@@ -1,14 +1,9 @@
 # Design Production Pipeline v5.1
 
+<img src="docs/banner.svg" alt="Design Production Pipeline — three conveyors, two human gates, one contract" width="100%">
+
 Turns a plain-text request into a finished, verified website or web application.
 Architecture: **three conveyors, two human gates, one contract.**
-
-```
-K1 "Structure"   →   GATE 1 (human)   →   K2 "Visual"   →   GATE 2 (human)   →   K2 continued   →   K3 "Verification"
-(scaffold +        (structure            (directions →      (blind choice        (merge → tokens →      (checks D1–D21
- neutral            approved)             contact sheet)      of a direction)     assets → scale)       + AI diagnostics)
- skeleton)
-```
 
 ## What it is for
 
@@ -50,6 +45,43 @@ the machine proves the floor; AI assists only where it is reliable.
   existing build back to an approved neutral skeleton (scenarios and logic
   preserved) instead of rebuilding it from scratch.
 
+## The skills — who builds UX, who builds UI
+
+| Skill | Conveyor | Layer | Owns |
+| :-- | :-- | :-- | :-- |
+| `pipeline-orchestrator` | — | process | request routing (new build / neutralize / restyle / targeted), the contract as SSOT, both gates, decision log, budgets, delivery report |
+| `structure-builder` | K1 | **UX** | product frame, experience model, information pattern, the neutral skeleton |
+| `visual-director` | K2 | **UI** | taste calibration, divergent directions, blind contact sheet, merge, DTCG tokens, assets, scaling |
+| `quality-guardian` | K3 | proof | deterministic floor D1–D21, AI diagnostics, quality report, verdict |
+
+**UX is built by `structure-builder` (K1).** Everything the user *does*,
+before anything about how it *looks*: the primary job-to-be-done, key screens
+with required states (loading / empty / error / success), walkable scenarios,
+and the information pattern that decides what earns the first viewport
+(answer-first, task-first, object-first, event-first, comparison-first).
+Output: a deliberately style-less neutral skeleton — gray graphite, real
+copy, priority annotations, `not_approved_visual_design` marker — approved by
+the human at Gate 1. On the "I already have a prototype" route it
+*neutralizes* existing code back to this state instead of rebuilding.
+
+**UI is built by `visual-director` (K2).** Everything the user *sees*, in two
+gated phases. Phase 1: taste calibration by showing (reference decomposition
+or the style-card test), 2–3 constructed-divergence directions on 7 axes
+(composition, type voice, color, surface, shape, imagery, motion) with
+machine-verified difference, and an anonymized contact sheet for the blind
+Gate 2 choice. Phase 2: merge-by-default with a coherence gate and confirming
+render, DTCG design tokens compiled to CSS/Tailwind (the skin property:
+restyle = token edit + recompile), an asset mini-gate (3–4 candidates per
+raster slot, auto favicon/OG, AI disclosure), and scaling to all screens ×
+states under a hard failure budget.
+
+**`quality-guardian` (K3) proves both** — the canonical deterministic floor
+D1–D21 (build, console, WCAG contrast, typography, token usage, placeholders,
+ban-list, viewports, tap targets, images, performance, a11y, functional
+paths, pipeline integrity) plus classified AI diagnostics, ending in a
+verdict the delivery report can stand behind: `ready`,
+`ready_with_caveats`, or `not_ready`.
+
 ## Core principles
 
 1. **Taste is gathered by showing, not by asking.** User references are
@@ -89,15 +121,6 @@ mandatory 3-minute confirmation offer when the user returns).
    `eval/eval-rubric.md` (pass ≥ 8.5/10, no zeros in blocking criteria).
 
 See `INSTALL.md` for the full installation and v5.0 → v5.1 migration guide.
-
-## Skills
-
-| Skill | Conveyor | Owns |
-| :-- | :-- | :-- |
-| `pipeline-orchestrator` | — | routing, contract, gates, decision log, economy, restyle, delivery |
-| `structure-builder` | K1 | brief, experience model, neutral skeleton (incl. neutralizing existing code) |
-| `visual-director` | K2 | calibration, divergence, contact sheet, merge, tokens, assets, scaling |
-| `quality-guardian` | K3 | deterministic floor D1–D21, AI diagnostics, report, verdict |
 
 ## License
 
