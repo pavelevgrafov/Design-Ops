@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Choose a visual direction</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0; background: #f4f4f4; color: #111; }
+  header { padding: 20px 28px 8px; }
+  h1 { font-size: 20px; margin: 0 0 6px; }
+  p.note { margin: 0 0 4px; color: #444; font-size: 14px; max-width: 75ch; }
+  .sheet { display: grid; gap: 20px; padding: 20px 28px 40px;
+           grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); }
+  figure { margin: 0; background: #fff; border: 1px solid #ddd; }
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid #ddd; }
+  .tabs button { flex: 1; padding: 8px 10px; font: inherit; font-size: 13px;
+                 background: #eee; border: 0; cursor: pointer; color: #333; }
+  .tabs button.active { background: #fff; font-weight: 600; color: #111; }
+  .frame { aspect-ratio: 4 / 3; overflow: hidden; background: #eee; }
+  .frame iframe { width: 100%; height: 100%; border: 0; }
+  figcaption { padding: 12px 14px; font-size: 15px; font-weight: 600; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Visual directions — pick the one you like best</h1>
+  <p class="note">These are the same two screens of your product with your real
+  text, styled in different directions: the main screen and a dense working
+  screen. Variants are anonymized and shown simultaneously. You can pick one
+  as a whole — or ask for a merge ("typography from 2, color from 3"). If none
+  works, say what repels you and there will be one regeneration round.</p>
+</header>
+<div class="sheet">
+  <!-- Order is RANDOMIZED at build time; mapping recorded in the contract
+       (visual.gate2_randomization). Never direction names or concepts here. -->
+  <figure data-variant="1">
+    <div class="tabs">
+      <button class="active" onclick="show(this,'main')">Main screen</button>
+      <button onclick="show(this,'contrast')">Working screen</button>
+    </div>
+    <div class="frame"><iframe src="v1-main.html" title="Variant 1 — main"></iframe></div>
+    <div class="frame" hidden><iframe src="v1-contrast.html" title="Variant 1 — working"></iframe></div>
+    <figcaption>Variant 1</figcaption>
+  </figure>
+  <figure data-variant="2">
+    <div class="tabs">
+      <button class="active" onclick="show(this,'main')">Main screen</button>
+      <button onclick="show(this,'contrast')">Working screen</button>
+    </div>
+    <div class="frame"><iframe src="v2-main.html" title="Variant 2 — main"></iframe></div>
+    <div class="frame" hidden><iframe src="v2-contrast.html" title="Variant 2 — working"></iframe></div>
+    <figcaption>Variant 2</figcaption>
+  </figure>
+  <figure data-variant="3">
+    <div class="tabs">
+      <button class="active" onclick="show(this,'main')">Main screen</button>
+      <button onclick="show(this,'contrast')">Working screen</button>
+    </div>
+    <div class="frame"><iframe src="v3-main.html" title="Variant 3 — main"></iframe></div>
+    <div class="frame" hidden><iframe src="v3-contrast.html" title="Variant 3 — working"></iframe></div>
+    <figcaption>Variant 3</figcaption>
+  </figure>
+</div>
+<script>
+function show(btn, which) {
+  var fig = btn.closest('figure');
+  fig.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  var frames = fig.querySelectorAll('.frame');
+  frames[0].hidden = (which !== 'main');
+  frames[1].hidden = (which !== 'contrast');
+}
+</script>
+</body>
+</html>

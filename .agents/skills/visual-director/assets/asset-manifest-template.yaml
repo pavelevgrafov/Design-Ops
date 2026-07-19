@@ -1,0 +1,43 @@
+# artifacts/visual/asset-manifest.yaml — standard/full only
+# (quick: contract assets.* instead). CR-08: candidates + disclosure.
+version: "5.1"
+generated_at: ""
+
+policy:
+  local_only: true            # no hotlinks, no placeholder services — ever
+  max_file_size_kb: 300
+  formats: [webp, avif, png, svg, mp4]
+  alt_required: true
+  default_language: typography_css_svg   # raster only for declared slots
+  ai_disclosure: "AI-generated imagery carries a disclosure mechanism per the
+    visual system (badge/caption/credits). EU AI Act transparency duty applies
+    to deployers in scope from 2026-08-02."
+
+slots:                        # every image/media slot in the build
+  - id: ""                    # hero | product | team | og | feature-illustration-1
+    screen: ""                # which screen/section
+    kind: ""                  # photo | illustration | texture | icon-set | video
+    role: ""                  # distinctive | supporting
+    alt: ""                   # real alt text (not the slot id)
+    status: ""                # planned | candidates_ready | picked | done | typography_only
+    candidates: []            # CR-08: 3–4 per raster slot: [{file, prompt, seed}]
+    picked: ""                # chosen candidate file; by: human | ai(provisional)
+    file: ""                  # final local path
+    size_kb: 0
+    disclosure: false         # true for AI-generated imagery
+    consistency_group: ""
+
+auto_generated:               # CR-08: no human involvement
+  favicon: { file: "", source: tokens }
+  og_image: { file: "", size: "1200x630", source: tokens+visual-system-template }
+
+consistency_anchors:
+  - group: ""
+    imagery_axis: ""          # copied from final_direction.axes.imagery
+    style_recipe: ""          # palette, treatment, lens/line/grain constants
+
+budget:
+  distinctive_max: 3          # quick: 1
+  total_slots: 0
+  done_slots: 0
+  oversize_files: []          # entries >300KB — must be empty at handoff
