@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/brand-header.svg" alt="DesignOps — brand image" width="100%">
+</p>
+
 # Design Production Pipeline v5.1
 
 <img src="docs/banner.svg" alt="Design Production Pipeline — three conveyors, two human gates, one contract" width="100%">
