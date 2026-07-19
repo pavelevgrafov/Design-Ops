@@ -10,6 +10,46 @@ K1 "Structure"   →   GATE 1 (human)   →   K2 "Visual"   →   GATE 2 (human)
  skeleton)
 ```
 
+## What it is for
+
+A skill pack for Codex CLI-style agents that takes a request like "make a
+landing page" or "I have a prototype, make it look good" and runs it through
+a production line: structure first (a neutral skeleton approved by a human),
+then visuals (a blind choice between real, divergent directions), then
+machine-verified quality. The human makes the taste decisions at two gates;
+the machine proves the floor; AI assists only where it is reliable.
+
+## Problems it solves
+
+- **AI slop and mode collapse.** "3 variants" from one model are usually one
+  layout recolored. Here divergence is constructed (persona + domain seeds,
+  7 axes, boldness spread) and machine-verified (`check-divergence.py` plus
+  an external blind-description test); a linted ban-list blocks the
+  statistical defaults (first-position Inter, indigo→purple gradients, glass,
+  bento, blobs, icon-per-label, marketing-slop copy).
+- **Taste gathered by interrogation.** Instead of "why do you like it?",
+  taste is calibrated by showing: references decomposed into principles, an
+  8–10 style-card test, and an anonymized contact sheet with recorded
+  randomization. No anchoring, no authorship hints.
+- **Frankenstein merges.** "Typography from 2, color from 3" is a default
+  path, but every merge passes a coherence gate and a confirming render
+  before it scales to the whole product (with a hard post-scale failure
+  budget and a documented `not_ready` stop).
+- **Unverifiable quality claims.** A canonical deterministic floor D1–D21
+  (build, console, WCAG contrast, typography, token usage, placeholders,
+  ban-list, viewports, tap targets, images, performance, a11y, functional
+  paths, pipeline integrity) runs by script; a missing capability reports an
+  honest `unavailable` and caps the verdict — never a silent pass.
+- **Restyle as code surgery.** The design lives in DTCG tokens; a restyle is
+  a token edit + recompile with zero manual component edits (the skin
+  property, enforced by `check-token-usage.sh`).
+- **Silent drift and lost decisions.** One contract (schema 5.1) is the
+  single source of truth; a decision log records every gate, hypothesis, and
+  accepted risk; `validate-pipeline.py` rejects retro-fitted compliance.
+- **"I already have a prototype."** A dedicated neutralize route strips an
+  existing build back to an approved neutral skeleton (scenarios and logic
+  preserved) instead of rebuilding it from scratch.
+
 ## Core principles
 
 1. **Taste is gathered by showing, not by asking.** User references are
@@ -58,3 +98,7 @@ See `INSTALL.md` for the full installation and v5.0 → v5.1 migration guide.
 | `structure-builder` | K1 | brief, experience model, neutral skeleton (incl. neutralizing existing code) |
 | `visual-director` | K2 | calibration, divergence, contact sheet, merge, tokens, assets, scaling |
 | `quality-guardian` | K3 | deterministic floor D1–D21, AI diagnostics, report, verdict |
+
+## License
+
+MIT — see `LICENSE`.
