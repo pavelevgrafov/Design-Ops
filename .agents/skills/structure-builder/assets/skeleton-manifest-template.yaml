@@ -1,0 +1,54 @@
+# artifacts/skeleton/skeleton-manifest.yaml — K1 exit artifact.
+# Verified by check-skeleton.sh.
+version: "5.1"
+generated_at: ""
+
+marker:
+  id: not_approved_visual_design
+  present_on_all_screens: false   # set true only after verification
+  text: "Structural mockup — visual design not yet approved."
+
+substrate: ""            # shadcn-ui | single-file-neutral-html | neutralized-existing
+palette:
+  name: gray-graphite
+  accent: neutral-blue-gray       # interactive affordance only
+  custom_colors: []               # MUST be empty in K1
+
+typography:
+  stack: system                   # no custom fonts in K1
+  custom_fonts: []                # MUST be empty in K1
+
+real_copy:
+  lorem_free: false
+  meta_placeholders_free: false
+
+localization:                     # filled when the trigger fired [K1.7]
+  risk: false
+  content_variants_implemented: []
+
+neutralization:                   # filled only for the neutralize route [K1.6]
+  performed: false
+  removed: []                     # what was stripped (fonts, colors, shadows...)
+  preserved: []                   # what was kept (scenarios, logic, copy)
+
+screens:
+  - id: ""                        # must match contract experience.key_screens
+    route: ""
+    states_implemented: []        # must cover contract required_states
+    priority_annotations: 0       # count of data-priority attrs (must be >0)
+    p1_matches_pattern: false
+
+navigation_walkable: false
+scenarios_smoke:
+  - id: ""
+    pass: false
+
+checks:                           # filled by check-skeleton.sh
+  marker_present: ""              # pass | fail
+  no_placeholders: ""
+  no_visual_properties: ""
+  screens_complete: ""
+  states_complete: ""
+  priorities_annotated: ""
+  scenarios_smoke: ""
+  overall: ""                     # pass | fail

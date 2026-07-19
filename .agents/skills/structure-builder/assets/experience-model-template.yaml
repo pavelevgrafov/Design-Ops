@@ -1,0 +1,48 @@
+# artifacts/ux/experience-model.yaml — standard/full modes.
+# Validated by scripts/validate_experience_model.py (D18).
+version: "5.1"
+
+primary_job:
+  statement: ""        # When [situation], I want to [action], so I can [outcome]
+  actor: ""
+  success_signal: ""
+
+audience:
+  roles: []            # list; >1 triggers multi-role review
+  primary: ""
+
+localization:
+  risk: false          # mirrors contract experience.localization_risk
+  reason: ""
+  content_variants: [] # required when risk=true: e.g. long-string, short-string,
+                       # cjk, empty-state — applied to primary-scenario screens
+
+screens:
+  - id: ""
+    name: ""
+    purpose: ""
+    route: ""
+    p1_content: []     # first-viewport content, pattern-driven
+    blocks:
+      - id: ""
+        kind: ""       # hero | form | list | detail | media | nav | legal | ...
+        priority: ""   # p1 | p2 | p3
+        copy_source: ""# real | realistic-draft (never lorem)
+    states: []         # subset of: loading, empty, validation_error, system_error,
+                       # success, permission_denied
+    transitions: []    # [{to_screen, trigger}]
+
+scenarios:
+  - id: ""
+    name: ""
+    steps: []          # [{screen, action, expect}]
+    covers_screens: [] # every key screen appears in >=1 scenario
+
+information_pattern:
+  pattern: ""          # answer-first | task-first | object-first | event-first | comparison-first
+  reason: ""
+  p1_rule: ""
+
+risks:
+  - description: ""
+    mitigation: ""
