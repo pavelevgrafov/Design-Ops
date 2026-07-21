@@ -1,0 +1,21 @@
+meta: {schema_version: "6.0", mode: standard, artifact_profile: app}
+product: {name: "Starter: app-dashboard", category: back-office, risk_level: medium}
+experience:
+  primary_job: "When an ops manager starts the day, I want to see the order queue and act on it, so nothing stalls unnoticed."
+  key_screens: [{id: dashboard, name: "Dashboard", purpose: "queue overview + primary actions"}]
+  required_states: [loading, empty, error, success, permission_denied]
+domain_model:
+  order: {fields: [id, customer, status, total, created_at], status_enum: [new, in_progress, done, cancelled]}
+roles_permissions:
+  admin:   [order.create, order.update, order.delete, reports.view]
+  manager: [order.create, order.update, reports.view]
+user_flows:
+  - {id: work-queue, steps: [open dashboard, filter orders, open order, update status]}
+state_matrix:
+  - {screen: dashboard, states: [loading, empty, error, success, permission_denied], roles: [admin, manager], data_volumes: [0, typical, overload]}
+api_contract: {spec: mock/orders.openapi.json, mock: mock/}
+starters: {route: starter_first, chosen: app-dashboard}
+gates: {gate1: passed, gate2: deferred, gate2_deferred: true, mode: batched}
+status: {base_skin_applied: true, verdict: ready_with_caveats}
+visual: {}
+acceptance: {}

@@ -1,0 +1,12 @@
+id: app-dashboard
+profile: app
+category: operations dashboard shell
+pattern: task-first
+description: >
+  Back-office dashboard shell: sidebar nav, KPI row, orders table with status
+  filter, new-order form with validation. RBAC (admin/manager), five switchable
+  states (loading/empty/error/success/permission_denied), typed mock fixtures.
+base_skin: base-app
+verified_at: 2026-07-21
+floor_verdict: ready_with_caveats
+shots: pending_hosted_run   # D22 baseline is taken by visual-regression.sh on the first hosted run
