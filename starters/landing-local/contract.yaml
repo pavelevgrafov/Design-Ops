@@ -1,0 +1,12 @@
+meta: {schema_version: "6.0", mode: quick, artifact_profile: site}
+product: {name: "Starter: landing-local", category: local business, risk_level: low}
+experience:
+  primary_job: "When a nearby customer needs a bakery, I want the phone/address/hours at a glance, so I can call or come over."
+  key_screens: [{id: home, name: "Landing", purpose: "convert visit into call/visit"}]
+  required_states: [success]
+content_model: {pattern: task-first, pattern_reason: "the user came to call/visit, not to read"}
+starters: {route: starter_first, chosen: landing-local}
+gates: {gate1: passed, gate2: deferred, gate2_deferred: true, mode: batched}
+status: {base_skin_applied: true, verdict: ready_with_caveats}
+visual: {}
+acceptance: {}

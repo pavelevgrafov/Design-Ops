@@ -1,0 +1,12 @@
+id: landing-local
+profile: site
+category: local business landing
+pattern: task-first
+description: >
+  Landing for a local business (bakery, cafe, salon, repair). P1 = call/visit
+  action with phone + address + hours in the first viewport. Sections: hero,
+  3 services with prices, contact block, map placeholder.
+base_skin: base-site
+verified_at: 2026-07-21
+floor_verdict: ready_with_caveats
+shots: pending_hosted_run   # D22 baseline is taken by visual-regression.sh on the first hosted run

@@ -1,0 +1,11 @@
+id: landing-saas
+profile: site
+category: SaaS product landing
+pattern: comparison-first
+description: >
+  Product landing for a SaaS tool. P1 = the pricing/plan comparison with the
+  signup CTA. Sections: value prop, three proof points, plan table, FAQ teaser.
+base_skin: base-site
+verified_at: 2026-07-21
+floor_verdict: ready_with_caveats
+shots: pending_hosted_run   # D22 baseline is taken by visual-regression.sh on the first hosted run

@@ -1,0 +1,28 @@
+# Verified Starters — agent reads this index only (<= 4 KB).
+# Each starter is verified at factory time (report.md in the starter dir),
+# starts at a base skin and may diverge into a full visual system later.
+starters:
+  - id: landing-local
+    profile: site
+    category: local business landing
+    pattern: task-first
+    line: bakery / cafe / salon — hero + services + contact
+    tags: [local, small-business, contact, cta]
+    verified_at: 2026-07-21
+    status: verified
+  - id: landing-saas
+    profile: site
+    category: SaaS product landing
+    pattern: comparison-first
+    line: product landing — value prop + proof points + plan table
+    tags: [saas, pricing, plans, signup]
+    verified_at: 2026-07-21
+    status: verified
+  - id: app-dashboard
+    profile: app
+    category: operations dashboard shell
+    pattern: task-first
+    line: sidebar + KPI row + table + form, RBAC, 5 states, typed mock
+    tags: [app, dashboard, back-office, rbac, mock]
+    verified_at: 2026-07-21
+    status: verified

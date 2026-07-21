@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title data-slot="business_name">Marta's Bakery</title>
+<link rel="stylesheet" href="../../../skins/base-site/tokens.css">
+<style>
+  body { margin: 0; font-family: var(--font-body); background: var(--canvas); color: var(--ink); line-height: 1.6; }
+  header, main, footer { max-width: 64rem; margin: 0 auto; padding: 0 var(--space-4); }
+  header { padding-top: var(--space-6); }
+  h1 { font-family: var(--font-display); font-size: var(--font-scale-step4); line-height: 1.15; margin: var(--space-6) 0 var(--space-3); max-width: 20ch; }
+  .tagline { font-size: var(--font-scale-step1); color: var(--ink-muted); max-width: var(--measure-body); }
+  .cta { display: inline-block; background: var(--action-primary); color: var(--action-primary-text); padding: var(--space-3) var(--space-6); border-radius: var(--radius-md); text-decoration: none; font-weight: 600; margin-top: var(--space-5); }
+  .cta:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .contact-card { margin-top: var(--space-6); padding: var(--space-4); background: var(--canvas-raised); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); }
+  .contact-card p { margin: var(--space-1) 0; }
+  section { margin-top: var(--space-12); }
+  h2 { font-family: var(--font-display); font-size: var(--font-scale-step2); margin-bottom: var(--space-4); }
+  table { width: 100%; border-collapse: collapse; background: var(--canvas-raised); }
+  td { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border-subtle); }
+  td.price { text-align: right; font-weight: 600; white-space: nowrap; }
+  footer { margin-top: var(--space-12); padding: var(--space-4) 0 var(--space-6); border-top: 1px solid var(--border-subtle); color: var(--ink-muted); font-size: var(--font-scale-step-1); }
+</style>
+</head>
+<body>
+<header data-priority="p1">
+  <h1 data-slot="business_name">Marta's Bakery</h1>
+  <p class="tagline" data-slot="tagline">Sourdough bread and croissants, baked at 5 a.m. every day</p>
+  <a class="cta" href="tel:+48123456789" data-slot="cta_label">Call to order</a>
+  <div class="contact-card">
+    <p><strong data-slot="phone">+48 123 456 789</strong></p>
+    <p data-slot="address">12 Rynek Street, Kraków</p>
+    <p data-slot="hours">Mon–Sat 7:00–19:00, Sun 8:00–14:00</p>
+  </div>
+</header>
+<main>
+  <section data-priority="p2">
+    <h2>Today at the counter</h2>
+    <table>
+      <tr><td data-slot="service_1_name">Country sourdough, 800 g</td><td class="price" data-slot="service_1_price">18 zł</td></tr>
+      <tr><td data-slot="service_2_name">Butter croissant</td><td class="price" data-slot="service_2_price">9 zł</td></tr>
+      <tr><td data-slot="service_3_name">Poppy-seed roll</td><td class="price" data-slot="service_3_price">12 zł</td></tr>
+    </table>
+  </section>
+</main>
+<footer data-priority="p3"><span data-slot="business_name">Marta's Bakery</span> — fresh every morning.</footer>
+</body>
+</html>

@@ -1,0 +1,12 @@
+meta: {schema_version: "6.0", mode: quick, artifact_profile: site}
+product: {name: "Starter: landing-saas", category: SaaS, risk_level: low}
+experience:
+  primary_job: "When a team lead compares tools, I want the plans and the deciding criteria visible at once."
+  key_screens: [{id: home, name: "Landing", purpose: "convert evaluation into signup"}]
+  required_states: [success]
+content_model: {pattern: comparison-first, pattern_reason: "visitor is choosing among alternatives"}
+starters: {route: starter_first, chosen: landing-saas}
+gates: {gate1: passed, gate2: deferred, gate2_deferred: true, mode: batched}
+status: {base_skin_applied: true, verdict: ready_with_caveats}
+visual: {}
+acceptance: {}
