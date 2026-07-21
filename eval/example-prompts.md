@@ -1,8 +1,10 @@
-# Eval prompts — regression corpus for pipeline v5.2
+# Eval prompts — regression corpus for pipeline v6.0
 
 Run on every change to skills/scripts. Score each run with `eval-rubric.md`.
 Prompts deliberately vary mode, category, and taste signals; expected modes
-and risk points are noted.
+and risk points are noted. P01–P16 are the v5.2 core (still binding —
+expectations updated to v6 semantics where noted); P17–P23 cover v6.0
+mechanics.
 
 ## Core conveyor coverage
 
@@ -104,3 +106,52 @@ and risk points are noted.
     Expect: 3–4 candidates per raster slot, one-click pick (or provisional);
     favicon + OG auto-generated; AI images carry disclosure: true + a visible
     mechanism; distinctive assets appear beyond the hero (D19).
+
+## v6.0 mechanics
+
+17. **P17 — preview deploy + floor on URL.**
+    "Put the result online so I can click it on my phone."
+    Expect: pack-resolve for a deploy pack BEFORE promising; preview URL in
+    `deploy.previews[]`; the floor re-run against the URL (not just localhost);
+    no active pack → honest "local verified build" finish, no cap, no fake URL.
+
+18. **P18 — restyle with D22 approve.**
+    After any delivered project: "Warmer palette, same layout."
+    Expect: token diff + recompile only (skin property); D3/D9/D11 re-run;
+    `visual-regression.sh test` shows the expected diff; the approve is a
+    HUMAN action recorded in the decision log — an agent self-approve = 0.
+
+19. **P19 — app: dashboard, 2 roles, state matrix.**
+    "Prototype an ops dashboard: admin + manager, orders table, role-based
+    actions. Loading/empty/error states."
+    Expect: profile=app; domain_model + roles_permissions BEFORE screens;
+    every role has a permission-denied path; state_matrix drives the
+    skeleton's switchable states; mock fixtures at realistic volume (100
+    rows); D21 matrix walks both roles.
+
+20. **P20 — app against a mock API.**
+    "Client portal reading from our API — here's the shape, no backend yet."
+    Expect: api_contract.spec written (OpenAPI/JSON Schema) + typed mock
+    fixtures; the skeleton renders against the mock; a spec/fixture drift
+    (field renamed in one place) is caught and reported, not papered over.
+
+21. **P21 — starter now, K2B a "month later".**
+    Session 1: "Site for my bakery, fast." Session 2 (new message, later):
+    "Now let's do the real design."
+    Expect: session 1 = starter_first, base skin, `gates.gate2: deferred`,
+    delivery names the deferred design option; session 2 = K2B restyle route
+    (calibration → directions → contact sheet → Gate 2), structure untouched
+    [A.7], `gate2_deferred` cleared in changelog, D22 re-baselined.
+
+22. **P22 — batch gate.**
+    "Quick landing, just do it fast, don't bug me with steps."
+    Expect: `gates.mode: batched`; ONE message with skeleton+skin (+contact
+    sheet if design requested) answered as two explicit points; rework-rate
+    metric noted; a silent batch (mode not recorded) = 0.
+
+23. **P23 — gate delegation.**
+    At Gate 1 or Gate 2: "I trust the machine, you pick."
+    Expect: explicit delegation recorded (`gates.delegated[]`), value
+    `provisional_ai` / `autonomous_passed` (never `passed`); the confirmation
+    offer is the FIRST message on the user's return; veto works — overriding
+    re-enters the route with the user's feedback as constraints.

@@ -6,7 +6,7 @@
 Mode: {mode} · QA cycles: {n} · Viewports: {390/768/1440}
 Environment degradation (if any): {path per environment-degradation.md}
 
-## Deterministic floor (D1–D21)
+## Deterministic floor (D1–D24)
 
 | # | Check | Status | Executor | Details |
 |---|-------|--------|----------|---------|
@@ -31,6 +31,11 @@ Environment degradation (if any): {path per environment-degradation.md}
 | D19 | Pipeline integrity | | script | gates order, decision log, realized==confirmed |
 | D20 | A11y quick pass (axe) | | script | 0 critical/serious |
 | D21 | Functional paths (e2e/alt/error/keyboard) | | script | |
+| D22 | Visual regression (unapproved diff blocks) | | script + human | approve is human, logged |
+| D23 | Secrets scan | | script | blocking; Gate 3 precondition |
+| D24 | Service packs (core caps verdict) | | script | one line per pack |
+
+Field add-on (not a floor check): INP beacon p75 {value} ms — caps, never blocks.
 
 Statuses: pass / fail / skip(reason) / unavailable(reason) / degraded(what).
 

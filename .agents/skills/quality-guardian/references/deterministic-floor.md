@@ -1,12 +1,17 @@
-# Canonical deterministic floor D1–D21 (v5.2)
+# Canonical deterministic floor D1–D24 (v6.0)
 
 This registry REPLACES both v5.0 variants' D1–D19 (they conflicted). The
-mapping table at the bottom is normative for reading older reports.
+mapping table at the bottom is normative for reading older reports. v6.0
+adds D22 (visual regression), D23 (secrets), D24 (service packs) to the
+v5.2 floor D1–D21.
 
 Blocking: D1–D14 and D16–D21 block `ready` (D16–D19 block their stage's
-handoff, hence the final verdict). D15 (lab performance) caps at
-`ready_with_caveats`, never blocks fully — CLS prevention stays blocking
-indirectly via D14 (declared image dimensions).
+handoff, hence the final verdict); D22 blocks on any UNAPPROVED diff; D23
+blocks on any finding. D15 (lab performance) caps at `ready_with_caveats`,
+never blocks fully — CLS prevention stays blocking indirectly via D14
+(declared image dimensions). D24 caps at `ready_with_caveats` when a CORE
+pack is unavailable; a peripheral pack is a report line. The INP field
+beacon (companion to D15) caps, never blocks.
 
 ## D1 — Build / typecheck. Blocking. Script.
 Project build exits 0. Fail: any build error, TS error, unresolvable import.
@@ -84,6 +89,9 @@ stated, with a manual alternative.
 ## D16 — Skeleton marker. Blocking (stage: scaling). Script.
 Zero `not_approved_visual_design` occurrences in the shipped build. Presence
 = scaling happened before Gate 2 or cleanup was skipped (also a D19 issue).
+v6.0: while Gate 2 is deferred the marker is KEPT BY DESIGN (the base skin
+is "presentable", not approved design) — the check then verifies the marker
+is present and visible, and flips to "removed" only after K2B scales.
 
 ## D17 — Divergence. Blocking (stage: K2 before Gate 2). Script (+model_judged).
 `check-divergence.py` clean; in standard/full the external blind test is
@@ -101,6 +109,13 @@ compliance is detectable); mode ceiling (AC-23); verdict ↔ report; every
 confirmed direction** (final_direction non-empty, gate2_result ids exist);
 **distinctive assets present beyond the hero**; **all_local truthful** (every
 slot has an existing local file); **not_ready never lowered without fix+retest**.
+v6.0 adds: closed-taxonomy enums [A.11] (artifact_profile, gates.mode,
+gates.gate2 incl. `deferred`, pack class, starter route); delegated-gate
+values restricted to `provisional_ai`/`autonomous_passed`; Gate 3 legality
+(prod confirmation requires `deploy.prod.rollback_tested: true`); deferred-G2
+A.2 exemption (scaling over the base skin is legal when
+`status.base_skin_applied: true`); decision-log Gate-2 sections required
+only when K2B ran.
 
 ## D20 — Accessibility quick pass. Blocking (critical/serious). Script.
 axe-core (or equivalent) on key screens: zero critical/serious violations.
@@ -118,6 +133,36 @@ is impossible — with the mark. Honesty rules (v5.2): the report splits
 (never a silent skip, never a pass line); a D21-paths pass requires BOTH
 declared paths (`alternative`, `error_recovery`) actually walked.
 
+## D22 — Visual regression. Blocking (unapproved diff). Script + human approve.
+`visual-regression.sh reference|test|approve`: baseline shots are recorded
+on starter production (factory) and re-taken after scaling; `test` compares
+the current build byte-wise against the baseline. Any unapproved diff
+BLOCKS the verdict. `approve` accepts the current shots as the new baseline
+— a HUMAN decision, recorded in the decision log by the orchestrator. No
+playwright → explicit `unavailable` + verdict cap, never a silent skip.
+Restyle runs expect a diff → the human approve IS the restyle acceptance.
+
+## D23 — Secrets scan. Blocking. Script.
+`check-secrets.py` over the project tree: known credential patterns (AWS,
+GitHub, Google, Slack, Stripe, private-key blocks) + high-entropy
+assignments. Any finding is a blocking FAIL — secrets live in env only.
+Runs at every floor and is a Gate 3 precondition (before any deploy).
+Documented false positives carry `SECRET-ALLOW:` on the same line.
+
+## D24 — Service packs. Core caps, peripheral reports. Script.
+`check-packs.py` resolves every contract `integrations[]` entry through
+`pack-resolve.py` (env check → TTL cache → acceptance test). A CORE pack
+not `active` → the dependent stage is `unavailable` and the verdict caps at
+`ready_with_caveats` [A.6]; a peripheral pack → a plain report line, no cap.
+The pack block is printed as one report line per pack (status, class,
+reason).
+
+## INP field beacon (companion, not a floor check)
+`assets/inp-beacon.js` (≤2 KB, Event Timing API) reports real field INP
+(p75 of event durations) from preview/prod deploys. p75 >200ms caps at
+`ready_with_caveats`, never blocks; reported as a SEPARATE line from the
+D15 lab proxy.
+
 ## Environment honesty
 
 If a check cannot run: `unavailable` + reason + nearest manual alternative;
@@ -126,7 +171,7 @@ Never silently convert unavailable to pass.
 
 ## Mapping from v5.0 variants (normative)
 
-| 5.1 | v5.0 (executable package) | v5.0 (SOP "Visual Gate") |
+| 5.1–6.0 | v5.0 (executable package) | v5.0 (SOP "Visual Gate") |
 | :-- | :-- | :-- |
 | D1–D3 | D1–D3 | Д1–Д3 |
 | D4–D8 | D4 (merged), D18 | Д4–Д8 |
@@ -138,3 +183,6 @@ Never silently convert unavailable to pass.
 | D19 | D19 | Д19 |
 | D20 | D16 | — (new for the SOP variant) |
 | D21 | D14 + D15 (merged with SOP functional stage) | — (formalized from К3.4) |
+| D22 | — (new in v6.0) | — (new in v6.0) |
+| D23 | — (new in v6.0) | — (new in v6.0) |
+| D24 | — (new in v6.0) | — (new in v6.0) |

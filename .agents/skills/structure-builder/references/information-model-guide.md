@@ -3,8 +3,12 @@
 Pick exactly ONE pattern by the primary job. The pattern defines what earns
 `data-priority="p1"` and the order of blocks. Do not blend patterns on one
 screen; different screens of one flow may use different patterns (record it).
+Each pattern cites its evidence base (`source: knowledge/<id>`) — a rule
+without a note does not exist.
 
 ## 1. answer-first — the user came for an answer
+
+source: knowledge/nng
 
 - **When:** docs, FAQ, support, news, knowledge bases, recipes.
 - **P1 rule:** the answer itself, or the shortest path to it, in the first
@@ -14,6 +18,8 @@ screen; different screens of one flow may use different patterns (record it).
 - **Failure mode:** burying the answer under a welcome banner or hero image.
 
 ## 2. task-first — the user came to do a thing
+
+source: knowledge/laws-of-ux, knowledge/goodui
 
 - **When:** SaaS, tools, dashboards, forms, admin panels, banking.
 - **P1 rule:** the primary action control and its minimum viable context
@@ -25,6 +31,8 @@ screen; different screens of one flow may use different patterns (record it).
 
 ## 3. object-first — the user is evaluating an object
 
+source: knowledge/baymard
+
 - **When:** e-commerce, portfolio, real estate, cars, courses, hotels.
 - **P1 rule:** the object's decisive evidence — key visual + 2–3 deciding
   attributes + price/verdict anchor. Specs p2, reviews/similar p3.
@@ -34,6 +42,8 @@ screen; different screens of one flow may use different patterns (record it).
 
 ## 4. event-first — the user is deciding whether to attend
 
+source: knowledge/goodui
+
 - **When:** conferences, concerts, webinars, meetups, openings.
 - **P1 rule:** what/when/where + the one reason to care + ticket/CTA. Program
   and speakers p2, venue/sponsors/FAQ p3.
@@ -41,6 +51,8 @@ screen; different screens of one flow may use different patterns (record it).
 - **Failure mode:** an atmospheric video hero with no date visible.
 
 ## 5. comparison-first — the user is choosing among alternatives
+
+source: knowledge/uxcore
 
 - **When:** pricing pages, vs-pages, product finders, ranked reviews.
 - **P1 rule:** the comparison unit (table/cards) with the deciding criteria

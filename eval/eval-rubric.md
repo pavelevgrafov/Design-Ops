@@ -29,7 +29,7 @@ CONFIRMING RENDER was shown (interactive) or deferred+offered (autonomous).
 render.
 
 **C4. The deterministic floor was run honestly.**
-D1–D21 executed; statuses from the taxonomy with executors; D15 caveats not
+D1–D24 executed; statuses from the taxonomy with executors; D15 caveats not
 blocks; unavailable/degraded named with reasons; report verdict == contract
 verdict; validate-pipeline.py green. 0 = silent unavailable→pass conversion;
 checks claimed without artifacts.
@@ -81,6 +81,13 @@ silent drift; budgets respected [E.1] (no "one more variant for luck").
 Final message: what was built / gate decisions / what was verified (n/n) /
 what remains — no jargon; statuses translated; ready-family verdicts used
 everywhere.
+
+## Benchmark opponent
+
+Blind comparisons in the demand test use the strongest free alternative as
+opponent (source: knowledge/ui-ux-pro-max-skill): it emits recommendations
+without verification, we run a machine floor — the comparison measures
+whether the floor is visible to a blind reviewer.
 
 ## Scoring protocol
 

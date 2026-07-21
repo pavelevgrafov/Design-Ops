@@ -4,6 +4,17 @@ Use these verbatim, filling {placeholders}. Never add authorship hints,
 recommendations, or "why" questions before a choice. Every template states
 how long the review takes.
 
+**Question quality rubric** (source: knowledge/paul-elder-critical-thinking):
+every question put to the human must be clear (one decision per question),
+precise (the answer options are enumerable), relevant (the answer changes
+what the pipeline does next), and logically bounded (no open "what do you
+think?" at a gate). A question failing the rubric is rewritten, not asked.
+
+**NoUI-first check** (source: knowledge/krishna-best-interface): before
+Gate 1, confirm the skeleton carries no screen that could be removed —
+ask once: "Could any of these screens be solved without a screen (default,
+automation, existing habit)?" If yes, cut it before the gate, not after.
+
 ## 1. Gate 1 — presentation (interactive)
 
 ```
@@ -90,7 +101,7 @@ the options instead of guessing.
 
 ```
 Verdict: {ready | ready_with_caveats | not_ready}
-Checks passed: {N of M} (D1–D21, see artifacts/audit/quality-report.md).
+Checks passed: {N of M} (D1–D24, see artifacts/audit/quality-report.md).
 
 {if not_ready: list of open blockers and required fixes}
 {if ready_with_caveats: list of accepted limitations + who accepted each risk}
