@@ -72,6 +72,11 @@
 │       ├── run-self-test.sh
 │       ├── expected.txt
 │       └── fixture/                                 # mini-sites + traps + contract
+├── packs/            # integration bus: pack manifests + registry.yaml + recheck.sh
+├── starters/         # Verified Starters + index.yaml + harvest.py + recheck.sh
+├── skins/            # base-site / base-app (tokens.json + compiled tokens.css)
+├── knowledge/        # evidence vault: sources/ + index.yaml (Obsidian = optional viewer)
+├── install.sh        # one-command installer (v6.0)
 └── artifacts/                                   # created on first run
     ├── design-contract.yaml
     ├── decision-log.md
@@ -80,7 +85,8 @@
 
 ### Install steps
 
-1. **Copy** `.agents/`, `eval/`, `AGENTS.md`, `README.md` into the target
+1. **Copy** `.agents/`, `eval/`, `packs/`, `starters/`, `skins/`,
+   `knowledge/`, `AGENTS.md`, `README.md` into the target
    repo (or `~/.codex/` for globally available skills).
 2. **Script dependencies:** Python ≥3.10 + `pip install pyyaml` (required —
    the contract is read only via `contract-read.py`); **Bash ≥3.2-compatible**
@@ -97,7 +103,7 @@
    ```
    Runs every validator against the bundled fixture (contract parsing, lorem
    trap, D5 heading case, clean skeleton, static bash/BSD audits) plus the
-   browser smoke when playwright is installed. Expected: `22 passed, 0 failed`
+   browser smoke when playwright is installed. Expected: `35 passed, 0 failed, 1 skipped` (v6.0; with playwright 39 passed, 0 failed)
    (browser stage skips explicitly without playwright). Run it on BOTH
    environment families before shipping changes: macOS (bash 3.2 + BSD grep)
    and Linux (bash 5 + GNU grep).
@@ -115,6 +121,27 @@
 6. **First run:** prompt P01 from `eval/example-prompts.md`, score with
    `eval/eval-rubric.md`. Pass ≥10/12 with no zeros in C1–C4/C11/C12 =
    install OK.
+
+### Fast path (v6.0): one command
+
+```bash
+bash install.sh <target-repo>
+```
+
+Copies the package, restores permissions, checks dependencies, runs the
+self-test, prints the ready line. Steps 1–6 below are what it does manually.
+
+### Migration v5.1 → v6.0
+
+1. **Package:** replace the v5.x tree with this one (new: `packs/`,
+   `starters/`, `skins/`, `knowledge/`, `install.sh`; scripts added per
+   skill).
+2. **Contracts:** run once per project —
+   `python3 .agents/skills/pipeline-orchestrator/scripts/contract-migrate.py artifacts/design-contract.yaml`
+   (idempotent; appends the migration changelog entry itself).
+   `validate-pipeline.py` accepts 6.0 and warns on 5.1.
+3. **Nothing else changes:** 5.1 gates/floor semantics carry over; Gate 2
+   stays where it was (`deferred` only for contracts that never ran K2B).
 
 ### Migration v5.0 → v5.1
 
@@ -137,12 +164,14 @@
 
 ---
 
-*Design Pipeline Codex v5.2 — bugfix/hardening over v5.1 (contract schema
-unchanged, still 5.1): bash 3.2 + BSD grep compatibility, contract read only
-via PyYAML (`contract-read.py`), SIGPIPE-proof checks (no `grep -q` after
-pipes), D5 heading-selectivity fix, honest D21 (no silent skip), measured
-INP-proxy (lab), zero-wait smoke + quick artifact matrix, self-test circuit
-(`eval/selftest/`). Base: v5.1, CR-01…CR-16 over v5.0 (canonical D1–D21
-registry, ready-family verdicts, two-screen slice, merge coherence +
-confirming render, asset mini-gate, degradation matrix, execution economy,
-decision log).*
+*Design Pipeline Codex v6.0 — working interface foundation for sites and
+apps (contract schema 6.0): K2A base skin + deferrable K2B, app profile
+(domain model/RBAC/state matrix/mock API), Verified Starters, pack bus with
+core/peripheral verdict semantics, floor D1–D24 (visual regression, secrets,
+pack block, INP beacon), knowledge vault, context/cost budgets, one-command
+install, gate annotations, [A.11] statuses-by-scripts. Base: v5.2
+(bash 3.2 + BSD grep, PyYAML-only contract reads, SIGPIPE-proof checks,
+honest D21, measured INP-proxy, zero-wait smoke, self-test circuit) over
+v5.1 (canonical D1–D21 registry, ready-family verdicts, two-screen slice,
+merge coherence + confirming render, asset mini-gate, degradation matrix,
+execution economy, decision log).*
