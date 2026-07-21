@@ -2,6 +2,11 @@
 # check-placeholders.sh — D10 + D14 (partial): placeholder copy, hotlinks, image hygiene.
 # Usage: bash check-placeholders.sh [project_root] [assets_dir]
 # Exit 0 = pass, 1 = fail.
+#
+# v5.2 hardening:
+#   - BSD grep compatible (POSIX classes, no perl shorthands)        [TZ-1.2]
+#   - no `grep -q` downstream of a pipe under pipefail; capture-then-test [TZ-2.1]
+#   - file size via stat with GNU/BSD fallback                       [TZ-1.2]
 set -uo pipefail
 
 ROOT="${1:-.}"
@@ -12,11 +17,17 @@ pass() { printf 'pass: %s\n' "$*"; }
 
 SRC_INCLUDES=(--include='*.html' --include='*.tsx' --include='*.jsx' --include='*.vue' --include='*.svelte' --include='*.md' --include='*.css')
 
-# --- 1. Placeholder copy -----------------------------------------------------
-if grep -rniE 'lorem ipsum|dolor sit amet|consectetur adipiscing|text goes here|TODO:?\s*(copy|text)|placeholder text|coming soon™|xxx+' \
-  "$ROOT" "${SRC_INCLUDES[@]}" 2>/dev/null | grep -v node_modules | grep -q .; then
-  grep -rniE 'lorem ipsum|dolor sit amet|consectetur adipiscing|text goes here|TODO:?\s*(copy|text)|placeholder text' \
-    "$ROOT" "${SRC_INCLUDES[@]}" 2>/dev/null | grep -v node_modules | head -5
+# file size in KB; GNU stat (-c) with BSD stat (-f) fallback
+size_kb() {
+  sz=$(stat -c%s "$1" 2>/dev/null || stat -f%z "$1" 2>/dev/null || echo 0)
+  printf '%s' $((sz / 1024))
+}
+
+# --- 1. Placeholder copy (capture-then-test) -----------------------------------
+PLACEHOLDER_HITS=$(grep -rniE 'lorem ipsum|dolor sit amet|consectetur adipiscing|text goes here|TODO:?[[:space:]]*(copy|text)|placeholder text|coming soon™|xxx+' \
+  "$ROOT" "${SRC_INCLUDES[@]}" 2>/dev/null | grep -v node_modules || true)
+if [ -n "$PLACEHOLDER_HITS" ]; then
+  printf '%s\n' "$PLACEHOLDER_HITS" | head -5
   fail "placeholder copy found"
 else
   pass "no placeholder copy"
@@ -58,7 +69,7 @@ if [ -d "$ASSETS" ]; then
   OVERSIZE=$(find "$ASSETS" -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' -o -iname '*.avif' -o -iname '*.gif' \) -size +300k 2>/dev/null || true)
   if [ -n "$OVERSIZE" ]; then
     printf '%s\n' "$OVERSIZE" | while IFS= read -r f; do
-      printf '  %s — %s KB\n' "$f" "$(( $(stat -c%s "$f") / 1024 ))"
+      printf '  %s — %s KB\n' "$f" "$(size_kb "$f")"
     done
     fail "images over 300 KB"
   else

@@ -15,6 +15,11 @@ Exit 0 = all pass, 1 = any violation. Stdlib only.
 import glob, os, re, sys
 
 BANNED_FIRST = {"inter", "roboto", "arial", "space grotesk", "space-grotesk", "spacegrotesk"}
+# v5.2 [TZ-2.4]: max-width: Nch counts as D5 evidence ONLY on text selectors
+# (same set as D4/D6). Headings are display type — their ch is ignored, not
+# flagged. Primary evidence remains the --measure-* token.
+TEXT_SEL = r"\b(body|p|prose|article|li)\b"
+HEADING_SEL = r"\bh[1-6]\b"
 GENERIC = {"system-ui", "sans-serif", "serif", "monospace", "ui-sans-serif",
            "ui-monospace", "ui-serif", "ui-rounded", "cursive", "fantasy", "emoji",
            "math", "fangsong"}
@@ -64,7 +69,13 @@ def main():
             if lh and re.search(r"\b(body|p)\b", sel_l):
                 body_lhs.append((f, float(lh.group(1))))
             if mw:
-                measures.append((f, float(mw.group(1))))
+                if re.search(TEXT_SEL, sel_l):
+                    measures.append((f, float(mw.group(1))))
+                elif re.search(HEADING_SEL, sel_l):
+                    notes.append(
+                        f"D5: heading measure {mw.group(1)}ch in {f} ignored "
+                        "(display type is not body measure)")
+                # other selectors (e.g. .container): not D5 evidence either
             if ff:
                 stack = [x.strip().strip("\"'") for x in ff.group(1).split(",")]
                 families.append((f, stack))
