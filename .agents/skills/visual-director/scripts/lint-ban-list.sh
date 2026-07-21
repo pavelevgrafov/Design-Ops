@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
-# lint-ban-list.sh — D11: machine-linted AI-slop ban-list (v5.1).
+# lint-ban-list.sh — D11: machine-linted AI-slop ban-list (v5.2).
 # Scans direction docs, CSS, and components for banned patterns.
 # Usage: bash lint-ban-list.sh [scan_root] [--allow direction-id]
 #   --allow: a direction id whose doc contains written justifications
 #            (lines starting with "ALLOW:") for specific banned keys.
 # Exit 0 = clean, 1 = banned patterns found.
+# v5.2: bash 3.2 (no bash-4 case conversion); BSD grep/sed (POSIX
+#       classes, no perl shorthands); grep -z is GNU-only → capability
+#       probe with honest skip                                       [TZ-1.1/1.2]
 set -uo pipefail
 
 ROOT="${1:-.}"
@@ -21,9 +24,10 @@ FONT_STACKS=$(grep -rnoE 'font-family:[^;}]*' "$ROOT" \
   | grep -v node_modules | grep -v 'lint-ban-list' || true)
 while IFS= read -r line; do
   [ -z "$line" ] && continue
-  first=$(printf '%s' "$line" | sed -E 's/.*font-family:\s*//; s/^\s*["'\'']?([^,"'\'']*)["'\'']?.*/\1/' | tr -d ' ' )
-  case "${first,,}" in
-    inter|roboto|arial|spacegrotesk|"space-grotesk")
+  first=$(printf '%s' "$line" | sed -E 's/.*font-family:[[:space:]]*//; s/^[[:space:]]*["'\'']?([^,"'\'']*)["'\'']?.*/\1/' | tr -d ' ' )
+  first_lc=$(printf '%s' "$first" | tr 'A-Z' 'a-z')
+  case "$first_lc" in
+    inter|roboto|arial|spacegrotesk|space-grotesk)
       hit "font-first-position" "$line" ;;
   esac
 done <<< "$FONT_STACKS"
@@ -41,19 +45,24 @@ GLASS=$(grep -rniE 'backdrop-(filter|blur)|bg-white/(5|10|20)[^0-9]|border-white
 [ -n "$GLASS" ] && hit "glassmorphism" "$(printf '%s\n' "$GLASS" | wc -l | tr -d ' ') occurrence(s): $(printf '%s\n' "$GLASS" | head -2)"
 
 # --- 4. Bento "hero + 3 identical cards" -------------------------------------
-BENTO=$(grep -rnzE 'grid[^>]*grid-cols-3[^>]*>(\s*<div[^>]*class="[^"]*"[^>]*>\s*(<svg|<[^>]*icon)[^]*?(<h[23])[^]*?<p[^]*?</div>\s*){3}' \
-  "$ROOT" --include='*.html' --include='*.tsx' --include='*.jsx' 2>/dev/null \
-  | grep -v node_modules | head -3 || true)
-[ -n "$BENTO" ] && hit "bento-hero-3-cards" "3 identical icon+title+text cards detected"
+# grep -z (multiline) is GNU-only: probe once, skip honestly on BSD/macOS.
+if printf 'a\0b\n' | grep -qzE 'a.b' 2>/dev/null; then
+  BENTO=$(grep -rnzE 'grid[^>]*grid-cols-3[^>]*>([[:space:]]*<div[^>]*class="[^"]*"[^>]*>[[:space:]]*(<svg|<[^>]*icon)[^]*?(<h[23])[^]*?<p[^]*?</div>[[:space:]]*){3}' \
+    "$ROOT" --include='*.html' --include='*.tsx' --include='*.jsx' 2>/dev/null \
+    | grep -v node_modules | head -3 || true)
+  [ -n "$BENTO" ] && hit "bento-hero-3-cards" "3 identical icon+title+text cards detected"
+else
+  printf 'skip: bento-hero-3-cards check requires GNU grep -z (unavailable on this platform)\n'
+fi
 
 # --- 5. Blobs -----------------------------------------------------------------
-BLOB=$(grep -rniE 'blob|border-radius:\s*[0-9]+%\s+[0-9]+%\s+[0-9]+%\s+[0-9]+%\s*/\s*[0-9]+%|organic-shape' "$ROOT" \
+BLOB=$(grep -rniE 'blob|border-radius:[[:space:]]*[0-9]+%[[:space:]]+[0-9]+%[[:space:]]+[0-9]+%[[:space:]]+[0-9]+%[[:space:]]*/[[:space:]]*[0-9]+%|organic-shape' "$ROOT" \
   --include='*.css' --include='*.html' --include='*.tsx' --include='*.jsx' --include='*.svg' 2>/dev/null \
-  | grep -v node_modules | grep -v 'lint-ban-list' | grep -viE 'blob\(|\bbinary\b|README|CHANGELOG' || true)
+  | grep -v node_modules | grep -v 'lint-ban-list' | grep -viE 'blob\(|binary|README|CHANGELOG' || true)
 [ -n "$BLOB" ] && hit "blobs" "$(printf '%s\n' "$BLOB" | wc -l | tr -d ' ') occurrence(s): $(printf '%s\n' "$BLOB" | head -2)"
 
 # --- 6. Icon-per-label decoration ----------------------------------------------
-ICONLABEL=$(grep -rnoE '<li[^>]*>\s*(<svg|<img[^>]*icon|<[^>]*class="[^"]*icon)[^>]*>[^<]{0,40}' "$ROOT" \
+ICONLABEL=$(grep -rnoE '<li[^>]*>[[:space:]]*(<svg|<img[^>]*icon|<[^>]*class="[^"]*icon)[^>]*>[^<]{0,40}' "$ROOT" \
   --include='*.html' --include='*.tsx' --include='*.jsx' 2>/dev/null \
   | grep -v node_modules | wc -l | tr -d ' ' || echo 0)
 if [ "${ICONLABEL:-0}" -ge 3 ]; then
