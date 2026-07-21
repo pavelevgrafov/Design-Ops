@@ -3,10 +3,10 @@ profile: site
 category: local business landing
 pattern: task-first
 description: >
-  Landing for a local business (bakery, cafe, salon, repair). P1 = call/visit
-  action with phone + address + hours in the first viewport. Sections: hero,
-  3 services with prices, contact block, map placeholder.
+  Single-page site for a local service business (bakery, barber, studio).
+  P1 = the booking/contact action. Sections: services, price list, hours,
+  contacts. Real copy slots, no stock imagery required.
 base_skin: base-site
 verified_at: 2026-07-21
-floor_verdict: ready_with_caveats
+floor_verdict: ready_with_caveats   # browser checks (D12/D13/D20) pending first hosted run
 shots: pending_hosted_run   # D22 baseline is taken by visual-regression.sh on the first hosted run

@@ -1,3 +1,5 @@
+# Content-injection map: brief field -> CSS selector in skeleton/index.html.
+# The injector fills textContent of each selector; leftovers are reported.
 business_name:   "[data-slot=business_name]"
 tagline:         "[data-slot=tagline]"
 phone:           "[data-slot=phone]"
