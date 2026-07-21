@@ -29,6 +29,11 @@ except ImportError:
 
 G1_OK = {"passed", "autonomous_passed"}
 G2_OK = {"passed", "provisional_ai", "regenerated"}
+G2_V6 = G2_OK | {"deferred"}
+PROFILES = {"", "site", "app"}
+GATE_MODES = {"", "separate", "batched"}
+PACK_CLASSES = {"core", "peripheral"}
+STARTER_ROUTES = {"", "starter_first", "from_scratch"}
 VERDICTS = {"ready", "ready_with_caveats", "not_ready"}
 OLD_VERDICTS = {"pass", "conditional_pass", "fail"}
 QUICK_FORBIDDEN = [
@@ -67,8 +72,11 @@ def main():
     if ver == "5.0":
         problems.append("contract is schema 5.0 — run the 5.1 migration first "
                         "(move to artifacts/, schema_version 5.1, verdict mapping)")
-    elif ver != "5.1":
-        problems.append(f"meta.schema_version is '{ver}', expected '5.1'")
+    elif ver == "5.1":
+        warnings.append("contract is schema 5.1 — migrate to 6.0 "
+                        "(pipeline-orchestrator/scripts/contract-migrate.py)")
+    elif ver != "6.0":
+        problems.append(f"meta.schema_version is '{ver}', expected '6.0' (5.1 migrates)")
     for key in ("product", "experience", "content_model", "visual", "gates", "status", "acceptance"):
         if key not in c:
             problems.append(f"missing contract section: {key}")
@@ -78,6 +86,40 @@ def main():
     visual = c.get("visual") or {}
     assets = c.get("assets") or {}
     changelog = c.get("changelog") or []
+
+    # --- v6: closed-taxonomy enums (A.11 — statuses are machine-set) -------
+    if str(meta.get("artifact_profile") or "") not in PROFILES:
+        problems.append(f"meta.artifact_profile '{meta.get('artifact_profile')}' "
+                        "not in site|app")
+    if str(gates.get("mode") or "") not in GATE_MODES:
+        problems.append(f"gates.mode '{gates.get('mode')}' not in separate|batched")
+    g2v = str(gates.get("gate2") or "")
+    if g2v in ("", "pending"):
+        g2v = ""  # pre-decision placeholder, not a status
+    if g2v and g2v not in G2_V6:
+        problems.append(f"gates.gate2 '{g2v}' outside the taxonomy "
+                        f"{sorted(G2_V6)}")
+    g2_deferred = g2v == "deferred" or gates.get("gate2_deferred") is True
+    route = str((c.get("starters") or {}).get("route") or "")
+    if route not in STARTER_ROUTES:
+        problems.append(f"starters.route '{route}' not in starter_first|from_scratch")
+    for it in (c.get("integrations") or []):
+        cls = str((it or {}).get("class") or "")
+        if cls and cls not in PACK_CLASSES:
+            problems.append(f"integrations[{it.get('pack', '?')}].class '{cls}' "
+                            "not in core|peripheral")
+    delegated = gates.get("delegated") or []
+    if not isinstance(delegated, list):
+        problems.append("gates.delegated must be a list of gate names")
+        delegated = []
+    for g in delegated:
+        v = str(gates.get(str(g)) or "")
+        if v and v not in ("provisional_ai", "autonomous_passed"):
+            problems.append(f"delegated gate '{g}' carries non-delegated value '{v}'")
+    prod = ((c.get("deploy") or {}).get("prod") or {})
+    if (prod.get("confirmed_by") or prod.get("at")) and not prod.get("rollback_tested"):
+        problems.append("Gate 3: prod confirmed without the dry-run rollback "
+                        "(deploy.prod.rollback_tested: true required)")
 
     # --- 2. gate order via changelog ------------------------------------------
     def first_time(pred):
@@ -98,7 +140,10 @@ def main():
     if visual_start and not g1_pass:
         problems.append("A.1 suspect: visual work recorded but no gate1 pass in changelog")
     if status.get("scaled") and gates.get("gate2") not in G2_OK:
-        problems.append(f"A.2 violated: scaled=true but gates.gate2='{gates.get('gate2')}'")
+        # v6: scaling over the automatic base skin with Gate 2 deferred is
+        # the legal default path; K2B later is a restyle route.
+        if not (g2_deferred and status.get("base_skin_applied")):
+            problems.append(f"A.2 violated: scaled=true but gates.gate2='{gates.get('gate2')}'")
     if scaled_t and g2_t and scaled_t < g2_t:
         problems.append(f"A.2 violated: scaled at {scaled_t} before gate2 result at {g2_t}")
 
@@ -167,7 +212,13 @@ def main():
     if lpath:
         with open(lpath, encoding="utf-8") as f:
             log = f.read()
-        for marker in LOG_REQUIRED:
+        required = list(LOG_REQUIRED)
+        if g2_deferred:
+            # K2B deferred: no calibration/directions/Gate 2 happened yet —
+            # those sections become mandatory only when K2B runs.
+            required = [m for m in required if m not in (
+                "## Taste calibration", "## Direction seeds", "## Gate 2")]
+        for marker in required:
             if marker not in log:
                 problems.append(f"decision-log missing mandatory section: '{marker}'")
         if g2res.startswith("regenerated") and "## Regenerations" not in log:

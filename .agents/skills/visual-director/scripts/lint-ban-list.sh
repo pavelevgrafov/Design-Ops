@@ -64,8 +64,9 @@ BLOB=$(grep -rniE 'blob|border-radius:[[:space:]]*[0-9]+%[[:space:]]+[0-9]+%[[:s
 # --- 6. Icon-per-label decoration ----------------------------------------------
 ICONLABEL=$(grep -rnoE '<li[^>]*>[[:space:]]*(<svg|<img[^>]*icon|<[^>]*class="[^"]*icon)[^>]*>[^<]{0,40}' "$ROOT" \
   --include='*.html' --include='*.tsx' --include='*.jsx' 2>/dev/null \
-  | grep -v node_modules | wc -l | tr -d ' ' || echo 0)
-if [ "${ICONLABEL:-0}" -ge 3 ]; then
+  | grep -v node_modules | wc -l | tr -d ' ')
+case "$ICONLABEL" in ''|*[!0-9]*) ICONLABEL=0 ;; esac
+if [ "$ICONLABEL" -ge 3 ]; then
   hit "icon-per-label" "$ICONLABEL decorated list items"
 fi
 
