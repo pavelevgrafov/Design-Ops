@@ -1,104 +1,128 @@
-# design-contract.yaml — Single Source of Truth, schema v5.1
+# design-contract.yaml — Single Source of Truth, schema v6.0
 # Location: artifacts/design-contract.yaml
 # Rules: contract beats markdown; changelog beats field values; earlier stage
-# wins where the contract is silent. Decision log (human-readable journal)
-# lives in artifacts/decision-log.md — not duplicated here.
+# wins where the contract is silent. Decision log: artifacts/decision-log.md.
+# v6.0: artifact profiles (site|app), starters, integrations (pack bus),
+# deploy, knowledge vault, cost, gate modes. Sections new in 6.0 are nullable
+# and default-empty; contracts 5.1 migrate via scripts/contract-migrate.py.
 
 meta:
-  schema_version: "5.1"
+  schema_version: "6.0"
   created_at: ""            # ISO-8601, from `date` at contract init
   updated_at: ""
   mode: ""                  # quick | standard | full
   mode_override_reason: ""  # required whenever mode != auto-selection
   interaction_mode: ""      # interactive | autonomous
   artifact_type: ""         # website | web_app | dashboard | landing_page
+  artifact_profile: ""      # site | app — drives conveyor defaults (v6)
 
 product:
   name: ""
   category: ""
-  user_outcome: ""          # what the end user gets done, one sentence
-  business_outcome: ""      # what the owner gets, one sentence
+  user_outcome: ""
+  business_outcome: ""
   risk_level: ""            # low | medium | high
-  audience: []              # list of roles; >1 triggers multi-role review
+  audience: []
   clarification: ""         # questions_asked | assumptions_logged | mixed
   visual_boldness: ""       # conventional | familiar_distinctive | challenger | experimental
-                            # default familiar_distinctive; risk_level: high → conventional [K1.2.1]
 
 experience:
-  primary_job: ""           # the ONE main job-to-be-done
-  key_screens: []           # [{id, name, purpose}] — the scaling checklist
-  required_states: []       # empty | loading | error | success | permission_denied ...
-  scenarios: []             # acceptance walkthroughs, Given/When/Then-lite
-  localization_risk: false  # [K1.7] >1 language | CJK/RTL audience | >2000 chars content
-  trigger_reason: ""        # which condition fired
+  primary_job: ""
+  key_screens: []           # [{id, name, purpose}] — site scaling checklist
+  required_states: []
+  scenarios: []
+  localization_risk: false
+  trigger_reason: ""
 
 content_model:
   pattern: ""               # answer-first | task-first | object-first | event-first | comparison-first
   pattern_reason: ""
 
+# --- app profile (v6; empty for site) --------------------------------------
+domain_model: {}            # entities, fields, relations, enum statuses — BEFORE screens
+roles_permissions: {}       # RBAC matrix: role x action x object
+user_flows: []              # looped flows; screens hang off flows
+screen_modules: []          # key_screens grouped by module with priorities
+state_matrix: []            # screen x state x role x data-volume
+api_contract: {}            # {spec: path(OpenAPI/JSON Schema), mock: dir}
+
+# --- starters (v6) -----------------------------------------------------------
+starters:
+  route: ""                 # starter_first | from_scratch
+  chosen: ""                # starter id
+  skin_diverged: false
+
 visual:
   category_anchors: []
+  base_skin: ""             # base-site | base-app — applied at K2A (v6)
   calibration:
-    references: []          # principles decomposed from refs, never 1:1 conditioning
+    references: []
     anti_references: []
-    style_card_result: ""   # e.g. "liked: 2,5,9; rejected: 3,8"
-    status: ""              # done | skipped_autonomous
-  directions:
-    - id: ""                # A | B | C
-      seed:
-        persona: ""
-        domains: []         # >=3, no overlap with other directions
-        boldness_point: ""  # spread across the band [K2.4.1]: safer | middle | bolder
-      axes:                 # the 7 axes; terse but specific
-        composition: ""
-        type_voice: ""
-        color: ""
-        surface: ""
-        shape: ""
-        imagery: ""
-        motion: ""
-      bold_moves: []        # 1–2 deliberate MAYA moves
-      differs_by: {}        # {B: [axis,...], C: [...]} — >=3 per pair, incl. composition or type_voice
-      concept: ""           # one paragraph, blind-description testable
-      blind_test: ""        # standard/full: external AI adjective overlap <=50%, model_judged
-  gate2_randomization: {}   # {"Variant 1": "B", ...} — blind order mapping
-  gate2_result: ""          # chosen(A) | merged(A.base+B.color) | regenerated | provisional_ai(A)
-  merge:                    # CR-06: filled when gate2_result is merged(...)
-    axes_resolution: {}     # axis -> source direction id
-    coherence_check: ""     # pass | fail (diagnosis, model_judged)
-    confirm_render: ""      # shown | adjusted | rejected | deferred (autonomous)
-  post_scale:               # CR-07: full-product failure handling
+    style_card_result: ""
+    status: ""              # done | skipped_autonomous | deferred (K2B deferred)
+  directions: []
+  gate2_randomization: {}
+  gate2_result: ""          # chosen(A) | merged(...) | regenerated | provisional_ai(X)
+  merge:
+    axes_resolution: {}
+    coherence_check: ""
+    confirm_render: ""
+  post_scale:
     failure_budget: 1
     used: 0
-    hypothesis_log: []      # [{at, hypothesis, action}]
-  final_direction: {}       # merged/resolved 7 axes — the build target
+    hypothesis_log: []
+  final_direction: {}
   distinctive_assets: []
 
 gates:
+  mode: ""                  # separate | batched (batched only on explicit "fast")
   gate1: ""                 # pending | passed | changes_requested | autonomous_passed
-  gate2: ""                 # pending | passed | provisional_ai | regenerated
+  gate2: ""                 # pending | passed | provisional_ai | regenerated | deferred
+  gate2_deferred: false     # K2B not requested yet (v6)
+  gate3: ""                 # pending | passed — exists only with deploy pack
+  delegated: []             # gates delegated to machine (provisional_ai)
+
+# --- pack bus (v6) -----------------------------------------------------------
+integrations: []            # {pack, version, class: core|peripheral, status,
+                            #  env_present, acceptance: pass|fail|unavailable, cost_tier}
+
+deploy:
+  previews: []              # {url, at, floor_passed}
+  prod:
+    confirmed_by: ""
+    at: ""
+    rollback_tested: false  # dry-run rollback passed (Gate 3 acceptance)
+
+knowledge:
+  vault_path: "knowledge/"
+  index_kb: 0
+
+cost:
+  estimate: ""              # shown before start: mode, ~time, ~tokens
+  actual: ""                # filled after the run
 
 assets:
-  slots: []                 # {id, screen, kind, role, alt, file, size_kb, source,
-                            #  candidates: [{file, prompt}], picked: "", disclosure: false}
+  slots: []
   planned: []
-  all_local: false          # true only when every slot resolves to a local file
+  all_local: false
 
 acceptance:
-  target_viewports: [390, 768, 1440]    # all modes [S.5]
+  target_viewports: [390, 768, 1440]
   scenarios: []
-  functional_paths:         # D21 — declared before the K3 run
+  functional_paths:
     primary: ""
     alternative: ""
     error_recovery: ""
     keyboard_path: ""
-  automated_checks: {}      # {D1: {status, executor}, ...} filled by quality-guardian
+  functional_paths_matrix: []   # app: [{flow, role, path, permission_denied}] (v6)
+  automated_checks: {}
 
 status:
   skeleton_approved: false
+  base_skin_applied: false      # K2A done (v6)
   direction_confirmed: false
   scaled: false
   qa_cycles_completed: 0
   verdict: ""               # ready | ready_with_caveats | not_ready
 
-changelog: []               # machine journal: [{at, author: user|agent, field, from, to, reason}]
+changelog: []               # [{at, author: user|agent, field, from, to, reason}]

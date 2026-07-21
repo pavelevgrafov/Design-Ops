@@ -1,0 +1,12 @@
+id: deploy-github-pages
+type: mcp
+conveyor: [K4]
+class: core
+provides: [preview_url, prod_deploy, rollback]
+requires_env: []
+contract_fields: [deploy.previews, deploy.prod, integrations]
+acceptance_test: "true"   # MCP probe in-session; shell probe is a no-op
+degradation: "unavailable: preview deploy — floor runs on localhost; verdict capped; Gate 3 is not offered"
+cost_profile: free
+license_notes: n/a
+version: "0.1.0"

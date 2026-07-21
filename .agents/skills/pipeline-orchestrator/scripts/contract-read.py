@@ -17,6 +17,10 @@ Queries:
   interaction_mode   meta.interaction_mode
   verdict            status.verdict
   schema_version     meta.schema_version
+  profile            meta.artifact_profile (site|app)                     [v6]
+  integrations       integrations[] as compact JSON (pack bus)            [v6]
+  deploy             deploy section as compact JSON                       [v6]
+  starters           starters section as compact JSON                     [v6]
   get <dotted.path>  generic lookup, e.g. get acceptance.target_viewports
 
 Exit codes: 0 = ok (empty stdout = key absent/empty); 1 = bad usage;
@@ -89,6 +93,12 @@ def main():
         print((c.get("status") or {}).get("verdict") or "")
     elif query == "schema_version":
         print((c.get("meta") or {}).get("schema_version") or "")
+    elif query == "profile":
+        print((c.get("meta") or {}).get("artifact_profile") or "")
+    elif query in ("integrations", "deploy", "starters"):
+        v = c.get(query)
+        if v:
+            print(json.dumps(v, ensure_ascii=False))
     elif query == "get":
         if len(sys.argv) < 4:
             print("contract-read: get requires a dotted path", file=sys.stderr)

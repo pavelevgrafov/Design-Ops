@@ -1,0 +1,12 @@
+id: iconify
+type: api
+conveyor: [K2]
+class: peripheral
+provides: [icon_sets]
+requires_env: []
+contract_fields: [assets.slots, integrations]
+acceptance_test: 'curl -sf --max-time 10 "https://api.iconify.design/mdi.json?icons=home" -o /dev/null'
+degradation: "slot closes with inline SVG / CSS; no verdict cap"
+cost_profile: free
+license_notes: record the icon-set license in the asset manifest per slot
+version: "0.1.0"

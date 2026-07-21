@@ -1,0 +1,13 @@
+id: favicon
+type: api
+conveyor: [K2]
+class: core
+provides: [favicon_pack, webmanifest]
+requires_env: []
+contract_fields: [assets.slots, integrations]
+# Local generation from an SVG master (sharp/ImageMagick); API is a fallback.
+acceptance_test: 'node -e "require.resolve(''sharp'')" 2>/dev/null || command -v magick >/dev/null 2>&1 || command -v convert >/dev/null 2>&1'
+degradation: "caps verdict (core); realfavicongenerator API allowed when REALFAVICON_KEY present"
+cost_profile: free
+license_notes: generated locally from the master mark
+version: "0.1.0"

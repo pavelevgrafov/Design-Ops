@@ -1,0 +1,12 @@
+id: unsplash
+type: api
+conveyor: [K2]
+class: peripheral
+provides: [photos_with_license]
+requires_env: [UNSPLASH_ACCESS_KEY]
+contract_fields: [assets.slots, integrations]
+acceptance_test: 'curl -sf --max-time 10 "https://api.unsplash.com/photos/random?count=1&client_id=$UNSPLASH_ACCESS_KEY" -o /dev/null'
+degradation: "slot closes with local generation (image_generation) or CSS/SVG; no verdict cap"
+cost_profile: free
+license_notes: Unsplash license; attribution metadata required in the asset manifest; files are local, no hotlinks
+version: "0.1.0"

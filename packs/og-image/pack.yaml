@@ -1,0 +1,13 @@
+id: og-image
+type: api
+conveyor: [K2]
+class: core
+provides: [og_image_1200x630]
+requires_env: []
+contract_fields: [assets.slots, integrations]
+# Local render from tokens via Playwright (already a floor dependency).
+acceptance_test: 'node -e "require.resolve(''playwright'')" 2>/dev/null || npx --no-install playwright --version >/dev/null 2>&1'
+degradation: "caps verdict (core) — but local fallback IS the primary path; external service only as backup"
+cost_profile: free
+license_notes: generated locally from tokens, no third-party assets
+version: "0.1.0"

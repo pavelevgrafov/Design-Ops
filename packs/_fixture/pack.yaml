@@ -1,0 +1,16 @@
+# Fixture pack for self-test: both outcomes are steerable via env.
+# - missing env:  unset FIXTURE_PACK_TOKEN  -> unavailable (missing env)
+# - red test:     FIXTURE_PACK_ACCEPT=fail  -> unavailable (acceptance failed)
+# - green:        token set + ACCEPT=pass   -> active
+id: _fixture
+type: api
+conveyor: [K3]
+class: peripheral
+provides: [selftest_probe]
+requires_env: [FIXTURE_PACK_TOKEN]
+contract_fields: [integrations]
+acceptance_test: 'test "$FIXTURE_PACK_ACCEPT" = "pass"'
+degradation: none — test fixture
+cost_profile: free
+license_notes: n/a
+version: "0.1.0"

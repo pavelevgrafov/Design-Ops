@@ -1,0 +1,12 @@
+id: google-fonts
+type: api
+conveyor: [K2]
+class: peripheral
+provides: [self_hosted_fonts]
+requires_env: []
+contract_fields: [assets.slots, integrations]
+acceptance_test: 'curl -sf --max-time 10 "https://fonts.googleapis.com/css2?family=Inter" -o /dev/null'
+degradation: "system font stack; no verdict cap"
+cost_profile: free
+license_notes: "OFL fonts; self-host with font-display: swap and a generic fallback tail"
+version: "0.1.0"

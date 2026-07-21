@@ -1,0 +1,13 @@
+id: lazyweb-research
+type: mcp
+conveyor: [K0, K2]
+class: peripheral
+provides: [real_screens, deep_research, quick_refs, design_improve]
+requires_env: []
+contract_fields: [visual.calibration.references, integrations]
+# MCP probe is performed in-session by the agent; the shell probe is a no-op.
+acceptance_test: "true"
+degradation: "unavailable: external research — K0/K2 run on internal sources (style cards, internal refs); verdict NOT capped (peripheral)"
+cost_profile: free
+license_notes: reference screenshots are internal research only, never ship in the product
+version: "0.1.0"

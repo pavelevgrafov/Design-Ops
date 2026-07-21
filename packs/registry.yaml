@@ -1,0 +1,13 @@
+# Pack registry — versions are FROZEN; a version bump is a conscious PR.
+# status: active | disabled. Kill criteria: unused for 20 runs OR red
+# contract test > 14 days => candidate for removal (listed in wave report).
+packs:
+  _fixture:              {version: "0.1.0", status: active}   # self-test only
+  lazyweb-research:      {version: "0.1.0", status: active}
+  iconify:               {version: "0.1.0", status: active}
+  unsplash:              {version: "0.1.0", status: active}
+  google-fonts:          {version: "0.1.0", status: active}
+  og-image:              {version: "0.1.0", status: active}
+  favicon:               {version: "0.1.0", status: active}
+  deploy-github-pages:   {version: "0.1.0", status: active}
+  deploy-cloudflare-pages: {version: "0.1.0", status: active}
