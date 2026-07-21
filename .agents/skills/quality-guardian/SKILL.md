@@ -1,7 +1,7 @@
 ---
 name: quality-guardian
 description: >
-  Conveyor K3 of the design pipeline (v5.1): autonomous verification of the
+  Conveyor K3 of the design pipeline (v5.2): autonomous verification of the
   finished build. Runs the canonical deterministic floor D1-D21 — build,
   console, WCAG contrast on semantic token pairs, typography (D4-D8
   granular), token usage, placeholders/hotlinks, ban-list, viewports
@@ -18,7 +18,13 @@ description: >
   (ready/ready_with_caveats/not_ready). Never issues taste verdicts.
 ---
 
-# Quality Guardian (K3, v5.1)
+# Quality Guardian (K3, v5.2)
+
+v5.2 hardening (all covered by `eval/selftest/run-self-test.sh`):
+- Shell checks are bash 3.2 / BSD grep compatible (macOS out of the box).
+- The contract is read ONLY via `pipeline-orchestrator/scripts/contract-read.py`.
+- No `grep -q` downstream of a pipe: capture-then-test everywhere (SIGPIPE
+  false-PASS eliminated).
 
 The machine owns the floor. Prove the build meets the canonical floor D1–D21,
 run honest diagnostics about what only a model can see, report so the user
@@ -49,17 +55,23 @@ Canonical registry: `references/deterministic-floor.md`. Tooling map:
 | D12 viewports 390/768/1440 | `run-ui-checks.sh` |
 | D13 tap targets ≥24px | `run-ui-checks.sh` |
 | D14 images | `check-placeholders.sh` + fs scan |
-| D15 performance (lab) | `run-ui-checks.sh` — violation caps at ready_with_caveats, never blocks |
+| D15 performance (lab) | `run-ui-checks.sh` — LCP + CLS + INP-proxy (event timing, real input; labeled "lab, not field-INP"); violation caps at ready_with_caveats, never blocks; no interactivity pass without a measured value |
 | D16 marker removed | grep `not_approved_visual_design` |
 | D17 divergence | `check-divergence.py` re-run + blind_test fields (standard/full) |
 | D18 UX model | `validate_experience_model.py` (standard/full) |
 | D19 pipeline integrity | `validate-pipeline.py` |
 | D20 a11y quick pass | `run-ui-checks.sh` (axe-core; zero critical/serious) |
-| D21 functional paths | `run-ui-checks.sh` (primary e2e + alternative + error recovery + keyboard) |
+| D21 functional paths | `run-ui-checks.sh` (keyboard probe + alternative + error recovery, reported as separate D21-keyboard / D21-paths lines; undeclared paths = explicit `unavailable` + verdict cap, never a silent skip) |
 
 Run the floor BEFORE any AI diagnostics. Environment degradation:
 `references/environment-degradation.md` — a missing capability is an explicit
 status, never a silent pass [A.6].
+
+**Smoke artifact matrix (v5.2):** pass the contract mode as the 5th argument
+of `run-ui-checks.sh`. quick: 1 shot per viewport per route (≤3+1 PNG/route,
+no section shots). standard/full: section-wise, VISIBLE sections only
+(`isVisible()` filter — zero waiting on hidden state panels), cap 12,
+duplicates deduped. Full quick smoke (2 routes × 3 viewports) ≤ 90 s.
 
 ### 2. AI diagnostics (visible factors, classified)
 

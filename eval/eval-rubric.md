@@ -1,38 +1,61 @@
-# Eval rubric — scoring runs of v5.1
+# Eval rubric — scoring runs of v5.2
 
-Score every prompt from `example-prompts.md` on 11 criteria.
-Points: 0 (no), 0.5 (partial), 1 (yes). Pass = ≥9/11 AND no zeros in the
-blocking criteria (C1–C4, C11).
+Score every prompt from `example-prompts.md` on 12 criteria.
+Points: 0 (no), 0.5 (partial), 1 (yes). Pass = ≥10/12 AND no zeros in the
+blocking criteria (C1–C4, C11, C12).
 
 ## Blocking criteria (the 5.1 core)
 
-**C1. Gates happened and were honest.**
-Gate 1 showed the neutral skeleton (marker, gray, real copy) BEFORE any
-visual work; Gate 2 showed a blind contact sheet: anonymized variants,
-simultaneous presentation, BOTH slice screens per variant, randomization
-recorded. 0 = visual work before Gate 1 / named or sequential variants /
-"recommended" marker.
+**C1. Gates passed in order.** Gate 1 (structure) BEFORE any visual work
+[A.1]; Gate 2 (blind visual choice) BEFORE scaling [A.2]. Evidence:
+contract `gates.*` + `changelog` timestamps; `validate-pipeline.py` green.
+0 = any visual work before Gate 1, any scaling before Gate 2.
 
-**C2. Divergence was real.**
-check-divergence.py green AND (manual sample) directions visibly differ in
-composition/type voice, not just color; seeds: personas + ≥3 non-overlapping
-domains each; boldness points SPREAD; 1–2 bold moves each; standard/full:
-external blind test recorded (overlap ≤50%, model_judged).
-0 = "3 variants = 3 recolors"; overlapping domains; coinciding boldness
-points ignored; missing blind test in standard/full.
+**C2. Skeleton is truly neutral.** `check-skeleton.sh` green: marker on all
+screens, zero non-gray colors, no visual properties, real copy,
+data-priority on all key blocks. 0 = skeleton shipped with styling or
+placeholder copy.
 
-**C3. Merge worked with the confirming render.**
-Merge follow-up asked after a plain pick; on merge: axes resolved into
-final_direction, coherence gate ran (render + AI check + D9/D11/D3), the
-CONFIRMING RENDER was shown (interactive) or deferred+offered (autonomous).
-0 = merge path skipped, or merged direction scaled without the confirming
-render.
+**C3. Contact sheet is blind and complete.** Randomized order recorded in
+`visual.gate2_randomization`; ALL variants shown simultaneously; TWO-screen
+slice per variant (main + contrast screen, +CJK variant when the
+localization trigger fired). 0 = authorship hints, sequential showing, or a
+missing screen.
 
-**C4. The deterministic floor was run honestly.**
-D1–D21 executed; statuses from the taxonomy with executors; D15 caveats not
-blocks; unavailable/degraded named with reasons; report verdict == contract
-verdict; validate-pipeline.py green. 0 = silent unavailable→pass conversion;
-checks claimed without artifacts.
+**C4. Deterministic floor passed.** D1–D21 run via scripts; every
+`skip`/`unavailable` carries a reason; verdict matches the report;
+`not_ready` never lowered without fix+retest (D19 green). 0 = any blocking
+check silently skipped or a verdict contradicting the evidence.
+
+## Quality criteria
+
+**C5. Directions are constructed-divergent.** Persona + ≥3 non-overlapping
+domains per direction; boldness spread across the band; ≥3 differing axes
+per pair incl. composition or type_voice; `check-divergence.py` clean;
+external blind test ≤50% overlap (standard/full). 0 = recolors of one
+layout.
+
+**C6. Merge has a coherence gate.** On `merged(...)`: axes_resolution filled,
+contradiction check ran, CONFIRMING RENDER shown (interactive) or deferred
+(autonomous) BEFORE scaling. 0 = merge applied silently.
+
+**C7. Token discipline (skin property).** DTCG tokens compiled via
+compile-tokens.py; restyle = token edit + recompile, ZERO manual component
+edits (D9 green). 0 = raw hex/px/fonts in components.
+
+**C8. Assets pass the mini-gate.** 3–4 candidates per raster slot with
+versioned prompts; human pick or provisional AI pick; favicon + OG
+auto-generated; AI images carry disclosure; all local, alt, ≤300 KB (D10/
+D14 green). 0 = hotlinks or placeholder services.
+
+**C9. Ban-list enforced.** `lint-ban-list.sh` green on specs AND the final
+build (D11); exceptions have written `ALLOW:` justifications. 0 = banned
+defaults shipped.
+
+**C10. Economics respected.** Question budget (≤5/≤3, none about taste in
+K1); one regeneration round max with a failure hypothesis; post-scale
+budget ≤1; QA cycles per mode. 0 = interrogation-style K1 or autonomous
+looping.
 
 **C11. Decision log is complete.**
 artifacts/decision-log.md exists with ALL mandatory sections (Classification,
@@ -41,46 +64,22 @@ Clarification, Gate 1, Taste calibration, Direction seeds, Gate 2, Verdict)
 limitations with risk owners). Script-verified (AC-25). 0 = missing log or
 missing mandatory sections.
 
-## Quality criteria
+**C12. Works out of the box (v5.2, blocking).**
+Fresh copy → install per INSTALL.md → quick-run completes WITHOUT a single
+edit to the package (no patched scripts, no swapped rem-units workarounds,
+no custom copies of validators). `bash eval/selftest/run-self-test.sh` is
+green on the target platform; smoke logs show zero 30-second stalls and a
+quick run ≤ 90 s; every PASS in the report is backed by a measured/checked
+evidence (spot-check D5, D15, D21, placeholders, screens). 0 = any package
+edit needed, any unmeasured pass, or self-test red/skipped silently.
 
-**C5. Taste calibrated by showing, not asking.**
-References decomposed to principles, or the style-card test ran; no
-"why do you like it?" before the choice; anti-references recorded and honored.
+## How to score
 
-**C6. Slop stopped.**
-lint-ban-list green on the FINAL (post-merge) build; no banned first-position
-fonts, indigo→purple gradients, glass, bento, blobs, icon-per-label,
-marketing-slop copy.
-
-**C7. Skin property holds.**
-check-token-usage green; (P09) restyle done as token diff + recompile, zero
-manual component edits; dark theme is a semantic layer, not a filter invert;
-input-hash reuse — no rebuilt structure on restyle [E.3].
-
-**C8. Autonomy is honest.**
-Autonomous gates marked (autonomous_passed / provisional_ai); AI judgments
-only visible factors, swap-augmented; every model_judged carries provisional;
-subjective findings ≤ minor; the return confirmation offer is the FIRST
-message on the user's return.
-
-**C9. The contract is the single source of truth.**
-All decisions (mode, pattern, axes, gates, merges, fixes) recorded with
-changelog + decision log; conflicts resolved by the documented order; no
-silent drift; budgets respected [E.1] (no "one more variant for luck").
-
-**C10. Delivery report is plain-language.**
-Final message: what was built / gate decisions / what was verified (n/n) /
-what remains — no jargon; statuses translated; ready-family verdicts used
-everywhere.
-
-## Scoring protocol
-
-1. Run the prompt on a clean project.
-2. Mechanical part: validate-pipeline.py + all K3 scripts (auto-points for
-   C2, C4, C6, C7, C11 — green script = 1, else 0).
-3. Manual part: C1, C3, C5, C8, C9, C10 from artifacts (contract, contact
-   sheet, decision log, final message) — screenshots as evidence.
-4. Result in `eval/results/YYYY-MM-DD-<prompt-id>.md`: score table +
-   evidence links + the main defect (if any).
+1. Run a prompt end-to-end; collect `artifacts/`.
+2. Run the scripted gates: `validate-pipeline.py`, `check-skeleton.sh`,
+   `check-typography.py`, `check-token-usage.sh`, `check-placeholders.sh`,
+   `lint-ban-list.sh`, `run-ui-checks.sh`.
+3. Score C1–C12 from evidence (scripts first, artifacts second, prose last).
+4. Record: prompt, mode, scores, total, blocking zeros, verdict, notes.
 5. Regression = total dropping ≥1.5 points vs the previous run OR any new 0
-   in C1–C4/C11 → stop the change from shipping.
+   in C1–C4/C11/C12 → stop the change from shipping.

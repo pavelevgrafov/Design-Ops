@@ -1,4 +1,4 @@
-# Canonical deterministic floor D1–D21 (v5.1)
+# Canonical deterministic floor D1–D21 (v5.2)
 
 This registry REPLACES both v5.0 variants' D1–D19 (they conflicted). The
 mapping table at the bottom is normative for reading older reports.
@@ -24,7 +24,10 @@ actionPrimaryText/actionPrimary, inkOnDark/surfaceDark (+ dark mirrors).
 Body/base text ≥16px at all viewports (`check-typography.py` line D4).
 
 ## D5 — Measure. Blocking. Script.
-45–75ch for body columns (`check-typography.py` line D5). On
+45–75ch for body columns (`check-typography.py` line D5). Evidence (v5.2):
+the `--measure-*` token is primary; a raw `max-width: Nch` counts ONLY on
+text selectors (`body|p|prose|article|li`, same set as D4/D6); heading ch is
+display type — ignored with a note, never flagged. On
 `localization_risk` — verified on BOTH language variants (e.g. Latin and
 CJK/long-content) [D5.1].
 
@@ -68,9 +71,15 @@ srcset for heroes, width/height or aspect-ratio declared. Favicon and OG
 exist (CR-08).
 
 ## D15 — Performance (lab). Caps at ready_with_caveats. Script.
-LCP ≤2.5s, INP ≤200ms, CLS ≤0.1 on the main screen (`run-ui-checks.sh`).
-Violation → cap, with the values in the report. `unavailable` when the
-measurement environment is missing — stated, with a manual alternative.
+LCP ≤2.5s, CLS ≤0.1, INP-proxy ≤200ms on the main screen
+(`run-ui-checks.sh`). The INP-proxy (v5.2) is a LAB measurement:
+PerformanceObserver event timing (durationThreshold 16) + real trusted
+input on up to 5 visible key controls, metric = max event duration; it is
+labeled "lab, not field-INP" in the report. If event timing is unsupported
+or no controls are visible, the report says so — an interactivity PASS
+without a measured value is forbidden. Violation → cap, with the values in
+the report. `unavailable` when the measurement environment is missing —
+stated, with a manual alternative.
 
 ## D16 — Skeleton marker. Blocking (stage: scaling). Script.
 Zero `not_approved_visual_design` occurrences in the shipped build. Presence
@@ -103,7 +112,11 @@ Per `acceptance.functional_paths`: primary scenario end-to-end + ONE
 alternative path + ONE error recovery + keyboard navigation of the key path
 (Tab order sane, focus visible, key controls reachable). Paths are declared
 before the K3 run; keyboard check may be `model_judged` only when a DOM probe
-is impossible — with the mark.
+is impossible — with the mark. Honesty rules (v5.2): the report splits
+**D21-keyboard** and **D21-paths**; `paths_json` missing or paths undeclared
+= explicit `unavailable D21-paths` + verdict cap at `ready_with_caveats`
+(never a silent skip, never a pass line); a D21-paths pass requires BOTH
+declared paths (`alternative`, `error_recovery`) actually walked.
 
 ## Environment honesty
 

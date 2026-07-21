@@ -1,4 +1,4 @@
-# Modes — quick / standard / full (v5.1)
+# Modes — quick / standard / full (v5.2)
 
 ## Auto-selection formula
 
@@ -25,6 +25,7 @@ An explicit user word ("quickly", "keep it simple" → quick; "full process",
 | `asset-manifest.yaml` | ✗ (contract `assets`) | ✓ | ✓ |
 | Distinctive assets | ≤1 | ≤3 | as planned |
 | Viewports | 390/768/1440 | 390/768/1440 | + project extras |
+| Smoke screenshots per route (v5.2) | 1 per viewport (≤3+1 PNG, no section shots) | section-wise, visible only, cap 12, dedup | same as standard |
 | QA cycles (fix+recheck) | 1 | 2 | 3 |
 | Regeneration budget (Gate 2) | 1 | 1 | 1 |
 | Post-scale failure budget | 1 | 1 | 1 |
