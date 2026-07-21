@@ -1,0 +1,92 @@
+# Self-test fixture contract — schema v5.1 (NOT a project artifact).
+# Purpose: regression coverage for defect A2 — the sed/awk scrape swallowed
+# the scenarios block; contract-read.py must return exactly 3 key_screen ids
+# and exactly 2 scenario ids, with zero cross-contamination.
+meta:
+  schema_version: "5.1"
+  created_at: "2026-07-21T00:00:00Z"
+  updated_at: "2026-07-21T00:00:00Z"
+  mode: "standard"
+  mode_override_reason: ""
+  interaction_mode: "autonomous"
+  artifact_type: "website"
+
+product:
+  name: "Selftest Fixture"
+  category: "test"
+  user_outcome: "exercise the validators"
+  business_outcome: "keep the floor honest"
+  risk_level: "low"
+  audience: ["tester"]
+  clarification: "assumptions_logged"
+  visual_boldness: "conventional"
+
+experience:
+  primary_job: "validate the validators"
+  key_screens:
+    - id: home
+      name: "Home"
+      purpose: "landing"
+    - id: pricing
+      name: "Pricing"
+      purpose: "plans"
+    - id: app
+      name: "App"
+      purpose: "main tool"
+  required_states: ["empty", "loading", "error", "success"]
+  scenarios:
+    - id: checkout-happy
+      given: "a visitor"
+      when: "buys a plan"
+      then: "sees success"
+    - id: search-empty
+      given: "a user"
+      when: "searches without results"
+      then: "sees the empty state"
+  localization_risk: false
+  trigger_reason: ""
+
+content_model:
+  pattern: "answer-first"
+  pattern_reason: "fixture"
+
+visual:
+  category_anchors: []
+  calibration:
+    references: []
+    anti_references: []
+    style_card_result: ""
+    status: "skipped_autonomous"
+  directions: []
+  gate2_randomization: {}
+  gate2_result: ""
+  final_direction: {}
+  distinctive_assets: []
+
+gates:
+  gate1: "pending"
+  gate2: "pending"
+
+assets:
+  slots: []
+  planned: []
+  all_local: false
+
+acceptance:
+  target_viewports: [390, 768, 1440]
+  scenarios: []
+  functional_paths:
+    primary: "home → pricing → app"
+    alternative: "/about.html"
+    error_recovery: "/index.html#error"
+    keyboard_path: "header nav → main CTA"
+  automated_checks: {}
+
+status:
+  skeleton_approved: false
+  direction_confirmed: false
+  scaled: false
+  qa_cycles_completed: 0
+  verdict: ""
+
+changelog: []

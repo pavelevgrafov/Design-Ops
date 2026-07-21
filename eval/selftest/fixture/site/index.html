@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Selftest Smoke — Home</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body id="home">
+  <header>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+    </nav>
+  </header>
+  <main>
+    <section data-section>
+      <h1>Smoke fixture home</h1>
+      <p>Visible hero section with real copy and honest controls.</p>
+      <a href="about.html" role="button">Go to about</a>
+      <button type="button" id="cta">Primary action</button>
+    </section>
+    <section data-section>
+      <h2>Second visible section</h2>
+      <p>More real copy so the smoke test has two visible sections to shoot.</p>
+      <input type="text" aria-label="fixture input" placeholder="type here">
+    </section>
+
+    <!-- Five HIDDEN state panels [TZ-3.1 regression]: the old smoke hung
+         30s per hidden section; the new one must skip them with zero waits. -->
+    <section data-section id="state-loading" hidden><p>Loading…</p></section>
+    <section data-section id="state-empty" hidden><p>Nothing here yet.</p></section>
+    <section data-section id="state-error" hidden><p>Something went wrong.</p></section>
+    <section data-section id="state-success" hidden><p>Done.</p></section>
+    <section data-section id="state-offline" hidden><p>You are offline.</p></section>
+  </main>
+  <footer><p>Fixture footer.</p></footer>
+
+  <script>
+    // error_recovery functional path: reveal the error panel on demand
+    document.getElementById('cta').addEventListener('click', function () {
+      var p = document.getElementById('state-error');
+      p.hidden = false;
+      p.classList.add('visible');
+    });
+  </script>
+</body>
+</html>

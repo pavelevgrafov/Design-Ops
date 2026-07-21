@@ -1,0 +1,25 @@
+body {
+  font-family: "Fixture Sans", sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0;
+  color: #1a1a1a;
+}
+main { padding: 1rem; }
+section[data-section] { padding: 1rem 0; }
+header nav a,
+a[role="button"] {
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: 16px;
+}
+button, input {
+  min-width: 24px;
+  min-height: 24px;
+  font-size: 16px;
+  padding: 4px 10px;
+}
+:focus-visible {
+  outline: 2px solid #555555;
+  outline-offset: 2px;
+}

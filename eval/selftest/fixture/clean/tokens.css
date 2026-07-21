@@ -1,0 +1,42 @@
+/* Selftest fixture stylesheet — neutral gray skeleton + typography tokens.
+   Covers the D5 regression case [TZ-2.4]: a heading with max-width: 11ch
+   must NOT fail D5; the --measure-text token (65ch) is the real evidence. */
+:root {
+  --measure-text: 65ch;
+  --font-scale-step0: 1rem;
+  --font-scale-step1: 1.2rem;
+  --font-scale-step2: 1.44rem;
+  --gray-900: #1a1a1a;
+  --gray-500: #777777;
+  --gray-100: #eeeeee;
+}
+
+body {
+  font-size: 16px;
+  line-height: 1.5;
+  font-family: "Fixture Sans", sans-serif;
+  color: var(--gray-900);
+  background: var(--gray-100);
+  margin: 0;
+}
+
+h1 {
+  font-size: var(--font-scale-step2);
+  max-width: 11ch; /* display type: deliberately tight, NOT a D5 violation */
+  color: var(--gray-900);
+}
+
+p, .prose, article, li {
+  max-width: var(--measure-text);
+}
+
+a, button, [role="button"] {
+  color: var(--gray-900);
+  min-width: 24px;
+  min-height: 24px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--gray-500);
+  outline-offset: 2px;
+}

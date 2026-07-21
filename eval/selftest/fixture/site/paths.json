@@ -1,0 +1,8 @@
+{
+  "alternative": { "route": "/about.html", "expect": "main" },
+  "error_recovery": {
+    "route": "/index.html",
+    "action": { "click": "#cta" },
+    "expect": "#state-error.visible"
+  }
+}
