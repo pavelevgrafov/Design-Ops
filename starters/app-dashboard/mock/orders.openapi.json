@@ -1,53 +1,32 @@
 {
-  "openapi": "3.0.3",
-  "info": { "title": "Orders mock API", "version": "0.1.0" },
-  "paths": {
-    "/orders": {
-      "get": {
-        "summary": "List orders",
-        "parameters": [
-          { "name": "status", "in": "query", "schema": { "$ref": "#/components/schemas/OrderStatus" } },
-          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 100, "maximum": 100 } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Array of orders",
-            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Order" } } } }
-          }
-        }
-      },
-      "post": {
-        "summary": "Create order",
-        "requestBody": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OrderInput" } } } },
-        "responses": {
-          "201": { "description": "Created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } },
-          "422": { "description": "Validation error" }
-        }
-      }
+ "openapi": "3.0.3",
+ "info": {
+  "title": "Orders mock API",
+  "version": "0.1.0"
+ },
+ "paths": {
+  "/orders": {
+   "get": {
+    "summary": "list orders",
+    "responses": {
+     "200": {
+      "description": "array of orders"
+     }
     }
+   }
   },
-  "components": {
-    "schemas": {
-      "OrderStatus": { "type": "string", "enum": ["new", "in_progress", "done", "cancelled"] },
-      "Order": {
-        "type": "object",
-        "required": ["id", "customer", "status", "total", "created_at"],
-        "properties": {
-          "id": { "type": "integer" },
-          "customer": { "type": "string", "minLength": 1 },
-          "status": { "$ref": "#/components/schemas/OrderStatus" },
-          "total": { "type": "number", "minimum": 0 },
-          "created_at": { "type": "string", "format": "date" }
-        }
-      },
-      "OrderInput": {
-        "type": "object",
-        "required": ["customer", "total"],
-        "properties": {
-          "customer": { "type": "string", "minLength": 1 },
-          "total": { "type": "number", "minimum": 0 }
-        }
-      }
+  "/orders/{id}": {
+   "patch": {
+    "summary": "update order status",
+    "responses": {
+     "200": {
+      "description": "updated order"
+     },
+     "403": {
+      "description": "permission denied (role)"
+     }
     }
+   }
   }
+ }
 }

@@ -1,8 +1,9 @@
-# Content-injection map for the app shell: entity names, KPI labels, role strings.
+# App starters inject the DOMAIN MODEL first, content second.
+# Entities land in mock/*.json; display names land in the selectors below.
 app_name:        "[data-slot=app_name]"
 primary_entity:  "[data-slot=primary_entity]"
+role_admin:      "[data-slot=role_admin]"
+role_manager:    "[data-slot=role_manager]"
 kpi_1_label:     "[data-slot=kpi_1_label]"
 kpi_2_label:     "[data-slot=kpi_2_label]"
 kpi_3_label:     "[data-slot=kpi_3_label]"
-role_admin:      "[data-slot=role_admin]"
-role_manager:    "[data-slot=role_manager]"
