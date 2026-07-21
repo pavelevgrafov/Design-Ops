@@ -1,0 +1,16 @@
+# Context budget limits (v6.0, TZ-12) — tokens of instructions/notes read
+# during a run, counted by context-budget.py from artifacts/context-log.jsonl.
+# Calibrated on W1 references: a quick starter-first run reads ~11k tokens
+# (AGENTS + orchestrator + K1 + starter pack + skin + contract + K3 + vault
+# index). Limits carry ~2x headroom for gates, annotations and app fields.
+# Exceeding a limit = wave defect (TZ-12), not a user-facing error.
+limits:
+  quick: 20000
+  standard: 60000
+  full: 120000
+est_bytes_per_token: 4
+lazy_loading_rule: >
+  Inactive packs and unreferenced knowledge notes are never read:
+  the agent reads knowledge/index.yaml only, full notes by id on demand;
+  pack SKILL/manifest files load only when the pack is in contract
+  integrations[].

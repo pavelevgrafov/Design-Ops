@@ -1,0 +1,18 @@
+# Cost estimate table (v6.0, TZ-12) — shown to the user after classification,
+# BEFORE the run starts ("режим, ~время, ~токены"); actuals go to cost.actual
+# after the run. Values are W1 calibration starts — refine from cost.actual
+# of reference runs; keep honest (round up, never down).
+estimate:
+  quick:
+    site: {time: "~15 мин", tokens: "~40k"}
+    app:  {time: "~20 мин", tokens: "~50k"}
+  standard:
+    site: {time: "~45 мин", tokens: "~120k"}
+    app:  {time: "~60 мин", tokens: "~150k"}
+  full:
+    site: {time: "~90 мин", tokens: "~250k"}
+    app:  {time: "~120 мин", tokens: "~300k"}
+notes: >
+  starter_first route cuts time/tokens roughly in half on quick/standard
+  (structure arrives pre-verified); K2B (full visual work) is the main
+  token driver — deferring Gate 2 keeps the first delivery cheap.
