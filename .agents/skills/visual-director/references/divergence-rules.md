@@ -1,4 +1,4 @@
-# Constructed Divergence — rules (v5.1)
+# Constructed Divergence — rules (v5.2)
 
 Problem: asked for "3 variants", any single model produces mode collapse —
 three recolors of one layout. Divergence must be constructed, then verified.

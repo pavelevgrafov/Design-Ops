@@ -1,4 +1,4 @@
-# Information Model Guide — 5 patterns (v5.1)
+# Information Model Guide — 5 patterns (v5.2)
 
 Pick exactly ONE pattern by the primary job. The pattern defines what earns
 `data-priority="p1"` and the order of blocks. Do not blend patterns on one

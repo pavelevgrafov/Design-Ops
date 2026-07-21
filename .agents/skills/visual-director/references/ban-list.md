@@ -1,4 +1,4 @@
-# Ban-list — machine-linted AI-slop patterns (v5.1)
+# Ban-list — machine-linted AI-slop patterns (v5.2)
 
 These are the statistically overused outputs that read as "AI made this".
 All are linted by `scripts/lint-ban-list.sh` (specs, CSS, components) and

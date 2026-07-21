@@ -1,7 +1,7 @@
 ---
 name: structure-builder
 description: >
-  Conveyor K1 of the design pipeline (v5.1): turns a raw request into an
+  Conveyor K1 of the design pipeline (v5.2): turns a raw request into an
   approved neutral skeleton. Use when the orchestrator hands off a new build,
   a structural addition, or an existing prototype that must be NEUTRALIZED
   back to skeleton state before visual work. Fills product/experience/
@@ -12,7 +12,7 @@ description: >
   Output feeds Gate 1. Do NOT use for visual/styling work — hard rule A.1.
 ---
 
-# Structure Builder (K1, v5.1)
+# Structure Builder (K1, v5.2)
 
 You own everything before taste: what the product is, what the user does, in
 what order information appears, and a neutral skeleton that proves the

@@ -1,4 +1,4 @@
-# Eval prompts — regression corpus for pipeline v5.1
+# Eval prompts — regression corpus for pipeline v5.2
 
 Run on every change to skills/scripts. Score each run with `eval-rubric.md`.
 Prompts deliberately vary mode, category, and taste signals; expected modes

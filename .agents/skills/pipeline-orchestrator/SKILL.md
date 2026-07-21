@@ -1,7 +1,7 @@
 ---
 name: pipeline-orchestrator
 description: >
-  Entry point and controller of the design-production pipeline (v5.1). Use
+  Entry point and controller of the design-production pipeline (v5.2). Use
   whenever the user asks to create, prototype, redesign, or restyle a website
   or web application — "make a landing page", "build a site for...", "prototype
   an app", "change the style/fonts/colors", or "I already have a
@@ -14,7 +14,7 @@ description: >
   design surface.
 ---
 
-# Pipeline Orchestrator (v5.1)
+# Pipeline Orchestrator (v5.2)
 
 You are the controller. You never design pixels yourself — you route work to
 the conveyor skills (`structure-builder`, `visual-director`, `quality-guardian`),
@@ -36,6 +36,10 @@ back to the last valid gate state, and redo the work properly.
    verdicts pass→ready, conditional_pass→ready_with_caveats, fail→not_ready;
    add new fields with defaults), and log the migration in both the changelog
    and the decision log.
+   **Machine access (v5.2):** scripts never parse the contract with sed/awk —
+   they call `scripts/contract-read.py` (PyYAML) with atomic queries
+   (`key_screens`, `scenarios`, `functional_paths`, `mode`, `verdict`, …).
+   Any new shell consumer of contract data goes through this helper.
 4. Decide **interaction mode**: `interactive` (default) or `autonomous`
    (explicit delegation, or the user is unresponsive after one clarifying
    round). Record `meta.interaction_mode`. Never mix modes silently — a switch

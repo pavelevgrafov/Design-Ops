@@ -1,4 +1,4 @@
-# Gate 2 protocol — blind visual choice (v5.1)
+# Gate 2 protocol — blind visual choice (v5.2)
 
 The gate where the human does what humans do best (recognize) and is protected
 from what humans do badly (rationalize, anchor, defer to authorship).

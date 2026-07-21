@@ -1,4 +1,4 @@
-# Token pipeline — DTCG, compile, skin property (v5.1)
+# Token pipeline — DTCG, compile, skin property (v5.2)
 
 Design tokens are the ONLY sanctioned channel between a direction and
 components. They make restyle a data edit, not a code surgery [A.7].

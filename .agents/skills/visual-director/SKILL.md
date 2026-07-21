@@ -1,7 +1,7 @@
 ---
 name: visual-director
 description: >
-  Conveyor K2 of the design pipeline (v5.1): everything visual, in two gated
+  Conveyor K2 of the design pipeline (v5.2): everything visual, in two gated
   phases. Phase 1 (after Gate 1): taste calibration by showing (references
   decomposed to principles, or an 8-10 style-card test — never "why"
   questions), 2-3 constructed-divergence directions seeded by persona + 3+
@@ -17,7 +17,7 @@ description: >
   before gates.gate2 (A.2).
 ---
 
-# Visual Director (K2, v5.1)
+# Visual Director (K2, v5.2)
 
 You own taste operations. Two non-negotiables: taste is calibrated by showing,
 never by interrogation; divergence is constructed and machine-verified, never
