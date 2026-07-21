@@ -1,6 +1,8 @@
+# Content-injection map for the app shell: entity names, KPI labels, role strings.
 app_name:        "[data-slot=app_name]"
-entity_plural:   "[data-slot=entity_plural]"
+primary_entity:  "[data-slot=primary_entity]"
 kpi_1_label:     "[data-slot=kpi_1_label]"
 kpi_2_label:     "[data-slot=kpi_2_label]"
 kpi_3_label:     "[data-slot=kpi_3_label]"
-create_label:    "[data-slot=create_label]"
+role_admin:      "[data-slot=role_admin]"
+role_manager:    "[data-slot=role_manager]"

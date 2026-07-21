@@ -3,295 +3,295 @@
   "id": 1000,
   "customer": "Client 000",
   "status": "done",
-  "total": 2180.65,
-  "created_at": "2026-07-09"
+  "total": 4741.93,
+  "created_at": "2026-07-13"
  },
  {
   "id": 1001,
   "customer": "Client 001",
-  "status": "in_progress",
-  "total": 3595.75,
-  "created_at": "2026-07-11"
+  "status": "new",
+  "total": 408.56,
+  "created_at": "2026-07-18"
  },
  {
   "id": 1002,
   "customer": "Client 002",
   "status": "new",
-  "total": 2520.84,
-  "created_at": "2026-07-21"
+  "total": 1860.16,
+  "created_at": "2026-07-02"
  },
  {
   "id": 1003,
   "customer": "Client 003",
-  "status": "new",
-  "total": 3880.62,
-  "created_at": "2026-07-09"
+  "status": "in_progress",
+  "total": 235.6,
+  "created_at": "2026-07-14"
  },
  {
   "id": 1004,
   "customer": "Client 004",
-  "status": "in_progress",
-  "total": 1030.19,
-  "created_at": "2026-07-13"
+  "status": "cancelled",
+  "total": 395.78,
+  "created_at": "2026-07-03"
  },
  {
   "id": 1005,
   "customer": "Client 005",
-  "status": "in_progress",
-  "total": 2061.32,
-  "created_at": "2026-07-16"
+  "status": "cancelled",
+  "total": 342.6,
+  "created_at": "2026-07-19"
  },
  {
   "id": 1006,
   "customer": "Client 006",
   "status": "new",
-  "total": 3207.86,
-  "created_at": "2026-07-15"
+  "total": 4739.88,
+  "created_at": "2026-07-21"
  },
  {
   "id": 1007,
   "customer": "Client 007",
-  "status": "done",
-  "total": 1763.34,
-  "created_at": "2026-07-04"
+  "status": "new",
+  "total": 2906.66,
+  "created_at": "2026-07-13"
  },
  {
   "id": 1008,
   "customer": "Client 008",
   "status": "new",
-  "total": 4276.56,
+  "total": 4882.46,
   "created_at": "2026-07-02"
  },
  {
   "id": 1009,
   "customer": "Client 009",
   "status": "in_progress",
-  "total": 2996.55,
-  "created_at": "2026-07-18"
+  "total": 1483.57,
+  "created_at": "2026-07-05"
  },
  {
   "id": 1010,
   "customer": "Client 010",
   "status": "new",
-  "total": 706.19,
-  "created_at": "2026-07-05"
+  "total": 2876.02,
+  "created_at": "2026-07-18"
  },
  {
   "id": 1011,
   "customer": "Client 011",
   "status": "in_progress",
-  "total": 2619.71,
-  "created_at": "2026-07-20"
+  "total": 560.13,
+  "created_at": "2026-07-19"
  },
  {
   "id": 1012,
   "customer": "Client 012",
   "status": "in_progress",
-  "total": 3160.46,
-  "created_at": "2026-07-04"
+  "total": 1893.37,
+  "created_at": "2026-07-18"
  },
  {
   "id": 1013,
   "customer": "Client 013",
-  "status": "done",
-  "total": 2782.02,
-  "created_at": "2026-07-19"
+  "status": "new",
+  "total": 2843.62,
+  "created_at": "2026-07-20"
  },
  {
   "id": 1014,
   "customer": "Client 014",
-  "status": "cancelled",
-  "total": 1892.75,
-  "created_at": "2026-07-16"
+  "status": "in_progress",
+  "total": 2507.25,
+  "created_at": "2026-07-18"
  },
  {
   "id": 1015,
   "customer": "Client 015",
-  "status": "done",
-  "total": 3780.33,
-  "created_at": "2026-07-12"
+  "status": "cancelled",
+  "total": 3897.28,
+  "created_at": "2026-07-15"
  },
  {
   "id": 1016,
   "customer": "Client 016",
-  "status": "done",
-  "total": 116.57,
-  "created_at": "2026-07-09"
+  "status": "cancelled",
+  "total": 1839.83,
+  "created_at": "2026-07-08"
  },
  {
   "id": 1017,
   "customer": "Client 017",
-  "status": "cancelled",
-  "total": 2833.27,
-  "created_at": "2026-07-12"
+  "status": "in_progress",
+  "total": 3510.02,
+  "created_at": "2026-07-08"
  },
  {
   "id": 1018,
   "customer": "Client 018",
-  "status": "in_progress",
-  "total": 2911.34,
-  "created_at": "2026-07-08"
+  "status": "new",
+  "total": 2893.4,
+  "created_at": "2026-07-17"
  },
  {
   "id": 1019,
   "customer": "Client 019",
-  "status": "done",
-  "total": 4124.26,
-  "created_at": "2026-07-16"
+  "status": "cancelled",
+  "total": 4381.93,
+  "created_at": "2026-07-15"
  },
  {
   "id": 1020,
   "customer": "Client 020",
   "status": "done",
-  "total": 3936.52,
-  "created_at": "2026-07-11"
+  "total": 3064.35,
+  "created_at": "2026-07-03"
  },
  {
   "id": 1021,
   "customer": "Client 021",
-  "status": "in_progress",
-  "total": 3432.54,
-  "created_at": "2026-07-19"
+  "status": "new",
+  "total": 2584.07,
+  "created_at": "2026-07-06"
  },
  {
   "id": 1022,
   "customer": "Client 022",
   "status": "done",
-  "total": 1509.24,
-  "created_at": "2026-07-21"
+  "total": 802.32,
+  "created_at": "2026-07-16"
  },
  {
   "id": 1023,
   "customer": "Client 023",
-  "status": "in_progress",
-  "total": 4341.22,
-  "created_at": "2026-07-10"
+  "status": "cancelled",
+  "total": 244.08,
+  "created_at": "2026-07-03"
  },
  {
   "id": 1024,
   "customer": "Client 024",
-  "status": "new",
-  "total": 1362.71,
-  "created_at": "2026-07-07"
+  "status": "done",
+  "total": 1733.61,
+  "created_at": "2026-07-12"
  },
  {
   "id": 1025,
   "customer": "Client 025",
-  "status": "new",
-  "total": 2168.9,
-  "created_at": "2026-07-03"
+  "status": "cancelled",
+  "total": 2920.48,
+  "created_at": "2026-07-15"
  },
  {
   "id": 1026,
   "customer": "Client 026",
-  "status": "done",
-  "total": 4060.82,
-  "created_at": "2026-07-04"
+  "status": "new",
+  "total": 4207.84,
+  "created_at": "2026-07-09"
  },
  {
   "id": 1027,
   "customer": "Client 027",
-  "status": "in_progress",
-  "total": 600.78,
-  "created_at": "2026-07-21"
+  "status": "cancelled",
+  "total": 3500.36,
+  "created_at": "2026-07-03"
  },
  {
   "id": 1028,
   "customer": "Client 028",
-  "status": "in_progress",
-  "total": 2015.19,
-  "created_at": "2026-07-15"
+  "status": "new",
+  "total": 3669.24,
+  "created_at": "2026-07-10"
  },
  {
   "id": 1029,
   "customer": "Client 029",
-  "status": "in_progress",
-  "total": 3867.29,
-  "created_at": "2026-07-14"
+  "status": "cancelled",
+  "total": 1458.75,
+  "created_at": "2026-07-13"
  },
  {
   "id": 1030,
   "customer": "Client 030",
-  "status": "new",
-  "total": 4954.01,
-  "created_at": "2026-07-07"
+  "status": "done",
+  "total": 161.69,
+  "created_at": "2026-07-15"
  },
  {
   "id": 1031,
   "customer": "Client 031",
-  "status": "cancelled",
-  "total": 194.09,
-  "created_at": "2026-07-01"
+  "status": "done",
+  "total": 881.84,
+  "created_at": "2026-07-04"
  },
  {
   "id": 1032,
   "customer": "Client 032",
-  "status": "new",
-  "total": 4880.25,
-  "created_at": "2026-07-02"
+  "status": "cancelled",
+  "total": 341.82,
+  "created_at": "2026-07-10"
  },
  {
   "id": 1033,
   "customer": "Client 033",
-  "status": "cancelled",
-  "total": 4828.23,
-  "created_at": "2026-07-12"
+  "status": "in_progress",
+  "total": 3704.9,
+  "created_at": "2026-07-13"
  },
  {
   "id": 1034,
   "customer": "Client 034",
-  "status": "in_progress",
-  "total": 3410.63,
-  "created_at": "2026-07-04"
+  "status": "cancelled",
+  "total": 4588.24,
+  "created_at": "2026-07-16"
  },
  {
   "id": 1035,
   "customer": "Client 035",
-  "status": "done",
-  "total": 2901.94,
-  "created_at": "2026-07-14"
+  "status": "new",
+  "total": 873.51,
+  "created_at": "2026-07-13"
  },
  {
   "id": 1036,
   "customer": "Client 036",
-  "status": "cancelled",
-  "total": 4141.12,
-  "created_at": "2026-07-05"
+  "status": "done",
+  "total": 4422.75,
+  "created_at": "2026-07-14"
  },
  {
   "id": 1037,
   "customer": "Client 037",
-  "status": "new",
-  "total": 1505.92,
-  "created_at": "2026-07-08"
+  "status": "done",
+  "total": 3546.66,
+  "created_at": "2026-07-12"
  },
  {
   "id": 1038,
   "customer": "Client 038",
-  "status": "done",
-  "total": 3335.07,
-  "created_at": "2026-07-12"
+  "status": "cancelled",
+  "total": 4790.77,
+  "created_at": "2026-07-05"
  },
  {
   "id": 1039,
   "customer": "Client 039",
   "status": "new",
-  "total": 875.61,
-  "created_at": "2026-07-20"
+  "total": 922.28,
+  "created_at": "2026-07-08"
  },
  {
   "id": 1040,
   "customer": "Client 040",
-  "status": "cancelled",
-  "total": 2425.62,
-  "created_at": "2026-07-01"
+  "status": "in_progress",
+  "total": 109.71,
+  "created_at": "2026-07-19"
  },
  {
   "id": 1041,
   "customer": "Client 041",
-  "status": "cancelled",
-  "total": 1816.71,
-  "created_at": "2026-07-21"
+  "status": "in_progress",
+  "total": 1350.6,
+  "created_at": "2026-07-01"
  },
  {
   "id": 1042,

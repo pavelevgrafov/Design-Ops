@@ -3,10 +3,11 @@ profile: app
 category: operations dashboard shell
 pattern: task-first
 description: >
-  Back-office dashboard shell: sidebar nav, KPI row, orders table with status
-  filter, new-order form with validation. RBAC (admin/manager), five switchable
-  states (loading/empty/error/success/permission_denied), typed mock fixtures.
+  App shell for an operations dashboard: sidebar nav, KPI row, orders table,
+  new-order form. Implements all five required states as switchable
+  [data-state] blocks plus a permission_denied path for the manager role.
 base_skin: base-app
+mock_api: mock/orders.json   # 100 orders, realistic volumes; OpenAPI: mock/orders.openapi.json
 verified_at: 2026-07-21
-floor_verdict: ready_with_caveats
+floor_verdict: ready_with_caveats   # browser checks (D12/D13/D20) pending first hosted run
 shots: pending_hosted_run   # D22 baseline is taken by visual-regression.sh on the first hosted run

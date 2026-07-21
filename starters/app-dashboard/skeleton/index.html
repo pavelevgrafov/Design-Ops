@@ -6,133 +6,68 @@
 <title data-slot="app_name">OpsBoard</title>
 <link rel="stylesheet" href="../../../skins/base-app/tokens.css">
 <style>
-  body { margin: 0; font-family: var(--font-body); background: var(--canvas); color: var(--ink); line-height: 1.5; display: grid; grid-template-columns: 14rem 1fr; min-height: 100vh; }
-  nav { background: var(--surface-dark); color: var(--ink-on-dark); padding: var(--space-4); }
-  nav strong { display: block; margin-bottom: var(--space-4); }
-  nav a { display: block; color: var(--ink-on-dark); opacity: .75; text-decoration: none; padding: var(--space-2) 0; }
-  nav a[aria-current] { opacity: 1; font-weight: 600; }
+  body { margin: 0; font-family: var(--font-body); background: var(--canvas); color: var(--ink); line-height: 1.5; }
+  .shell { display: grid; grid-template-columns: 14rem 1fr; min-height: 100vh; }
+  aside { border-right: 1px solid var(--border-subtle); padding: var(--space-4); background: var(--canvas-raised); }
+  aside nav a { display: block; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); color: var(--ink-muted); text-decoration: none; margin-bottom: var(--space-1); }
+  aside nav a[aria-current] { color: var(--ink); background: var(--canvas); font-weight: 600; }
   main { padding: var(--space-6); }
-  .bar { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
-  select, input, button { font: inherit; padding: var(--space-2) var(--space-3); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); background: var(--canvas-raised); color: var(--ink); }
-  button.primary { background: var(--action-primary); color: var(--action-primary-text); border-color: transparent; font-weight: 600; }
-  button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: var(--space-4); margin: var(--space-6) 0; }
+  h1 { font-size: var(--font-scale-step3); margin: 0 0 var(--space-6); }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: var(--space-4); margin-bottom: var(--space-6); }
   .kpi { background: var(--canvas-raised); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: var(--space-4); }
-  .kpi b { font-size: var(--font-scale-step3); display: block; }
+  .kpi b { display: block; font-size: var(--font-scale-step2); margin-top: var(--space-1); }
   .kpi span { color: var(--ink-muted); font-size: var(--font-scale-step-1); }
   table { width: 100%; border-collapse: collapse; background: var(--canvas-raised); }
   th, td { text-align: left; padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--border-subtle); }
-  th { color: var(--ink-muted); font-size: var(--font-scale-step-1); text-transform: uppercase; letter-spacing: .04em; }
-  .badge { padding: 0 var(--space-2); border-radius: var(--radius-sm); font-size: var(--font-scale-step-1); border: 1px solid var(--border-subtle); }
-  form { margin-top: var(--space-6); display: flex; gap: var(--space-3); align-items: flex-end; flex-wrap: wrap; }
-  label { display: grid; gap: var(--space-1); font-size: var(--font-scale-step-1); color: var(--ink-muted); }
-  .error-text { color: #9f1239; font-size: var(--font-scale-step-1); }
-  [data-state] { display: none; margin-top: var(--space-6); padding: var(--space-6); background: var(--canvas-raised); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); }
-  body[data-view="loading"] [data-state="loading"], body[data-view="empty"] [data-state="empty"], body[data-view="error"] [data-state="error"], body[data-view="denied"] [data-state="denied"] { display: block; }
-  body[data-view="loading"] table, body[data-view="empty"] table, body[data-view="error"] table, body[data-view="denied"] table { display: none; }
-  @media (max-width: 48rem) { body { grid-template-columns: 1fr; } nav { display: flex; gap: var(--space-3); align-items: center; } nav strong { margin: 0; } }
+  .status { font-size: var(--font-scale-step-1); padding: 2px var(--space-2); border-radius: var(--radius-sm); background: var(--canvas); border: 1px solid var(--border-subtle); }
+  form { margin-top: var(--space-6); max-width: 26rem; }
+  label { display: block; margin-top: var(--space-3); font-size: var(--font-scale-step-1); color: var(--ink-muted); }
+  input, select { width: 100%; padding: var(--space-2) var(--space-3); margin-top: var(--space-1); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font: inherit; background: var(--canvas-raised); color: var(--ink); }
+  input:focus-visible, select:focus-visible, button:focus-visible, aside nav a:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .error-text { color: #9c2b2b; font-size: var(--font-scale-step-1); margin-top: var(--space-1); }
+  button { margin-top: var(--space-4); background: var(--action-primary); color: var(--action-primary-text); border: 0; padding: var(--space-2) var(--space-6); border-radius: var(--radius-md); font: inherit; font-weight: 600; }
+  [data-state] { display: none; margin-top: var(--space-6); padding: var(--space-4); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--canvas-raised); }
+  [data-state].visible { display: block; }
 </style>
 </head>
-<body data-view="success" data-role="admin">
-<nav>
-  <strong data-slot="app_name">OpsBoard</strong>
-  <a href="#dashboard" aria-current="page">Dashboard</a>
-  <a href="#reports">Reports</a>
-  <a href="#settings">Settings</a>
-</nav>
-<main>
-  <div class="bar" data-priority="p1">
-    <div>
-      <label>Status
-        <select id="filter" onchange="render()">
-          <option value="">All</option><option>new</option><option>in_progress</option><option>done</option><option>cancelled</option>
-        </select>
-      </label>
+<body>
+<div class="shell">
+  <aside data-priority="p2">
+    <strong data-slot="app_name">OpsBoard</strong>
+    <nav style="margin-top: var(--space-4)">
+      <a href="#" aria-current="page">Orders</a>
+      <a href="#">Customers</a>
+      <a href="#">Reports</a>
+      <a href="#" data-slot="role_admin">Settings (admin)</a>
+    </nav>
+  </aside>
+  <main>
+    <h1>Orders — today</h1>
+    <div class="kpis" data-priority="p2">
+      <div class="kpi"><span data-slot="kpi_1_label">In queue</span><b>17</b></div>
+      <div class="kpi"><span data-slot="kpi_2_label">Late</span><b>3</b></div>
+      <div class="kpi"><span data-slot="kpi_3_label">Done today</span><b>42</b></div>
     </div>
-    <div>
-      <label>Role
-        <select id="role" onchange="setRole(this.value)">
-          <option value="admin">admin</option><option value="manager">manager</option>
-        </select>
-      </label>
-      <label>View
-        <select id="view" onchange="document.body.dataset.view=this.value">
-          <option value="success">success</option><option value="loading">loading</option><option value="empty">empty</option><option value="error">error</option><option value="denied">permission_denied</option>
-        </select>
-      </label>
-    </div>
-  </div>
-
-  <div class="kpis" data-priority="p1">
-    <div class="kpi"><b id="kpi1">—</b><span data-slot="kpi_1_label">Open orders</span></div>
-    <div class="kpi"><b id="kpi2">—</b><span data-slot="kpi_2_label">In progress</span></div>
-    <div class="kpi"><b id="kpi3">—</b><span data-slot="kpi_3_label">Done this week</span></div>
-  </div>
-
-  <table data-priority="p1" aria-label="orders">
-    <thead><tr><th>#</th><th>Customer</th><th>Status</th><th>Total</th><th>Created</th><th></th></tr></thead>
-    <tbody id="rows"></tbody>
-  </table>
-
-  <div data-state="loading">Loading orders…</div>
-  <div data-state="empty">No orders yet. Create the first one below.</div>
-  <div data-state="error">Couldn't load orders. <button onclick="render()">Retry</button></div>
-  <div data-state="denied">Your role can't view this queue. Ask an admin for access.</div>
-
-  <form data-priority="p2" onsubmit="return createOrder(event)">
-    <label>Customer <input id="f-customer" required></label>
-    <label>Total <input id="f-total" type="number" min="0.01" step="0.01" required></label>
-    <button class="primary" type="submit" data-slot="create_label">New order</button>
-    <span class="error-text" id="f-error" role="alert"></span>
-  </form>
-</main>
-<script>
-let ORDERS = [];
-fetch('../mock/orders.json').then(r => r.json()).then(d => { ORDERS = d; render(); })
-  .catch(() => { document.body.dataset.view = 'error'; });
-
-function render() {
-  const f = document.getElementById('filter').value;
-  const rows = ORDERS.filter(o => !f || o.status === f);
-  document.getElementById('rows').innerHTML = rows.map(o =>
-    `<tr><td>${o.id}</td><td>${o.customer}</td><td><span class="badge">${o.status}</span></td>` +
-    `<td>${o.total.toFixed(2)}</td><td>${o.created_at}</td>` +
-    `<td><button onclick="advance(${o.id})">advance</button> <button onclick="removeOrder(${o.id})" ${document.body.dataset.role === 'manager' ? 'disabled title="admin only"' : ''}>delete</button></td></tr>`
-  ).join('');
-  document.getElementById('kpi1').textContent = ORDERS.filter(o => o.status === 'new').length;
-  document.getElementById('kpi2').textContent = ORDERS.filter(o => o.status === 'in_progress').length;
-  document.getElementById('kpi3').textContent = ORDERS.filter(o => o.status === 'done').length;
-}
-function setRole(r) {
-  document.body.dataset.role = r;
-  if (r === 'manager') document.body.dataset.view = 'denied'; else document.body.dataset.view = 'success';
-  render();
-}
-function advance(id) {
-  const o = ORDERS.find(x => x.id === id);
-  const seq = ['new', 'in_progress', 'done'];
-  const i = seq.indexOf(o.status);
-  if (i >= 0 && i < seq.length - 1) o.status = seq[i + 1];
-  render();
-}
-function removeOrder(id) {
-  if (document.body.dataset.role === 'manager') { document.body.dataset.view = 'denied'; return; }
-  ORDERS = ORDERS.filter(x => x.id !== id);
-  render();
-}
-function createOrder(e) {
-  e.preventDefault();
-  const c = document.getElementById('f-customer').value.trim();
-  const t = parseFloat(document.getElementById('f-total').value);
-  const err = document.getElementById('f-error');
-  if (!c) { err.textContent = 'Customer is required.'; return false; }
-  if (!(t > 0)) { err.textContent = 'Total must be above zero.'; return false; }
-  err.textContent = '';
-  ORDERS.unshift({ id: Math.max(...ORDERS.map(o => o.id), 999) + 1, customer: c, status: 'new', total: t, created_at: new Date().toISOString().slice(0, 10) });
-  e.target.reset();
-  render();
-  return false;
-}
-</script>
+    <table data-priority="p1">
+      <thead><tr><th>#</th><th data-slot="primary_entity">Customer</th><th>Status</th><th>Total</th></tr></thead>
+      <tbody>
+        <tr><td>1042</td><td>Kawiarnia Zorza</td><td><span class="status">in_progress</span></td><td>1 240 zł</td></tr>
+        <tr><td>1041</td><td>Studio Ryte</td><td><span class="status">new</span></td><td>380 zł</td></tr>
+        <tr><td>1040</td><td>Piekarnia u Marty</td><td><span class="status">done</span></td><td>2 060 zł</td></tr>
+      </tbody>
+    </table>
+    <form data-priority="p1" novalidate>
+      <h2 style="font-size: var(--font-scale-step1)">New order</h2>
+      <label>Customer <input required name="customer" aria-describedby="err-customer"></label>
+      <span class="error-text" id="err-customer" hidden>Customer name is required.</span>
+      <label>Total, zł <input required name="total" inputmode="decimal"></label>
+      <button type="submit">Create order</button>
+    </form>
+    <div data-state="loading">Loading orders…</div>
+    <div data-state="empty">No orders yet — create the first one above.</div>
+    <div data-state="error">Could not load orders. <a href="#">Retry</a>.</div>
+    <div data-state="permission_denied">Your role (<span data-slot="role_manager">manager</span>) cannot delete orders. Ask an admin.</div>
+  </main>
+</div>
 </body>
 </html>

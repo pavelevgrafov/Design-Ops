@@ -1,54 +1,51 @@
 {
   "openapi": "3.0.3",
-  "info": {"title": "Orders mock API", "version": "0.1.0"},
+  "info": { "title": "Orders mock API", "version": "0.1.0" },
   "paths": {
     "/orders": {
       "get": {
         "summary": "List orders",
         "parameters": [
-          {"name": "status", "in": "query", "schema": {"$ref": "#/components/schemas/OrderStatus"}}
+          { "name": "status", "in": "query", "schema": { "$ref": "#/components/schemas/OrderStatus" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 100, "maximum": 100 } }
         ],
-        "responses": {"200": {"description": "orders", "content": {"application/json": {"schema": {"type": "array", "items": {"$ref": "#/components/schemas/Order"}}}}}}
+        "responses": {
+          "200": {
+            "description": "Array of orders",
+            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Order" } } } }
+          }
+        }
       },
       "post": {
         "summary": "Create order",
-        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/OrderInput"}}}},
-        "responses": {"201": {"description": "created"}, "403": {"description": "permission denied (role: manager cannot delete; create allowed)"}}
-      }
-    },
-    "/orders/{id}": {
-      "patch": {
-        "summary": "Update order status",
-        "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
-        "responses": {"200": {"description": "updated"}, "403": {"description": "permission denied"}}
-      },
-      "delete": {
-        "summary": "Delete order (admin only)",
-        "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}],
-        "responses": {"204": {"description": "deleted"}, "403": {"description": "permission denied for role manager"}}
+        "requestBody": { "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OrderInput" } } } },
+        "responses": {
+          "201": { "description": "Created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Order" } } } },
+          "422": { "description": "Validation error" }
+        }
       }
     }
   },
   "components": {
     "schemas": {
-      "OrderStatus": {"type": "string", "enum": ["new", "in_progress", "done", "cancelled"]},
+      "OrderStatus": { "type": "string", "enum": ["new", "in_progress", "done", "cancelled"] },
       "Order": {
         "type": "object",
         "required": ["id", "customer", "status", "total", "created_at"],
         "properties": {
-          "id": {"type": "integer"},
-          "customer": {"type": "string"},
-          "status": {"$ref": "#/components/schemas/OrderStatus"},
-          "total": {"type": "number"},
-          "created_at": {"type": "string", "format": "date"}
+          "id": { "type": "integer" },
+          "customer": { "type": "string", "minLength": 1 },
+          "status": { "$ref": "#/components/schemas/OrderStatus" },
+          "total": { "type": "number", "minimum": 0 },
+          "created_at": { "type": "string", "format": "date" }
         }
       },
       "OrderInput": {
         "type": "object",
         "required": ["customer", "total"],
         "properties": {
-          "customer": {"type": "string", "minLength": 1},
-          "total": {"type": "number", "exclusiveMinimum": 0}
+          "customer": { "type": "string", "minLength": 1 },
+          "total": { "type": "number", "minimum": 0 }
         }
       }
     }
