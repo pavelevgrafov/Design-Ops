@@ -105,7 +105,7 @@ def main():
     for s in screens:
         sid = s.get("id")
         cards.append(
-            f'<div class="card" data-screen="{esc(sid}">'
+            f'<div class="card" data-screen="{esc(sid)}">'
             f'<div class="sid">{esc(title_of.get(sid, sid))} <span class="idtag">{esc(sid)}</span></div>'
             f'<div class="purpose">{esc(s.get("purpose"))}</div>'
             f'<div class="prio">{esc(prio_of.get(sid) or "—")}</div>'
