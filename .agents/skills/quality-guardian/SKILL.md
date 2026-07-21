@@ -55,7 +55,7 @@ Canonical registry: `references/deterministic-floor.md`. Tooling map:
 | D12 viewports 390/768/1440 | `run-ui-checks.sh` |
 | D13 tap targets ≥24px | `run-ui-checks.sh` |
 | D14 images | `check-placeholders.sh` + fs scan |
-| D15 performance (lab) | `run-ui-checks.sh` — LCP + CLS + INP-proxy (event timing, real input; labeled "lab, not field-INP"); violation caps at ready_with_caveats, never blocks; no interactivity pass without a measured value |
+| D15 performance (lab) | `run-ui-checks.sh` — violation caps at ready_with_caveats, never blocks |
 | D16 marker removed | grep `not_approved_visual_design` |
 | D17 divergence | `check-divergence.py` re-run + blind_test fields (standard/full) |
 | D18 UX model | `validate_experience_model.py` (standard/full) |

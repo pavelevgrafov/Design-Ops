@@ -1,13 +1,87 @@
-# Install / Migration Guide — Design Pipeline Codex v5.2
+### Directory layout after unpacking
 
-## Fresh install (a host project without the pipeline)
+```
+<project repo or skills repo>/
+├── AGENTS.md
+├── README.md
+├── .agents/skills/
+│   ├── pipeline-orchestrator/
+│   │   ├── SKILL.md
+│   │   ├── assets/
+│   │   │   ├── design-contract-template.yaml
+│   │   │   └── decision-log-template.md
+│   │   ├── references/
+│   │   │   ├── modes.md
+│   │   │   ├── execution-economy.md
+│   │   │   ├── gate-templates.md
+│   │   │   └── launch-checklist.md
+│   │   └── scripts/
+│   │       └── contract-read.py
+│   ├── structure-builder/
+│   │   ├── SKILL.md
+│   │   ├── assets/
+│   │   │   ├── brief-template.md
+│   │   │   ├── experience-model-template.yaml
+│   │   │   └── skeleton-manifest-template.yaml
+│   │   ├── references/
+│   │   │   ├── stack-profiles.md
+│   │   │   ├── information-model-guide.md
+│   │   │   └── component-substrate.md
+│   │   └── scripts/
+│   │       ├── validate_experience_model.py
+│   │       └── check-skeleton.sh
+│   ├── visual-director/
+│   │   ├── SKILL.md
+│   │   ├── assets/
+│   │   │   ├── direction-template.md
+│   │   │   ├── style-cards-template.md
+│   │   │   ├── contact-sheet-template.html
+│   │   │   ├── tokens-template.json
+│   │   │   └── asset-manifest-template.yaml
+│   │   ├── references/
+│   │   │   ├── divergence-rules.md
+│   │   │   ├── ban-list.md
+│   │   │   ├── gate2-protocol.md
+│   │   │   ├── merge-rules.md
+│   │   │   ├── token-pipeline.md
+│   │   │   └── asset-production.md
+│   │   └── scripts/
+│   │       ├── check-divergence.py
+│   │       ├── lint-ban-list.sh
+│   │       └── compile-tokens.py
+│   └── quality-guardian/
+│       ├── SKILL.md
+│       ├── assets/
+│       │   └── quality-report-template.md
+│       ├── references/
+│       │   ├── deterministic-floor.md
+│       │   ├── ai-diagnostics.md
+│       │   ├── status-taxonomy.md
+│       │   └── environment-degradation.md
+│       └── scripts/
+│           ├── check-placeholders.sh
+│           ├── check-token-usage.sh
+│           ├── check-contrast.py
+│           ├── check-typography.py
+│           ├── run-ui-checks.sh
+│           └── validate-pipeline.py
+├── eval/
+│   ├── example-prompts.md
+│   ├── eval-rubric.md
+│   └── selftest/
+│       ├── run-self-test.sh
+│       ├── expected.txt
+│       └── fixture/                                 # mini-sites + traps + contract
+└── artifacts/                                   # created on first run
+    ├── design-contract.yaml
+    ├── decision-log.md
+    ├── skeleton/  visual/  ux/  prototype/  audit/
+```
 
-1. **Copy into the project root:**
-   - `.agents/` — the skill package;
-   - `eval/` — prompts and rubric;
-   - `AGENTS.md` — entry point;
-   - `README.md`, `INSTALL.md`, `LICENSE` — documentation.
+### Install steps
 
+1. **Copy** `.agents/`, `eval/`, `AGENTS.md`, `README.md` into the target
+   repo (or `~/.codex/` for globally available skills).
 2. **Script dependencies:** Python ≥3.10 + `pip install pyyaml` (required —
    the contract is read only via `contract-read.py`); **Bash ≥3.2-compatible**
    (verified on macOS bash 3.2.57 + BSD grep and Linux bash 5 + GNU grep).
@@ -29,8 +103,11 @@
    and Linux (bash 5 + GNU grep).
 5. **Self-check:**
    ```bash
-   bash .agents/skills/structure-builder/scripts/check-skeleton.sh
-   python3 .agents/skills/quality-guardian/scripts/check-typography.py .agents/skills/visual-director/assets
+   python3 .agents/skills/visual-director/scripts/compile-tokens.py \
+     .agents/skills/visual-director/assets/tokens-template.json --check-only
+   python3 .agents/skills/visual-director/scripts/check-divergence.py --help || true
+   python3 .agents/skills/quality-guardian/scripts/check-typography.py \
+     .agents/skills/visual-director/assets || true
    ```
    The first must exit 0; the typography check on the assets dir reports
    granular pass[D4]–pass[D8] lines (placeholder tokens legitimately flag
@@ -39,125 +116,24 @@
    `eval/eval-rubric.md`. Pass ≥10/12 with no zeros in C1–C4/C11/C12 =
    install OK.
 
-## Repository layout
+### Migration v5.0 → v5.1
 
-```
-project-root/
-├── AGENTS.md
-├── README.md
-├── INSTALL.md
-├── LICENSE
-├── .agents/
-│   └── skills/
-│   ├── pipeline-orchestrator/
-│   │   ├── SKILL.md
-│   │   ├── assets/
-│   │   │   ├── design-contract-template.yaml
-│   │   │   └── decision-log-template.md
-│   │   ├── references/
-│   │   │   ├── modes.md
-│   │   │   ├── execution-economy.md
-│   │   │   ├── gate-templates.md
-│   │   │   └── launch-checklist.md
-│   │   └── scripts/
-│   │       └── contract-read.py
-│   ├── structure-builder/
-│   │   ├── SKILL.md
-│   │   ├── assets/
-│   │   │   ├── brief-template.md
-│   │   │   ├── experience-model-template.yaml
-│   │   │   └── skeleton-manifest-template.yaml
-│   │   ├── references/
-│   │   │   ├── information-model-guide.md
-│   │   │   ├── component-substrate.md
-│   │   │   └── stack-profiles.md
-│   │   └── scripts/
-│   │       ├── check-skeleton.sh
-│   │       └── validate_experience_model.py
-│   ├── visual-director/
-│   │   ├── SKILL.md
-│   │   ├── assets/
-│   │   │   ├── tokens-template.json
-│   │   │   ├── style-cards-template.md
-│   │   │   ├── direction-template.md
-│   │   │   ├── contact-sheet-template.html
-│   │   │   └── asset-manifest-template.yaml
-│   │   ├── references/
-│   │   │   ├── divergence-rules.md
-│   │   │   ├── gate2-protocol.md
-│   │   │   ├── merge-rules.md
-│   │   │   ├── token-pipeline.md
-│   │   │   ├── asset-production.md
-│   │   │   └── ban-list.md
-│   │   └── scripts/
-│   │       ├── compile-tokens.py
-│   │       ├── check-divergence.py
-│   │       └── lint-ban-list.sh
-│   └── quality-guardian/
-│       ├── SKILL.md
-│       ├── assets/
-│       │   └── quality-report-template.md
-│       ├── references/
-│       │   ├── deterministic-floor.md
-│       │   ├── ai-diagnostics.md
-│       │   ├── environment-degradation.md
-│       │   └── status-taxonomy.md
-│       └── scripts/
-│           ├── run-ui-checks.sh
-│           ├── check-contrast.py
-│           ├── check-typography.py
-│           ├── check-token-usage.sh
-│           ├── check-placeholders.sh
-│           └── validate-pipeline.py
-├── eval/
-│   ├── example-prompts.md
-│   ├── eval-rubric.md
-│   └── selftest/
-│       ├── run-self-test.sh
-│       ├── expected.txt
-│       └── fixture/                                 # mini-sites + traps + contract
-└── artifacts/                                       # created on the first run
-```
-
-## Migration v5.0 → v5.1
-
-1. **Contract:** move `design-contract.yaml` from the root to `artifacts/`, set
-   `meta.schema_version: "5.1"`, add new fields with defaults from
-   `.agents/skills/pipeline-orchestrator/assets/design-contract-template.yaml`.
-2. **Verdicts:** `pass` → `ready`, `conditional_pass` → `ready_with_caveats`,
-   `fail` → `not_ready`. Old verdicts in the report are a validation error
-   (`validate-pipeline.py` flags them with the mapping).
-3. **Quick-mode ceiling (AC-23):** `brief.md`, `ux/`, `style-calibration.md`,
-   `asset-manifest.yaml` exist only in standard/full; in quick their content
-   lives in contract sections.
-4. **Merge (CR-06):** on `gate2_result: merged(...)` fill
-   `visual.merge.axes_resolution` and record `confirm_render` (in autonomous
-   mode — `deferred` + include in the confirmation offer).
-5. **Assets (CR-08):** every AI image carries a disclosure mechanism
-   (`assets.slots[].disclosure: true` + a badge/credits per the visual
-   system).
-6. **Scripts:** replace the whole `scripts/` directories — signatures and
-   exit codes changed (validate-pipeline.py is the single entry for D19).
-
-## Updating inside a project (v5.1 → v5.2)
-
-1. Replace `.agents/skills/*/scripts/` and `.agents/skills/*/SKILL.md` with
-   the new versions (no contract changes — schema stays 5.1).
-2. Ensure PyYAML is installed — `check-skeleton.sh` now reads the contract
-   only via `pipeline-orchestrator/scripts/contract-read.py`.
-3. Copy `eval/selftest/` and run `bash eval/selftest/run-self-test.sh` once
-   on the target machine; keep the log.
-4. Skim the v5.2 changelog in `README.md` — D15/D21 semantics changed
-   (measured INP-proxy; undeclared paths = explicit `unavailable`).
-
-## Environment matrix (v5.2)
-
-| Environment | Status |
-| :-- | :-- |
-| macOS (bash 3.2.57 + BSD grep/sed/stat) | supported, self-test required before shipping script changes |
-| Linux (bash 5 + GNU coreutils) | supported, reference CI environment |
-| No Playwright | browser checks degrade to `unavailable` + curl HTTP fallback; verdict caps at `ready_with_caveats` |
-| No PyYAML | contract-dependent checks report `unavailable` — install `pyyaml` (hard requirement) |
+1. **Package:** replace the v5.0 `.agents/skills/` tree with this one
+   (4 new files, ~27 updated; see the 5.1 changelog table).
+2. **Contracts:** a `schema_version: "5.0"` contract is upgraded by the
+   orchestrator on first touch: moved from the project root to
+   `artifacts/design-contract.yaml`, `schema_version: "5.1"`, verdicts mapped
+   (`pass→ready`, `conditional_pass→ready_with_caveats`, `fail→not_ready`),
+   new fields defaulted. The migration is logged in changelog + decision log.
+   `validate-pipeline.py` REJECTS un-migrated 5.0 contracts with migration
+   guidance.
+3. **Check numbers:** reports written against either v5.0 D-registry are
+   read via the normative mapping table in
+   `quality-guardian/references/deterministic-floor.md`. New reports use only
+   the canonical D1–D21.
+4. **Backward compatibility of work:** v5.0 projects without tokens keep
+   working; the restyle router offers tokenization first. Skeletons without
+   the marker and directions without axes are NOT accepted by 5.1 stages.
 
 ---
 
