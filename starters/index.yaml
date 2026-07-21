@@ -1,28 +1,27 @@
-# Verified Starters — agent reads this index only (<= 4 KB).
-# Each starter is verified at factory time (report.md in the starter dir),
-# starts at a base skin and may diverge into a full visual system later.
-starters:
-  - id: landing-local
-    profile: site
-    category: local business landing
-    pattern: task-first
-    line: bakery / cafe / salon — hero + services + contact
-    tags: [local, small-business, contact, cta]
-    verified_at: 2026-07-21
-    status: verified
-  - id: landing-saas
-    profile: site
-    category: SaaS product landing
-    pattern: comparison-first
-    line: product landing — value prop + proof points + plan table
-    tags: [saas, pricing, plans, signup]
-    verified_at: 2026-07-21
-    status: verified
-  - id: app-dashboard
-    profile: app
-    category: operations dashboard shell
-    pattern: task-first
-    line: sidebar + KPI row + table + form, RBAC, 5 states, typed mock
-    tags: [app, dashboard, back-office, rbac, mock]
-    verified_at: 2026-07-21
-    status: verified
+# Starters index — the ONLY starter file the agent reads by default (<=4 KB).
+# Full manifests load on demand by id. verified_at is refreshed by
+# starters/recheck.sh; a starter with a red floor flips to unavailable.
+- id: landing-local
+  profile: site
+  category: local business landing
+  pattern: task-first
+  line: "Single-page local-business site: services, prices, hours, booking CTA."
+  tags: [landing, local, services, booking]
+  verified_at: 2026-07-21
+  status: active
+- id: landing-saas
+  profile: site
+  category: SaaS product landing
+  pattern: comparison-first
+  line: "Product landing: value prop, proof points, pricing table, signup CTA."
+  tags: [landing, saas, pricing, product]
+  verified_at: 2026-07-21
+  status: active
+- id: app-dashboard
+  profile: app
+  category: operations dashboard shell
+  pattern: task-first
+  line: "App shell: sidebar nav, KPI row, orders table, new-order form, 5 states."
+  tags: [app, dashboard, table, form, crud]
+  verified_at: 2026-07-21
+  status: active

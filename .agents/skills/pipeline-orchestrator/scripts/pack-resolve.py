@@ -12,9 +12,7 @@ ready_with_caveats; peripheral unavailable is a report line only.
 Usage:
   python3 pack-resolve.py <packs_dir> <pack_id> [--ttl-hours N] [--json]
   python3 pack-resolve.py <packs_dir> --all [--ttl-hours N] [--json]
-Exit: 0 = every queried pack active; 1 = usage error or any pack
-unavailable (status lines name the reason); 2 = PyYAML missing.
-Packs whose id starts with "_" are fixtures and excluded from --all.
+Exit: 0 = resolved (see status), 1 = usage/pack missing, 2 = manifest error.
 Cache: <packs_dir>/.pack-cache/<id>.json
 """
 import json, os, subprocess, sys, time
