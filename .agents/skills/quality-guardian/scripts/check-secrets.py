@@ -18,7 +18,7 @@ PATTERNS = [
     ("private_key_block", re.compile(r"-----BEGIN (RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----")),
     ("slack_token",       re.compile(r"\bxox[baprs]-[0-9A-Za-z-]{10,}\b")),
     ("stripe_key",        re.compile(r"\b(sk|pk)_(live|test)_[0-9A-Za-z]{16,}\b")),
-    ("generic_secret",    re.compile(r"(?i)\b(api[_-]?key|secret|password|passwd|token)\b\s*[:=]\s*['\"][^'\"]{12,}\"")),
+    ("generic_secret",    re.compile(r"(?i)\b(api[_-]?key|secret|password|passwd|token)\b\s*[:=]\s*['\"][^'\"]{12,}['\"]")),
 ]
 SKIP_DIRS = {"node_modules", ".git", "dist", "build", ".pack-cache", "__pycache__"}
 SKIP_FILES = {"check-secrets.py", "package-lock.json", "yarn.lock", "pnpm-lock.yaml"}
