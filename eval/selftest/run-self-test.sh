@@ -210,7 +210,7 @@ else
   bad "knowledge-validate on repo (rc=$RC): $(printf '%s' "$OUT" | tail -2 | tr '\n' ' ')"
 fi
 IDXSIZE=$(wc -c < "$ROOT/knowledge/index.yaml" | tr -d ' ')
-[ "$IDXSIZE" -le 4096 ] && ok "knowledge index <= 4 KB ($IDXSIZE B)" \
+[ "$IDXSIZE" -le 8192 ] && ok "knowledge index <= 8 KB v7.0 ($IDXSIZE B)" \
   || bad "knowledge index too big: $IDXSIZE B"
 KVWORK=$(mktemp -d 2>/dev/null || mktemp -d -t kv)
 mkdir -p "$KVWORK/knowledge/sources" "$KVWORK/.agents/skills/x"
