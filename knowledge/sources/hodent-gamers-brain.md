@@ -5,7 +5,7 @@ url: https://celiahodent.com/
 evidence_level: research
 verified_at: 2026-07-21
 tags: [cognitive-load, attention, memory, onboarding]
-thesis: "Нейронаука UX: пределы внимания и рабочей памяти задают плотность экрана."
+thesis: "Нейронаука UX: пределы внимания задают плотность экрана."
 ---
 
 ## Что это

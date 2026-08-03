@@ -5,7 +5,7 @@ url: https://www.nointerface.com/
 evidence_level: curated
 verified_at: 2026-07-21
 tags: [noui, screen-reduction, principles]
-thesis: "NoUI-first: реши задачу с меньшим числом экранов или вовсе без UI."
+thesis: "NoUI-first: реши задачу с меньшим числом экранов."
 ---
 
 ## Что это

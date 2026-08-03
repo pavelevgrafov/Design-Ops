@@ -36,6 +36,10 @@ references). Never ask about style [A.3]. Autonomous: answer from the request
 + category defaults, set `clarification: assumptions_logged` (or `mixed`),
 flag assumptions in the decision log.
 
+**v7.0 — discovery-lite:** fold AJTBD-lite (job hypothesis with a confidence
+level) into this block and record RAT-lite (≤3 assumptions with kill
+criteria) before leaving K1: `references/k0-discovery-lite.md`.
+
 Set `visual_boldness`: default `familiar_distinctive`; if `risk_level: high`
 → `conventional`, with the reason recorded [K1.2.1].
 

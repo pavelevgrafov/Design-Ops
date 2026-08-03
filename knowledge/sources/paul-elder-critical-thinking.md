@@ -5,7 +5,7 @@ url: https://www.criticalthinking.org/
 evidence_level: industry-standard
 verified_at: 2026-07-21
 tags: [questions, rubric, clarity, reasoning]
-thesis: "Интеллектуальные стандарты — рубрика качества вопросов гейтов и брифа K0."
+thesis: "Интеллектуальные стандарты — рубрика вопросов гейтов и брифа K0."
 ---
 
 ## Что это

@@ -5,7 +5,7 @@ url: https://www.shapeof.ai/
 evidence_level: curated
 verified_at: 2026-07-21
 tags: [ai-features, patterns, trust, onboarding, prompting]
-thesis: "Таксономия AI-паттернов по фазам: онбординг, промптинг, вывод, доверие."
+thesis: "Таксономия AI-паттернов: онбординг, промптинг, вывод, доверие."
 ---
 
 ## Что это

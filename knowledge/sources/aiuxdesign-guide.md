@@ -5,7 +5,7 @@ url: https://www.aiuxdesign.guide/
 evidence_level: curated
 verified_at: 2026-07-21
 tags: [ai-features, patterns, chat, agents, generation]
-thesis: "36 паттернов AI-интерфейсов из продуктов с миллионной аудиторией, с кодом и демо."
+thesis: "36 паттернов AI-интерфейсов с кодом и демо."
 ---
 
 ## Что это

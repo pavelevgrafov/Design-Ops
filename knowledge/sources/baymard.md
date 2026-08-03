@@ -5,7 +5,7 @@ url: https://baymard.com/
 evidence_level: research
 verified_at: 2026-07-21
 tags: [ecommerce, product-page, checkout, forms]
-thesis: "700+ гайдлайнов e-commerce из крупных юзабилити-тестов: product page, checkout, формы."
+thesis: "700+ гайдлайнов e-commerce из юзабилити-тестов: checkout, формы."
 ---
 
 ## Что это

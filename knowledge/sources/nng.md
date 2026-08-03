@@ -5,7 +5,7 @@ url: https://www.nngroup.com/
 evidence_level: research
 verified_at: 2026-07-21
 tags: [research, scanning, legibility, usability, copy]
-thesis: "Первичные исследования чтения и сканирования, 10 эвристик Нильсена."
+thesis: "Первичные исследования чтения/сканирования, 10 эвристик Нильсена."
 ---
 
 ## Что это

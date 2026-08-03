@@ -5,7 +5,7 @@ url: https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
 evidence_level: curated
 verified_at: 2026-07-21
 tags: [benchmark, taxonomy, competitor, eval]
-thesis: "Бенчмарк-оппонент: сетка стилей без верификации; донор таксономии K0."
+thesis: "Бенчмарк-оппонент: стили без верификации; донор таксономии K0."
 ---
 
 ## Что это

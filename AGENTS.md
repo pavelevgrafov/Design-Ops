@@ -48,6 +48,34 @@ the first testable artifact in minutes) or `from_scratch`.
   comes from a closed taxonomy and is backed by an artifact a check can
   re-verify; the agent never "declares" a pass.
 
+### v7.0 invariants (added from the formalized UI/UX rule base)
+
+- **[A.12]** Every async screen is a 7-state automaton (idle, loading,
+  skeleton, populated, empty, error, success); designing only the ideal
+  state is a defect (knowledge/async-seven-states).
+- **[A.13]** Interactive looks interactive, non-interactive does not
+  (affordance + signifier): every clickable element carries a visual marker
+  and a hover state; every action gets feedback < 400 ms.
+- **[A.14]** One primary CTA per view; secondary actions are outline/ghost.
+- **[A.15]** All sizes in rem, never px (respects the user's system font
+  size; zoom 200% must not break layout).
+- **[A.16]** No cards inside cards.
+- **[A.17]** Animation: transform + opacity only, nonblocking (interruptible
+  by new input), with a prefers-reduced-motion quiet version
+  (knowledge/motion-budgets).
+- **[A.18]** Semantic HTML before ARIA; H1→H3 hierarchy is continuous.
+- **[A.19]** Never color alone: status = color + icon + text.
+- **[A.20]** Mobile-first; components are adaptive, not pages.
+- **[A.21]** Tokens flow primitive → semantic → component, never
+  component → primitive (knowledge/token-architecture-3layer).
+- **[A.22]** No corporate-slop copy ("Empower/Unlock/Seamless/Transform"):
+  concrete claims and numbers instead (knowledge/microcopy-principles).
+- **[A.23]** Parallel design: at least 3 directions in the contact sheet;
+  merge remains the default (knowledge/parallel-design).
+- **[A.24]** AI-look detection: the ban-list blocks default statistical
+  markers (indigo-600 hero gradients, slate-900, rounded-2xl-everything);
+  every ban cites its evidence note (knowledge/ai-look-catalog).
+
 ## Entry point
 
 Trigger words: "make a website", "landing page", "prototype an app",

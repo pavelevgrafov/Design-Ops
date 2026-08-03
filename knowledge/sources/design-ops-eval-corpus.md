@@ -5,7 +5,7 @@ url: internal:eval/
 evidence_level: curated
 verified_at: 2026-07-21
 tags: [internal, eval, slop, mode-collapse]
-thesis: "Наш eval-корпус фиксирует слоп-дефолты моделей (Inter, indigo→purple, bento)."
+thesis: "Наш eval-корпус: слоп-дефолты моделей (Inter, indigo→purple, bento)."
 ---
 
 ## Что это
