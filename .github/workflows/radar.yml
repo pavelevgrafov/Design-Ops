@@ -1,0 +1,28 @@
+name: Design-Ops Radar (MVP)
+
+# Weekly ecosystem scan → digest issue. Hard thresholds against noise;
+# ≤30 min/week of owner review. If the digest goes unread for 4 weeks,
+# disable the workflow (radar must save time, not spend it).
+
+on:
+  schedule:
+    - cron: '17 6 * * 1'   # weekly, Monday 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run radar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: python radar/radar.py

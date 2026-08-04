@@ -440,6 +440,21 @@ OUT=$(python3 "$ROOT/packs/awwwards-reference/scripts/extract-tokens.py" --self-
 [ "$RC" -eq 0 ] && ok "awwwards-reference: CSS-only token extraction drafts DTCG" \
   || bad "awwwards-reference extract self-test: $(printf '%s' "$OUT" | tail -1)"
 
+# --- v7.0 ecosystem: showcase + radar --------------------------------------
+SCWORK=$(mktemp -d 2>/dev/null || mktemp -d -t sc)
+OUT=$(python3 "$ROOT/showcase/build-showcase.py" --out "$SCWORK/index.html" 2>&1); RC=$?
+if [ "$RC" -eq 0 ] && [ -f "$SCWORK/index.html" ]; then
+  has "landing-saas" "$(cat "$SCWORK/index.html")" \
+    && ok "showcase: auto-populated from starters index" \
+    || bad "showcase: generated page misses starters"
+else
+  bad "showcase build failed (rc=$RC): $(printf '%s' "$OUT" | tail -1)"
+fi
+OUT=$(env -u GITHUB_TOKEN -u GITHUB_REPOSITORY python3 "$ROOT/radar/radar.py" 2>&1); RC=$?
+[ "$RC" -eq 2 ] && has "required" "$OUT" \
+  && ok "radar: missing env is an explicit usage error, never a silent run" \
+  || bad "radar env-honesty broken (rc=$RC)"
+
 printf '%s\n' "== self-test: browser smoke [TZ-2.2/2.3/3.1/3.2] =="
 
 if node -e "require.resolve('playwright')" >/dev/null 2>&1; then
