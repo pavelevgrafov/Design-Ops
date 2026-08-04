@@ -1,0 +1,12 @@
+id: ai-look-detector
+type: local
+conveyor: [K2, K3]
+class: core
+provides: [ai_look_scan]
+requires_env: []
+contract_fields: [integrations]
+acceptance_test: 'python3 "{pack_dir}/scripts/scan.py" --self-test'
+degradation: "K2B divergence ships unscanned — D.30 reports unavailable; never a silent pass"
+cost_profile: free
+license_notes: n/a
+version: "0.1.0"

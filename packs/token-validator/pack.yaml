@@ -1,0 +1,12 @@
+id: token-validator
+type: local
+conveyor: [K2, K3]
+class: core
+provides: [token_layer_validation]
+requires_env: []
+contract_fields: [integrations]
+acceptance_test: 'python3 "{pack_dir}/scripts/validate-layers.py" --self-test'
+degradation: "project token architecture unchecked — D.37 reports unavailable; compile-time A.21 still enforced"
+cost_profile: free
+license_notes: n/a
+version: "0.1.0"

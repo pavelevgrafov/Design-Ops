@@ -1,0 +1,2 @@
+.card { transition: width 300ms linear; }
+@keyframes slide { from { left: 0; } }

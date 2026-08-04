@@ -68,6 +68,8 @@ def resolve(packs_dir, pack_id, ttl_hours):
     if not cmd:
         out.update(status="unavailable", reason="no acceptance_test in manifest")
         return out
+    # v7.0: local packs may anchor their acceptance command to the pack dir.
+    cmd = cmd.replace("{pack_dir}", os.path.join(os.path.abspath(packs_dir), pack_id))
     r = subprocess.run(cmd, shell=True, capture_output=True, timeout=120)
     ok = r.returncode == 0
     os.makedirs(os.path.dirname(cache), exist_ok=True)

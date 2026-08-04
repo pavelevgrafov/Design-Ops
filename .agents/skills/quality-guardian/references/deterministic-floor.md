@@ -186,3 +186,32 @@ Never silently convert unavailable to pass.
 | D22 | — (new in v6.0) | — (new in v6.0) |
 | D23 | — (new in v6.0) | — (new in v6.0) |
 | D24 | — (new in v6.0) | — (new in v6.0) |
+
+## v7.0 extension (D.25–D.38, tiered)
+
+Tier 1 failures block the verdict; Tier 2 are warnings in the quality
+report and never block. Browser-dependent tests report explicit
+`unavailable` without playwright [A.6].
+
+| Check | Rule | Tier | Tool |
+| :-- | :-- | :-- | :-- |
+| D.25 extended contrast | text tiers 4.5/4.5/3.0, status hues 4.5, focus ring 3.0, component button — both themes | 1 | `packs/contrast-checker` (D3 core pairs stay in `check-contrast.py`) |
+| D.26 target size | ≥24×24 CSS px (SC 2.5.8); 44–48px practice | 1 | covered by D13 (`run-ui-checks.sh`) — same rule, kept as one line |
+| D.27 focus visible | no naked `outline: none`; `:focus-visible` styled | 1 | `scripts/check-focus-visible.py` |
+| D.28 semantic HTML | one h1, continuous hierarchy, `<main>`, no interactive divs | 1 | `scripts/check-semantic-html.py` |
+| D.29 reduced-motion | motion ⇒ `prefers-reduced-motion` quiet version | 1 | `scripts/check-reduced-motion.py` |
+| D.30 AI-look markers | tier-1 catalog (indigo-600, slate-900, indigo→purple) | 1 | `packs/ai-look-detector` (+ D11 ban-list) |
+| D.31 squint test | hierarchy readable under blur | 2 | model_judged on the D22 render; `unavailable` without it |
+| D.32 5-second test | new viewer gets what-it-is + what-to-do | 2 | model_judged / human |
+| D.33 grayscale test | hierarchy works without color | 2 | model_judged on the D22 render |
+| D.34 keyboard test | whole scenario without a mouse | 2 | D21-keyboard line + manual probe |
+| D.35 jank-safe motion | transform/opacity only, no linear easing | 2 | `scripts/check-motion-properties.py` |
+| D.36 copy audit | no corporate slop (EN+RU list) | 2 | `packs/copy-linter` |
+| D.37 token architecture | primitive → semantic → component refs only | 1 | `packs/token-validator` (+ compile-time A.21) |
+| D.38 seven states | idle/loading/skeleton/populated/empty/error/success per async module | 1 | `scripts/check-seven-states.py` + `packs/state-generator` |
+
+Verification packs (v7.0, registered in `packs/registry.yaml`):
+ai-look-detector, contrast-checker, token-validator, state-generator
+(class: core), copy-linter (class: peripheral). Each carries a
+`--self-test` acceptance probe wired into `eval/selftest/run-self-test.sh`
+and the D24 pack block.

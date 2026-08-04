@@ -13,7 +13,7 @@
   --semantic-error: #b93a3a;
   --semantic-info: #2f62b0;
   --semantic-success: #1e7a52;
-  --semantic-warning: #c77f22;
+  --semantic-warning: #8f6300;
   --surface-dark: #141312;
   --text-primary: #141312;
   --text-secondary: #4a4741;
@@ -56,7 +56,7 @@
   --color-semantic-success-600: #1e7a52;
   --color-semantic-success-dark: #7fb896;
   --color-semantic-warning-500: #e8a13c;
-  --color-semantic-warning-600: #c77f22;
+  --color-semantic-warning-600: #8f6300;
   --color-semantic-warning-dark: #e3b76a;
   --elevation-drag: 0.16;
   --elevation-focus: 0.12;

@@ -1,0 +1,12 @@
+id: state-generator
+type: local
+conveyor: [K1, K3]
+class: core
+provides: [seven_state_specs]
+requires_env: []
+contract_fields: [experience.state_matrix, integrations]
+acceptance_test: 'python3 "{pack_dir}/scripts/generate-states.py" --self-test'
+degradation: "state specs hand-written by K1 — D.38 reports unavailable on generated-spec coverage only"
+cost_profile: free
+license_notes: n/a
+version: "0.1.0"

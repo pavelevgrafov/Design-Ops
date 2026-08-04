@@ -333,6 +333,91 @@ else
   bad "handoff path (rc=$RC): $OUT"
 fi
 
+printf '%s\n' "== self-test: v7.0 floor D.25–D.38 + verification packs =="
+
+# --- compile-tokens A.21 layer enforcement (negative) -------------------
+A21WORK=$(mktemp -d 2>/dev/null || mktemp -d -t a21)
+printf '%s' '{"primitive":{"color":{"red":{"500":{"$value":"#ff0000","$type":"color"}}}},"semantic":{"color":{"ink":{"$value":"{primitive.color.red.500}","$type":"color"}}},"component":{"button":{"bg":{"$value":"{primitive.color.red.500}","$type":"color"}}}}' > "$A21WORK/bad.json"
+OUT=$(python3 "$VD/compile-tokens.py" "$A21WORK/bad.json" --check-only 2>&1); RC=$?
+[ "$RC" -eq 1 ] && has "component token must reference semantic" "$OUT" \
+  && ok "compile-tokens: component->primitive violation blocked [A.21]" \
+  || bad "compile-tokens A.21 negative (rc=$RC): $(printf '%s' "$OUT" | tail -1)"
+
+# --- D.25 extended contrast (contrast-checker) ---------------------------
+OUT=$(python3 "$ROOT/packs/contrast-checker/scripts/check-all-pairs.py" --self-test 2>&1); RC=$?
+[ "$RC" -eq 0 ] && ok "D.25 contrast-checker: both skins, both themes green" \
+  || bad "D.25 contrast-checker self-test: $(printf '%s' "$OUT" | tail -1)"
+
+# --- D.27 focus visible ---------------------------------------------------
+python3 "$QG/check-focus-visible.py" "$FIX/v7/focus-ok.css" >/dev/null 2>&1 \
+  && ok "D.27 focus-visible: styled focus passes" \
+  || bad "D.27 false-positive on focus-ok.css"
+OUT=$(python3 "$QG/check-focus-visible.py" "$FIX/v7/focus-bad.css" 2>&1); RC=$?
+[ "$RC" -eq 1 ] && ok "D.27 focus-visible: naked outline:none fails" \
+  || bad "D.27 missed outline removal (rc=$RC)"
+
+# --- D.28 semantic HTML ---------------------------------------------------
+python3 "$QG/check-semantic-html.py" "$FIX/v7/semantic-ok.html" >/dev/null 2>&1 \
+  && ok "D.28 semantic: landmarks + continuous headings pass" \
+  || bad "D.28 false-positive on semantic-ok.html"
+OUT=$(python3 "$QG/check-semantic-html.py" "$FIX/v7/semantic-bad.html" 2>&1); RC=$?
+[ "$RC" -eq 1 ] && has "heading level skips" "$OUT" \
+  && ok "D.28 semantic: double h1 + skipped level + div-button caught" \
+  || bad "D.28 missed violations (rc=$RC)"
+
+# --- D.29 reduced motion --------------------------------------------------
+python3 "$QG/check-reduced-motion.py" "$FIX/v7/motion-ok.css" >/dev/null 2>&1 \
+  && ok "D.29 reduced-motion: quiet version present passes" \
+  || bad "D.29 false-positive on motion-ok.css"
+OUT=$(python3 "$QG/check-reduced-motion.py" "$FIX/v7/motion-bad.css" 2>&1); RC=$?
+[ "$RC" -eq 1 ] && ok "D.29 reduced-motion: motion without quiet version fails" \
+  || bad "D.29 missed missing reduced-motion (rc=$RC)"
+
+# --- D.30 ai-look-detector ------------------------------------------------
+OUT=$(python3 "$ROOT/packs/ai-look-detector/scripts/scan.py" --self-test 2>&1); RC=$?
+[ "$RC" -eq 0 ] && ok "D.30 ai-look-detector: clean passes, tier-1 markers caught" \
+  || bad "D.30 ai-look-detector self-test: $(printf '%s' "$OUT" | tail -1)"
+
+# --- D.35 motion properties (tier 2) --------------------------------------
+OUT=$(python3 "$QG/check-motion-properties.py" "$FIX/v7/motion-ok.css" 2>&1); RC=$?
+[ "$RC" -eq 0 ] && ok "D.35 motion-props: transform/opacity motion passes" \
+  || bad "D.35 false-positive on motion-ok.css"
+OUT=$(python3 "$QG/check-motion-properties.py" "$FIX/v7/motion-bad.css" 2>&1); RC=$?
+if [ "$RC" -eq 0 ] && has "WARN" "$OUT"; then
+  python3 "$QG/check-motion-properties.py" "$FIX/v7/motion-bad.css" --strict >/dev/null 2>&1
+  [ "$?" -eq 1 ] && ok "D.35 motion-props: layout-property transition warns (tier 2), strict fails" \
+    || bad "D.35 --strict did not fail on motion-bad.css"
+else
+  bad "D.35 expected tier-2 warning on motion-bad.css (rc=$RC)"
+fi
+
+# --- D.36 copy-linter ------------------------------------------------------
+OUT=$(python3 "$ROOT/packs/copy-linter/scripts/lint-copy.py" --self-test 2>&1); RC=$?
+[ "$RC" -eq 0 ] && ok "D.36 copy-linter: clean copy passes, slop caught" \
+  || bad "D.36 copy-linter self-test: $(printf '%s' "$OUT" | tail -1)"
+
+# --- D.37 token-validator --------------------------------------------------
+OUT=$(python3 "$ROOT/packs/token-validator/scripts/validate-layers.py" --self-test 2>&1); RC=$?
+[ "$RC" -eq 0 ] && ok "D.37 token-validator: violation caught, both skins valid" \
+  || bad "D.37 token-validator self-test: $(printf '%s' "$OUT" | tail -1)"
+
+# --- D.38 state-generator + seven-states -----------------------------------
+OUT=$(python3 "$ROOT/packs/state-generator/scripts/generate-states.py" --self-test 2>&1); RC=$?
+[ "$RC" -eq 0 ] && ok "D.38 state-generator: generate->check cycle works" \
+  || bad "D.38 state-generator self-test: $(printf '%s' "$OUT" | tail -1)"
+OUT=$(python3 "$QG/check-seven-states.py" "$FIX/contract/design-contract.yaml" 2>&1); RC=$?
+has "skip D.38" "$OUT" || has "OK:" "$OUT" || [ "$RC" -eq 0 ] \
+  && ok "D.38 seven-states: honest skip/ pass on fixture contract" \
+  || bad "D.38 unexpected failure on fixture (rc=$RC): $OUT"
+
+# --- pack bus: new packs resolve through pack-resolve ----------------------
+for v7pack in ai-look-detector contrast-checker token-validator state-generator copy-linter; do
+  OUT=$(python3 "$PO/pack-resolve.py" "$ROOT/packs" "$v7pack" --json 2>&1)
+  has '"status": "active"' "$OUT" \
+    && ok "pack-resolve: $v7pack active (acceptance green)" \
+    || bad "pack-resolve: $v7pack not active: $(printf '%s' "$OUT" | tr '\n' ' ' | head -c 160)"
+done
+
 printf '%s\n' "== self-test: browser smoke [TZ-2.2/2.3/3.1/3.2] =="
 
 if node -e "require.resolve('playwright')" >/dev/null 2>&1; then
