@@ -2,7 +2,7 @@
   <img src="docs/brand-header.svg" alt="DesignOps — brand image" width="100%">
 </p>
 
-# Design Production Pipeline v6.0
+# Design Production Pipeline v7.0
 
 <img src="docs/banner.svg" alt="v6.0 pipeline: discovery → structure → human gate → automatic base skin → verified foundation; visual craft and deploy as options" width="100%">
 
@@ -10,6 +10,12 @@ Turns a plain-text request into a **working interface foundation** for
 websites AND web apps — assembled fast, machine-verified, testable locally,
 and ready for further UI refinement whenever you want. Not a pretty-page
 generator: a basic but real product that works from the first hour.
+
+**Open-source pipeline for production-ready UI** — the core is fully free
+(MIT), forever: all skills, all gates, base skins, base packs, the
+D1–D38 floor, the knowledge vault. Ecosystem assets (curated packs,
+skins, starters) and support are the future Pro tier — a bonus, never a
+paywall on capability.
 
 ```
 K0 discovery → K1 structure → GATE 1 (human) → K2A base skin (automatic)
@@ -40,9 +46,10 @@ the machine proves the floor; AI assists only where it is reliable.
 - **No AI slop.** Divergence is constructed and machine-verified; a linted
   ban-list blocks the statistical defaults, every ban citing its evidence
   note in `knowledge/`.
-- **Quality is proven, not claimed.** A deterministic floor D1–D24
-  (including visual regression and a secrets scan); a missing capability
-  reports an honest `unavailable` and caps the verdict.
+- **Quality is proven, not claimed.** A deterministic floor D1–D38,
+  tiered (blocking / warning), including visual regression and a secrets
+  scan; a missing capability reports an honest `unavailable` and caps the
+  verdict.
 
 ## The skills
 
@@ -51,12 +58,16 @@ the machine proves the floor; AI assists only where it is reliable.
 | `pipeline-orchestrator` | — | routing (site/app, starter-first, neutralize, restyle), the contract as single source of truth, gates, packs, decision log, delivery report |
 | `structure-builder` | K1 | **UX** — experience model, domain + RBAC + state matrix (app), neutral skeleton, neutralization |
 | `visual-director` | K2A/K2B | **UI** — automatic base skin; directions, blind choice, merge, DTCG tokens, assets (K2B) |
-| `quality-guardian` | K3 | proof — deterministic floor D1–D24, AI diagnostics, quality report, verdict |
+| `quality-guardian` | K3 | proof — deterministic floor D1–D38 (tiered), AI diagnostics, quality report, verdict |
 
 Sidecars: `packs/` (integration bus: manifest + acceptance test + frozen
-registry per integration), `starters/` (Verified Starters + harvest),
-`skins/` (base-site, base-app), `knowledge/` (evidence vault — Obsidian is
-an optional viewer, never a dependency).
+registry per integration — 15 packs in v7.0, incl. ai-look-detector,
+contrast-checker, token-validator, state-generator, copy-linter,
+awwwards-reference), `starters/` (Verified Starters + harvest),
+`skins/` (base-site, base-app — three-layer tokens + dark theme),
+`knowledge/` (evidence vault, 33 notes — Obsidian is an optional viewer,
+never a dependency), `radar/` (weekly ecosystem digest), `showcase/`
+(gallery auto-built from starters).
 
 ## Gates
 
@@ -88,6 +99,20 @@ First run: prompt P01 from `eval/example-prompts.md`, score with
 
 ## Changelog
 
+- **v7.0** — verified design intelligence: invariants A.12–A.24 and
+  evidence vault E.22–E.38 (33 notes) from the formalized UI/UX rule
+  base (ux-wiki); deterministic floor extended to D1–D38 with tiered
+  enforcement (WCAG contrast, touch targets, focus, semantic HTML,
+  reduced-motion, AI-look — blocking; squint/grayscale/keyboard/copy —
+  warning); three-layer token architecture (primitive → semantic →
+  component, compile-enforced) with dark-elevation and motion tokens;
+  K2B upgraded (design review audit, Three Dials calibration, curated
+  reference directions with hard stops); AJTBD-lite + RAT-lite discovery;
+  slash commands (/design, /restyle, /verify, /deploy); six new
+  verification packs; ecosystem MVP (Radar weekly digest, Docs Portal,
+  Showcase); monetization groundwork (trademark notice, pro-tier
+  structure, install-time tier check) — the core pipeline stays fully
+  open source.
 - **v6.0** — working interface foundation: K2 split (automatic base skin +
   optional deferrable visual craft), app profile (domain, RBAC, state
   matrix, OpenAPI mocks), Verified Starters with harvest flywheel, pack
@@ -99,4 +124,6 @@ First run: prompt P01 from `eval/example-prompts.md`, score with
 
 ## License
 
-MIT — see `LICENSE`.
+Code and documentation: MIT — see `LICENSE`. Brand (the "Design-Ops"
+name, logo, and associated marks): trademark of Pavel Evgrafov — use
+requires explicit permission (see the trademark notice in `LICENSE`).

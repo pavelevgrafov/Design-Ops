@@ -19,3 +19,21 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+TRADEMARK NOTICE
+
+The MIT License above applies to the code and documentation files (the
+"Software"). It does NOT grant any rights to the brand assets:
+
+- the name "Design-Ops" and "Design Production Pipeline",
+- the logo, banner, and brand artwork (docs/banner.svg,
+  docs/brand-header.svg),
+- the marks "Design-Ops Verified" and "Design-Ops Certified"
+
+are trademarks of Pavel Evgrafov. You may use, copy, modify, and
+redistribute the Software under MIT terms, but you may NOT use the
+trademarks to name, brand, or endorse derivative distributions, packs,
+skins, starters, or services without explicit written permission. Forks
+must be distributed under a different name and without the brand artwork.

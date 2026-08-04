@@ -1,4 +1,4 @@
-# AGENTS.md — Design Production (v6.0)
+# AGENTS.md — Design Production (v7.0)
 
 ## What this repository does
 
