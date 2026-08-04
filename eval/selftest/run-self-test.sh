@@ -145,20 +145,38 @@ else
   bad "GNU-only regex tokens found: $(printf '%s%s' "$AUDIT" "$AUDIT2" | head -3 | tr '\n' ' ')"
 fi
 
-printf '%s\n' "== self-test: v6.0 contract-migrate [TZ-1] =="
+printf '%s\n' "== self-test: v6.0/v7.0 contract-migrate [TZ-1] =="
 
 MIGWORK=$(mktemp -d 2>/dev/null || mktemp -d -t mig)
 cp "$FIX/contract/design-contract.yaml" "$MIGWORK/design-contract.yaml"
 OUT=$(python3 "$PO/contract-migrate.py" "$MIGWORK/design-contract.yaml" 2>&1); RC=$?
 GOT=$(python3 "$PO/contract-read.py" "$MIGWORK/design-contract.yaml" schema_version 2>&1)
-if [ "$RC" -eq 0 ] && [ "$GOT" = "6.0" ]; then
-  ok "migrator: 5.1 fixture -> schema 6.0"
+if [ "$RC" -eq 0 ] && [ "$GOT" = "7.0" ] && has "5.1->6.0" "$OUT" && has "6.0->7.0" "$OUT"; then
+  ok "migrator: 5.1 fixture -> schema 7.0 in one chained run"
 else
   bad "migrator run (rc=$RC, schema=$GOT): $(printf '%s' "$OUT" | tail -1)"
 fi
 OUT=$(python3 "$PO/contract-migrate.py" "$MIGWORK/design-contract.yaml" 2>&1)
-has "already 6.0" "$OUT" && ok "migrator: idempotent second run" \
+has "already 7.0" "$OUT" && ok "migrator: idempotent second run" \
   || bad "migrator not idempotent: $OUT"
+V7BAD=$(mktemp -d 2>/dev/null || mktemp -d -t v7bad)
+mkdir -p "$V7BAD/artifacts"
+cp "$MIGWORK/design-contract.yaml" "$V7BAD/artifacts/design-contract.yaml"
+python3 - "$V7BAD/artifacts/design-contract.yaml" <<'PYEOF'
+import sys, yaml
+p = sys.argv[1]
+c = yaml.safe_load(open(p))
+c["product"]["job_hypothesis"] = {"statement": "x", "confidence": "sure", "source": "vibes"}
+c["experience"]["assumptions"] = [{"claim": "a", "kill_criteria": "k"}] * 4
+c["visual"]["design_review"] = "looks-good"
+yaml.safe_dump(c, open(p, "w"), allow_unicode=True, sort_keys=False)
+PYEOF
+OUT=$(python3 "$QG/validate-pipeline.py" "$V7BAD" 2>&1); RC=$?
+if [ "$RC" -eq 1 ] && has "confidence" "$OUT" && has "RAT-lite caps" "$OUT" && has "design_review" "$OUT"; then
+  ok "validate-pipeline: v7 field violations caught (confidence, RAT cap, design_review)"
+else
+  bad "validate-pipeline v7 negatives missed (rc=$RC): $(printf '%s' "$OUT" | grep -c FAIL) fail lines"
+fi
 
 printf '%s\n' "== self-test: v6.0 pack-resolve + D24 [TZ-2/TZ-8] =="
 

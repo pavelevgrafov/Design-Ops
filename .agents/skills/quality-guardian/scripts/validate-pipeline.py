@@ -72,11 +72,11 @@ def main():
     if ver == "5.0":
         problems.append("contract is schema 5.0 — run the 5.1 migration first "
                         "(move to artifacts/, schema_version 5.1, verdict mapping)")
-    elif ver == "5.1":
-        warnings.append("contract is schema 5.1 — migrate to 6.0 "
+    elif ver in ("5.1", "6.0"):
+        warnings.append(f"contract is schema {ver} — migrate to 7.0 "
                         "(pipeline-orchestrator/scripts/contract-migrate.py)")
-    elif ver != "6.0":
-        problems.append(f"meta.schema_version is '{ver}', expected '6.0' (5.1 migrates)")
+    elif ver != "7.0":
+        problems.append(f"meta.schema_version is '{ver}', expected '7.0' (chain 5.1->6.0->7.0)")
     for key in ("product", "experience", "content_model", "visual", "gates", "status", "acceptance"):
         if key not in c:
             problems.append(f"missing contract section: {key}")
@@ -120,6 +120,36 @@ def main():
     if (prod.get("confirmed_by") or prod.get("at")) and not prod.get("rollback_tested"):
         problems.append("Gate 3: prod confirmed without the dry-run rollback "
                         "(deploy.prod.rollback_tested: true required)")
+
+    # --- v7: discovery-lite + K2B audit fields (when present) ----------------
+    jh = ((c.get("product") or {}).get("job_hypothesis") or {})
+    conf = str(jh.get("confidence") or "")
+    if conf and conf not in ("low", "medium", "high"):
+        problems.append(f"product.job_hypothesis.confidence '{conf}' "
+                        "not in low|medium|high")
+    src = str(jh.get("source") or "")
+    if src and src not in ("user_answer", "inferred_from_request", "category_default"):
+        problems.append(f"product.job_hypothesis.source '{src}' outside the taxonomy")
+    assumptions = ((c.get("experience") or {}).get("assumptions") or [])
+    if len(assumptions) > 3:
+        problems.append(f"experience.assumptions has {len(assumptions)} entries — "
+                        "RAT-lite caps at 3 (k0-discovery-lite.md)")
+    for a in assumptions:
+        if isinstance(a, dict) and not str(a.get("kill_criteria", "")).strip():
+            problems.append(f"assumption '{str(a.get('claim', '?'))[:50]}' missing kill_criteria")
+    dr = str((c.get("visual") or {}).get("design_review") or "")
+    if dr and dr != "pending" and dr != "pass" and not dr.startswith("fail("):
+        problems.append(f"visual.design_review '{dr}' outside pass|pending|fail(<lines>)")
+    for d in ((c.get("visual") or {}).get("directions") or []):
+        if not isinstance(d, dict):
+            continue
+        dials = d.get("dials")
+        if dials is None:
+            continue
+        for k in ("variance", "motion", "density"):
+            v = (dials or {}).get(k)
+            if v is not None and not (isinstance(v, (int, float)) and 0 <= v <= 10):
+                problems.append(f"direction '{d.get('id', '?')}': dials.{k}={v} outside 0–10")
 
     # --- 2. gate order via changelog ------------------------------------------
     def first_time(pred):
