@@ -170,11 +170,17 @@ else
 fi
 
 # --- git hook (v7.1 gate enforcement) ----------------------------------------
+HOOKS_PATH=$(git -C "$TARGET" config core.hooksPath 2>/dev/null || true)
 if [ -d "$TARGET/.git" ]; then
-  mkdir -p "$TARGET/.git/hooks"
-  cp "$SRC/.agents/hooks/pre-commit" "$TARGET/.git/hooks/pre-commit"
-  chmod +x "$TARGET/.git/hooks/pre-commit"
-  echo "== git hook: pre-commit pipeline integrity (D19) installed"
+  if [ -n "$HOOKS_PATH" ]; then
+    echo "== git hook: skipped (global core.hooksPath=$HOOKS_PATH shadows repo hooks)"
+    echo "   D19 integrity still enforced in K3 (validate-pipeline) and CI"
+  else
+    mkdir -p "$TARGET/.git/hooks"
+    cp "$SRC/.agents/hooks/pre-commit" "$TARGET/.git/hooks/pre-commit"
+    chmod +x "$TARGET/.git/hooks/pre-commit"
+    echo "== git hook: pre-commit pipeline integrity (D19) installed"
+  fi
 else
   echo "== git hook: skipped (no .git in target)"
 fi

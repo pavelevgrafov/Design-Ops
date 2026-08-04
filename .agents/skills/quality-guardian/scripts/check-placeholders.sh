@@ -24,7 +24,7 @@ size_kb() {
 }
 
 # --- 1. Placeholder copy (capture-then-test) -----------------------------------
-PLACEHOLDER_HITS=$(grep -rniE 'lorem ipsum|dolor sit amet|consectetur adipiscing|text goes here|TODO:?[[:space:]]*(copy|text)|placeholder text|coming soon™|xxx+' \
+PLACEHOLDER_HITS=$(grep -rniE 'lorem ipsum|dolor sit amet|consectetur adipiscing|text goes here|TODO:?[[:space:]]*(copy|text)|placeholder text|coming soon™|\bxxx\b' \
   "$ROOT" "${SRC_INCLUDES[@]}" 2>/dev/null | grep -v node_modules || true)
 if [ -n "$PLACEHOLDER_HITS" ]; then
   printf '%s\n' "$PLACEHOLDER_HITS" | head -5
