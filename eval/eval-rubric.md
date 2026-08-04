@@ -100,3 +100,27 @@ whether the floor is visible to a blind reviewer.
    evidence links + the main defect (if any).
 5. Regression = total dropping ≥1.5 points vs the previous run OR any new 0
    in C1–C4/C11/C12 → stop the change from shipping.
+
+## v7.0 floor extension (D25–D38)
+
+The deterministic floor extends D1–D24 → D1–D38 with tiered enforcement.
+Tier 1 failures block the verdict; Tier 2 produce warnings in the quality
+report and never block. Until a check is wired (phase 3), its status is
+`skip(spec)` — explicit, never a silent pass [A.6].
+
+| Check | Rule | Tier | Source |
+| :-- | :-- | :-- | :-- |
+| D25 contrast WCAG | text 4.5:1, large 3:1, non-text 3:1; no rounding | 1 | knowledge/wcag-22-aa-rules |
+| D26 target size | ≥24×24 CSS px (AA), 44–48px practice | 1 | knowledge/wcag-22-aa-rules |
+| D27 focus visible | :focus-visible styled, never removed; indicator ≥3:1 | 1 | knowledge/wcag-22-aa-rules |
+| D28 semantic HTML | correct tags, continuous H1→H3 | 1 | knowledge/wcag-22-aa-rules |
+| D29 reduced-motion | quiet version without movement | 1 | knowledge/motion-budgets |
+| D30 AI-look markers | no ban-list defaults (indigo-600 hero, slate-900, rounded-2xl-everything) | 1 | knowledge/ai-look-catalog |
+| D31 squint test | hierarchy readable under blur | 2 | knowledge/text-hierarchy-tiers |
+| D32 5-second test | a new viewer understands what it is and what to do | 2 | knowledge/parallel-design |
+| D33 grayscale test | hierarchy works without color | 2 | knowledge/text-hierarchy-tiers |
+| D34 keyboard test | the whole scenario without a mouse | 2 | knowledge/wcag-22-aa-rules |
+| D35 jank | 60fps, transform/opacity only, jank < 1% | 2 | knowledge/motion-budgets |
+| D36 copy audit | no corporate slop; ≥1 concrete claim with a number | 2 | knowledge/microcopy-principles |
+| D37 token architecture | primitive → semantic → component references only | 1 | knowledge/token-architecture-3layer |
+| D38 seven states | idle/loading/skeleton/populated/empty/error/success per async block | 1 | knowledge/async-seven-states |

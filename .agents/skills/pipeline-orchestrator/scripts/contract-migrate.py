@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""contract-migrate.py — upgrade a design contract 5.1 -> 6.0 (idempotent).
+"""contract-migrate.py — upgrade a design contract 5.1 -> 6.0 -> 7.0 (idempotent).
 
-Adds v6 sections with defaults; never touches existing values; appends a
-changelog entry. Reads/writes artifacts/design-contract.yaml by default.
+Adds new sections with defaults; never touches existing values; appends one
+changelog entry per hop. Reads/writes artifacts/design-contract.yaml by
+default. Chained: a 5.1 contract lands on 7.0 in one run.
 
 Usage: python3 contract-migrate.py [contract_path]
-Exit: 0 migrated (or already 6.0), 1 error, 2 file missing, 3 yaml error,
+Exit: 0 migrated (or already 7.0), 1 error, 2 file missing, 3 yaml error,
       4 pyyaml missing, 5 unsupported source version.
 """
 import os, sys, datetime
@@ -39,6 +40,32 @@ V6_DEFAULTS = {
     ("status", "base_skin_applied"): False,
 }
 
+V7_DEFAULTS = {
+    ("product", "job_hypothesis"): {"statement": "", "confidence": "",
+                                    "source": ""},
+    ("experience", "assumptions"): [],
+    ("visual", "design_review"): "",
+    ("knowledge", "sources_pin"): {"ux_wiki": {"tag": "", "sha256": ""},
+                                   "design_ops": {"tag": ""}},
+}
+
+HOPS = [("5.1", "6.0", V6_DEFAULTS), ("6.0", "7.0", V7_DEFAULTS)]
+
+
+def apply_defaults(c, defaults):
+    added = []
+    for keys, default in defaults.items():
+        node = c
+        for k in keys[:-1]:
+            node = node.setdefault(k, {})
+            if not isinstance(node, dict):
+                node = {}
+        if node.get(keys[-1]) is None:
+            node[keys[-1]] = default
+            added.append(".".join(keys))
+    return added
+
+
 def main():
     path = sys.argv[1] if len(sys.argv) > 1 else os.path.join(
         "artifacts", "design-contract.yaml")
@@ -54,37 +81,36 @@ def main():
 
     meta = c.setdefault("meta", {})
     ver = str(meta.get("schema_version"))
-    if ver == "6.0":
-        print("OK: already 6.0, nothing to do")
+    if ver == "7.0":
+        print("OK: already 7.0, nothing to do")
         return 0
-    if ver != "5.1":
-        print(f"FAIL: unsupported schema_version '{ver}' (migrate 5.0 -> 5.1 first)")
+
+    hops_done = []
+    for from_ver, to_ver, defaults in HOPS:
+        if ver != from_ver:
+            continue
+        added = apply_defaults(c, defaults)
+        meta["schema_version"] = to_ver
+        now = datetime.datetime.now().isoformat(timespec="seconds")
+        meta["updated_at"] = now
+        c.setdefault("changelog", []).append({
+            "at": now, "author": "agent",
+            "field": "meta.schema_version", "from": from_ver, "to": to_ver,
+            "reason": f"migration {from_ver} -> {to_ver} (sections added with defaults)",
+        })
+        hops_done.append(f"{from_ver}->{to_ver} ({len(added)} fields)")
+        ver = to_ver
+
+    if not hops_done:
+        print(f"FAIL: unsupported schema_version '{meta.get('schema_version')}' "
+              "(supported chain: 5.1 -> 6.0 -> 7.0)")
         return 5
-
-    added = []
-    for keys, default in V6_DEFAULTS.items():
-        node = c
-        for k in keys[:-1]:
-            node = node.setdefault(k, {})
-            if not isinstance(node, dict):
-                node = {}
-        if node.get(keys[-1]) is None:
-            node[keys[-1]] = default
-            added.append(".".join(keys))
-    meta["schema_version"] = "6.0"
-
-    now = datetime.datetime.now().isoformat(timespec="seconds")
-    meta["updated_at"] = now
-    c.setdefault("changelog", []).append({
-        "at": now, "author": "agent",
-        "field": "meta.schema_version", "from": "5.1", "to": "6.0",
-        "reason": "migration 5.1 -> 6.0 (sections added with defaults)",
-    })
 
     with open(path, "w", encoding="utf-8") as f:
         yaml.safe_dump(c, f, allow_unicode=True, sort_keys=False)
-    print(f"OK: migrated to 6.0 ({len(added)} sections/fields defaulted)")
+    print(f"OK: migrated to 7.0 [{'; '.join(hops_done)}]")
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())

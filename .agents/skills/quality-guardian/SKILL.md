@@ -70,6 +70,15 @@ Canonical registry: `references/deterministic-floor.md`. Tooling map:
 | D23 secrets scan | `check-secrets.py` — BLOCKING, runs before any deploy and at every floor; `SECRET-ALLOW:` documents false positives |
 | D24 service packs | `check-packs.py` — resolves every contract `integrations[]` entry; core pack not active → verdict caps at ready_with_caveats; peripheral → report line only [A.6] |
 
+v7.0 extension D.25–D.38 (tiered; full registry:
+`references/deterministic-floor.md`): D.25 `packs/contrast-checker`,
+D.26 = D13 line, D.27 `check-focus-visible.py`, D.28
+`check-semantic-html.py`, D.29 `check-reduced-motion.py`, D.30
+`packs/ai-look-detector`, D.31–D.34 model_judged/manual (Tier 2),
+D.35 `check-motion-properties.py` (Tier 2), D.36 `packs/copy-linter`
+(Tier 2), D.37 `packs/token-validator`, D.38 `check-seven-states.py` +
+`packs/state-generator`. Tier 1 blocks, Tier 2 warns in the report.
+
 Field add-on (not a floor check): `assets/inp-beacon.js` (≤2 KB, Event
 Timing API) measures real INP when the artifact is deployed; p75 >200ms caps
 at ready_with_caveats, never blocks, and is reported separately from the lab

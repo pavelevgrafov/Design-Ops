@@ -11,3 +11,9 @@ packs:
   favicon:               {version: "0.1.0", status: active}
   deploy-github-pages:   {version: "0.1.0", status: active}
   deploy-cloudflare-pages: {version: "0.1.0", status: active}
+  ai-look-detector:      {version: "0.1.0", status: active}   # v7.0, D.30
+  contrast-checker:      {version: "0.1.0", status: active}   # v7.0, D.25
+  token-validator:       {version: "0.1.0", status: active}   # v7.0, D.37
+  state-generator:       {version: "0.1.0", status: active}   # v7.0, D.38
+  copy-linter:           {version: "0.1.0", status: active}   # v7.0, D.36
+  awwwards-reference:    {version: "0.1.0", status: active}   # v7.0, K2B calibration

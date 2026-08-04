@@ -5,7 +5,7 @@ url: https://keepsimple.io/ru/uxcore
 evidence_level: curated
 verified_at: 2026-07-21
 tags: [cognitive-biases, pricing, framing, ru]
-thesis: "100+ когнитивных искажений с примерами для продактов, русскоязычно."
+thesis: "100+ когнитивных искажений с примерами, русскоязычно."
 ---
 
 ## Что это

@@ -145,20 +145,38 @@ else
   bad "GNU-only regex tokens found: $(printf '%s%s' "$AUDIT" "$AUDIT2" | head -3 | tr '\n' ' ')"
 fi
 
-printf '%s\n' "== self-test: v6.0 contract-migrate [TZ-1] =="
+printf '%s\n' "== self-test: v6.0/v7.0 contract-migrate [TZ-1] =="
 
 MIGWORK=$(mktemp -d 2>/dev/null || mktemp -d -t mig)
 cp "$FIX/contract/design-contract.yaml" "$MIGWORK/design-contract.yaml"
 OUT=$(python3 "$PO/contract-migrate.py" "$MIGWORK/design-contract.yaml" 2>&1); RC=$?
 GOT=$(python3 "$PO/contract-read.py" "$MIGWORK/design-contract.yaml" schema_version 2>&1)
-if [ "$RC" -eq 0 ] && [ "$GOT" = "6.0" ]; then
-  ok "migrator: 5.1 fixture -> schema 6.0"
+if [ "$RC" -eq 0 ] && [ "$GOT" = "7.0" ] && has "5.1->6.0" "$OUT" && has "6.0->7.0" "$OUT"; then
+  ok "migrator: 5.1 fixture -> schema 7.0 in one chained run"
 else
   bad "migrator run (rc=$RC, schema=$GOT): $(printf '%s' "$OUT" | tail -1)"
 fi
 OUT=$(python3 "$PO/contract-migrate.py" "$MIGWORK/design-contract.yaml" 2>&1)
-has "already 6.0" "$OUT" && ok "migrator: idempotent second run" \
+has "already 7.0" "$OUT" && ok "migrator: idempotent second run" \
   || bad "migrator not idempotent: $OUT"
+V7BAD=$(mktemp -d 2>/dev/null || mktemp -d -t v7bad)
+mkdir -p "$V7BAD/artifacts"
+cp "$MIGWORK/design-contract.yaml" "$V7BAD/artifacts/design-contract.yaml"
+python3 - "$V7BAD/artifacts/design-contract.yaml" <<'PYEOF'
+import sys, yaml
+p = sys.argv[1]
+c = yaml.safe_load(open(p))
+c["product"]["job_hypothesis"] = {"statement": "x", "confidence": "sure", "source": "vibes"}
+c["experience"]["assumptions"] = [{"claim": "a", "kill_criteria": "k"}] * 4
+c["visual"]["design_review"] = "looks-good"
+yaml.safe_dump(c, open(p, "w"), allow_unicode=True, sort_keys=False)
+PYEOF
+OUT=$(python3 "$QG/validate-pipeline.py" "$V7BAD" 2>&1); RC=$?
+if [ "$RC" -eq 1 ] && has "confidence" "$OUT" && has "RAT-lite caps" "$OUT" && has "design_review" "$OUT"; then
+  ok "validate-pipeline: v7 field violations caught (confidence, RAT cap, design_review)"
+else
+  bad "validate-pipeline v7 negatives missed (rc=$RC): $(printf '%s' "$OUT" | grep -c FAIL) fail lines"
+fi
 
 printf '%s\n' "== self-test: v6.0 pack-resolve + D24 [TZ-2/TZ-8] =="
 
@@ -210,7 +228,7 @@ else
   bad "knowledge-validate on repo (rc=$RC): $(printf '%s' "$OUT" | tail -2 | tr '\n' ' ')"
 fi
 IDXSIZE=$(wc -c < "$ROOT/knowledge/index.yaml" | tr -d ' ')
-[ "$IDXSIZE" -le 4096 ] && ok "knowledge index <= 4 KB ($IDXSIZE B)" \
+[ "$IDXSIZE" -le 8192 ] && ok "knowledge index <= 8 KB v7.0 ($IDXSIZE B)" \
   || bad "knowledge index too big: $IDXSIZE B"
 KVWORK=$(mktemp -d 2>/dev/null || mktemp -d -t kv)
 mkdir -p "$KVWORK/knowledge/sources" "$KVWORK/.agents/skills/x"
@@ -332,6 +350,128 @@ if [ "$RC" -eq 0 ] && [ -f "$HOWORK/handoff/README.md" ] && [ -f "$HOWORK/handof
 else
   bad "handoff path (rc=$RC): $OUT"
 fi
+
+printf '%s\n' "== self-test: v7.0 floor D.25–D.38 + verification packs =="
+
+# --- compile-tokens A.21 layer enforcement (negative) -------------------
+A21WORK=$(mktemp -d 2>/dev/null || mktemp -d -t a21)
+printf '%s' '{"primitive":{"color":{"red":{"500":{"$value":"#ff0000","$type":"color"}}}},"semantic":{"color":{"ink":{"$value":"{primitive.color.red.500}","$type":"color"}}},"component":{"button":{"bg":{"$value":"{primitive.color.red.500}","$type":"color"}}}}' > "$A21WORK/bad.json"
+OUT=$(python3 "$VD/compile-tokens.py" "$A21WORK/bad.json" --check-only 2>&1); RC=$?
+[ "$RC" -eq 1 ] && has "component token must reference semantic" "$OUT" \
+  && ok "compile-tokens: component->primitive violation blocked [A.21]" \
+  || bad "compile-tokens A.21 negative (rc=$RC): $(printf '%s' "$OUT" | tail -1)"
+
+# --- D.25 extended contrast (contrast-checker) ---------------------------
+OUT=$(python3 "$ROOT/packs/contrast-checker/scripts/check-all-pairs.py" --self-test 2>&1); RC=$?
+[ "$RC" -eq 0 ] && ok "D.25 contrast-checker: both skins, both themes green" \
+  || bad "D.25 contrast-checker self-test: $(printf '%s' "$OUT" | tail -1)"
+
+# --- D.27 focus visible ---------------------------------------------------
+python3 "$QG/check-focus-visible.py" "$FIX/v7/focus-ok.css" >/dev/null 2>&1 \
+  && ok "D.27 focus-visible: styled focus passes" \
+  || bad "D.27 false-positive on focus-ok.css"
+OUT=$(python3 "$QG/check-focus-visible.py" "$FIX/v7/focus-bad.css" 2>&1); RC=$?
+[ "$RC" -eq 1 ] && ok "D.27 focus-visible: naked outline:none fails" \
+  || bad "D.27 missed outline removal (rc=$RC)"
+
+# --- D.28 semantic HTML ---------------------------------------------------
+python3 "$QG/check-semantic-html.py" "$FIX/v7/semantic-ok.html" >/dev/null 2>&1 \
+  && ok "D.28 semantic: landmarks + continuous headings pass" \
+  || bad "D.28 false-positive on semantic-ok.html"
+OUT=$(python3 "$QG/check-semantic-html.py" "$FIX/v7/semantic-bad.html" 2>&1); RC=$?
+[ "$RC" -eq 1 ] && has "heading level skips" "$OUT" \
+  && ok "D.28 semantic: double h1 + skipped level + div-button caught" \
+  || bad "D.28 missed violations (rc=$RC)"
+
+# --- D.29 reduced motion --------------------------------------------------
+python3 "$QG/check-reduced-motion.py" "$FIX/v7/motion-ok.css" >/dev/null 2>&1 \
+  && ok "D.29 reduced-motion: quiet version present passes" \
+  || bad "D.29 false-positive on motion-ok.css"
+OUT=$(python3 "$QG/check-reduced-motion.py" "$FIX/v7/motion-bad.css" 2>&1); RC=$?
+[ "$RC" -eq 1 ] && ok "D.29 reduced-motion: motion without quiet version fails" \
+  || bad "D.29 missed missing reduced-motion (rc=$RC)"
+
+# --- D.30 ai-look-detector ------------------------------------------------
+OUT=$(python3 "$ROOT/packs/ai-look-detector/scripts/scan.py" --self-test 2>&1); RC=$?
+[ "$RC" -eq 0 ] && ok "D.30 ai-look-detector: clean passes, tier-1 markers caught" \
+  || bad "D.30 ai-look-detector self-test: $(printf '%s' "$OUT" | tail -1)"
+
+# --- D.35 motion properties (tier 2) --------------------------------------
+OUT=$(python3 "$QG/check-motion-properties.py" "$FIX/v7/motion-ok.css" 2>&1); RC=$?
+[ "$RC" -eq 0 ] && ok "D.35 motion-props: transform/opacity motion passes" \
+  || bad "D.35 false-positive on motion-ok.css"
+OUT=$(python3 "$QG/check-motion-properties.py" "$FIX/v7/motion-bad.css" 2>&1); RC=$?
+if [ "$RC" -eq 0 ] && has "WARN" "$OUT"; then
+  python3 "$QG/check-motion-properties.py" "$FIX/v7/motion-bad.css" --strict >/dev/null 2>&1
+  [ "$?" -eq 1 ] && ok "D.35 motion-props: layout-property transition warns (tier 2), strict fails" \
+    || bad "D.35 --strict did not fail on motion-bad.css"
+else
+  bad "D.35 expected tier-2 warning on motion-bad.css (rc=$RC)"
+fi
+
+# --- D.36 copy-linter ------------------------------------------------------
+OUT=$(python3 "$ROOT/packs/copy-linter/scripts/lint-copy.py" --self-test 2>&1); RC=$?
+[ "$RC" -eq 0 ] && ok "D.36 copy-linter: clean copy passes, slop caught" \
+  || bad "D.36 copy-linter self-test: $(printf '%s' "$OUT" | tail -1)"
+
+# --- D.37 token-validator --------------------------------------------------
+OUT=$(python3 "$ROOT/packs/token-validator/scripts/validate-layers.py" --self-test 2>&1); RC=$?
+[ "$RC" -eq 0 ] && ok "D.37 token-validator: violation caught, both skins valid" \
+  || bad "D.37 token-validator self-test: $(printf '%s' "$OUT" | tail -1)"
+
+# --- D.38 state-generator + seven-states -----------------------------------
+OUT=$(python3 "$ROOT/packs/state-generator/scripts/generate-states.py" --self-test 2>&1); RC=$?
+[ "$RC" -eq 0 ] && ok "D.38 state-generator: generate->check cycle works" \
+  || bad "D.38 state-generator self-test: $(printf '%s' "$OUT" | tail -1)"
+OUT=$(python3 "$QG/check-seven-states.py" "$FIX/contract/design-contract.yaml" 2>&1); RC=$?
+has "skip D.38" "$OUT" || has "OK:" "$OUT" || [ "$RC" -eq 0 ] \
+  && ok "D.38 seven-states: honest skip/ pass on fixture contract" \
+  || bad "D.38 unexpected failure on fixture (rc=$RC): $OUT"
+
+# --- pack bus: new packs resolve through pack-resolve ----------------------
+for v7pack in ai-look-detector contrast-checker token-validator state-generator copy-linter awwwards-reference; do
+  OUT=$(python3 "$PO/pack-resolve.py" "$ROOT/packs" "$v7pack" --json 2>&1)
+  has '"status": "active"' "$OUT" \
+    && ok "pack-resolve: $v7pack active (acceptance green)" \
+    || bad "pack-resolve: $v7pack not active: $(printf '%s' "$OUT" | tr '\n' ' ' | head -c 160)"
+done
+
+# --- v7.0 K2B: tier-2 ban-list + awwwards-reference flows -------------------
+T2WORK=$(mktemp -d 2>/dev/null || mktemp -d -t t2)
+printf 'h1{background-clip:text;-webkit-text-fill-color:transparent}\n.x{border-radius:2rem}\n' > "$T2WORK/t.css"
+OUT=$(bash "$VD/lint-ban-list.sh" "$T2WORK" 2>&1); RC=$?
+if [ "$RC" -eq 0 ] && has "tier-2 warning" "$OUT"; then
+  bash "$VD/lint-ban-list.sh" "$T2WORK" --strict >/dev/null 2>&1
+  [ "$?" -eq 1 ] && ok "lint-ban-list: tier-2 warns without blocking, --strict fails" \
+    || bad "lint-ban-list --strict did not fail on tier-2 hits"
+else
+  bad "lint-ban-list tier-2 behavior broken (rc=$RC): $(printf '%s' "$OUT" | tail -1)"
+fi
+bash "$VD/lint-ban-list.sh" "$FIX/clean" >/dev/null 2>&1 \
+  && ok "lint-ban-list: clean fixture stays green with tier-2 active" \
+  || bad "lint-ban-list false-positive on clean fixture"
+
+OUT=$(python3 "$ROOT/packs/awwwards-reference/scripts/search-references.py" --self-test 2>&1); RC=$?
+[ "$RC" -eq 0 ] && ok "awwwards-reference: search honors hard stops (<=3, scored)" \
+  || bad "awwwards-reference search self-test: $(printf '%s' "$OUT" | tail -1)"
+OUT=$(python3 "$ROOT/packs/awwwards-reference/scripts/extract-tokens.py" --self-test 2>&1); RC=$?
+[ "$RC" -eq 0 ] && ok "awwwards-reference: CSS-only token extraction drafts DTCG" \
+  || bad "awwwards-reference extract self-test: $(printf '%s' "$OUT" | tail -1)"
+
+# --- v7.0 ecosystem: showcase + radar --------------------------------------
+SCWORK=$(mktemp -d 2>/dev/null || mktemp -d -t sc)
+OUT=$(python3 "$ROOT/showcase/build-showcase.py" --out "$SCWORK/index.html" 2>&1); RC=$?
+if [ "$RC" -eq 0 ] && [ -f "$SCWORK/index.html" ]; then
+  has "landing-saas" "$(cat "$SCWORK/index.html")" \
+    && ok "showcase: auto-populated from starters index" \
+    || bad "showcase: generated page misses starters"
+else
+  bad "showcase build failed (rc=$RC): $(printf '%s' "$OUT" | tail -1)"
+fi
+OUT=$(env -u GITHUB_TOKEN -u GITHUB_REPOSITORY python3 "$ROOT/radar/radar.py" 2>&1); RC=$?
+[ "$RC" -eq 2 ] && has "required" "$OUT" \
+  && ok "radar: missing env is an explicit usage error, never a silent run" \
+  || bad "radar env-honesty broken (rc=$RC)"
 
 printf '%s\n' "== self-test: browser smoke [TZ-2.2/2.3/3.1/3.2] =="
 

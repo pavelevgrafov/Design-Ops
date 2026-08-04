@@ -27,7 +27,7 @@ import sys
 LEVELS = {"research", "industry-standard", "curated"}
 REQUIRED = ["id", "title", "url", "evidence_level", "verified_at", "tags", "thesis"]
 RESERVED = {"sources", "decisions", "gates", "briefs", "index", "readme"}
-INDEX_LIMIT = 4096
+INDEX_LIMIT = 8192  # v7.0: vault 16 → 33 notes (E.22–E.38), limit raised 4 KB → 8 KB consciously
 STALE_DAYS = 365
 REF_RE = re.compile(r"knowledge/([a-z0-9][a-z0-9-]*)")
 SCAN_GLOBS = [(".agents/skills", ".md"), ("eval", ".md")]

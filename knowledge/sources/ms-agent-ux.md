@@ -5,7 +5,7 @@ url: https://microsoft.design/articles/ux-design-for-agents/
 evidence_level: industry-standard
 verified_at: 2026-07-21
 tags: [ai-features, agents, transparency, control, trust]
-thesis: "Принципы агентного UX Microsoft: прозрачность статуса, контроль, консистентность."
+thesis: "Принципы агентного UX Microsoft: прозрачность, контроль."
 ---
 
 ## Что это

@@ -5,7 +5,7 @@ url: https://goodui.org/
 evidence_level: curated
 verified_at: 2026-07-21
 tags: [patterns, ab-tests, conversion-free, clarity]
-thesis: "UI-паттерны с A/B-данными; дисциплина «паттерн + наблюдаемый эффект»."
+thesis: "UI-паттерны с A/B-данными; дисциплина «паттерн + эффект»."
 ---
 
 ## Что это

@@ -5,7 +5,7 @@ url: https://lawsofux.com/
 evidence_level: curated
 verified_at: 2026-07-21
 tags: [heuristics, psychology, fitts, hick, von-restorff]
-thesis: "Законы Fitts, Hick, Miller, Jakob, Von Restorff с первичными ссылками."
+thesis: "Законы Fitts, Hick, Miller, Jakob, Von Restorff с первоисточниками."
 ---
 
 ## Что это

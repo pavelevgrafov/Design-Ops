@@ -5,7 +5,7 @@ url: https://habr.com/ru/companies/bitrix/articles/928270/
 evidence_level: curated
 verified_at: 2026-07-21
 tags: [attention, memory, b2b, ru, gamedev]
-thesis: "Рабочая память 3–4 элемента; 5 причин «слитого» внимания; порционность."
+thesis: "Рабочая память 3–4 элемента; порционность экранов."
 ---
 
 ## Что это

@@ -97,3 +97,24 @@ can allowlist it. Unjustified hits = automatic fail.
 The ban-list is a snapshot of 2024–2026 slop. Each project MAY append entries
 ("what does the category overdo?"), never remove base entries. Review date:
 with each pipeline version bump.
+
+## v7.0 — tiered enforcement (spec; wiring in phases 2–4)
+
+The v6.0 sections above stay Tier 1 (blocking) as they are. The v7.0 rule
+base adds a tier split so the lint stops shouting about everything:
+
+- **Tier 1 (blocking)** — statistical-default markers: indigo-600/slate-900
+  defaults, indigo→purple hero gradients, first-position Inter/Roboto/
+  Arial/Space Grotesk, cards inside cards, dark-pattern mechanics.
+  source: knowledge/ai-look-catalog
+- **Tier 2 (warning)** — generates a report line, never blocks: glassmorphism
+  with no content under the glass, gradient text on metrics, bounce/elastic
+  on everything, a frame where an offset already groups, hierarchy steps
+  below the 1.25× jump, line-length over 75ch.
+  source: knowledge/ai-look-catalog, knowledge/text-hierarchy-tiers,
+  knowledge/crap-framework, knowledge/modular-type-scale,
+  knowledge/spacing-8pt-grid
+- **Tier 3 (reference only)** — loaded on demand, never linted: full 21-law
+  and 10-heuristic tables, dark-theme rule set.
+  source: knowledge/ux-laws-21, knowledge/nielsen-heuristics-checklist,
+  knowledge/dark-theme-rules

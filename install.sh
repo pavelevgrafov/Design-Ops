@@ -17,7 +17,7 @@ echo "== install: $SRC -> $TARGET"
 
 # --- copy -----------------------------------------------------------------
 for item in AGENTS.md README.md INSTALL.md LICENSE .agents eval starters \
-            skins packs knowledge docs; do
+            skins packs knowledge docs showcase radar; do
   [ -e "$SRC/$item" ] || continue
   if [ "$TARGET" != "$SRC" ]; then
     rm -rf "$TARGET/$item"
@@ -49,10 +49,42 @@ else
   echo "   (enable: npm i -D playwright axe-core && npx playwright install chromium)"
 fi
 
+# --- subscription tier (v7.0) -------------------------------------------------
+# Core pipeline is fully open source — always. The tier only gates future
+# ecosystem assets (packs-pro/, skins-pro/, starters-pro/). Default: free.
+CFG="$TARGET/.agents/config.yaml"
+if [ ! -f "$CFG" ]; then
+  mkdir -p "$TARGET/.agents"
+  cat > "$CFG" <<'YAML'
+# Design-Ops install configuration.
+# subscription.tier: free | pro | team | enterprise — gates ecosystem assets
+# (packs-pro/, skins-pro/, starters-pro/); the core pipeline is always full.
+subscription:
+  tier: free
+YAML
+  echo "== config: created .agents/config.yaml (subscription.tier: free)"
+fi
+TIER=$(sed -n 's/^[[:space:]]*tier:[[:space:]]*\([a-z]*\).*/\1/p' "$CFG" | head -1)
+TIER="${TIER:-free}"
+echo "== subscription tier: $TIER"
+if [ "$TIER" = "free" ]; then
+  for prodir in packs-pro skins-pro starters-pro; do
+    if [ -d "$SRC/$prodir" ] && [ "$TARGET" != "$SRC" ]; then
+      rm -rf "$TARGET/$prodir"
+      echo "== $prodir: skipped (Upgrade to Pro for ecosystem assets)"
+    fi
+  done
+else
+  for prodir in packs-pro skins-pro starters-pro; do
+    [ -e "$SRC/$prodir" ] && [ "$TARGET" != "$SRC" ] \
+      && { rm -rf "$TARGET/$prodir"; cp -R "$SRC/$prodir" "$TARGET/$prodir"; }
+  done
+fi
+
 # --- self-test ---------------------------------------------------------------
 echo "== self-test"
 if bash "$TARGET/eval/selftest/run-self-test.sh"; then
-  echo "== готов к работе: pipeline v6.0 installed in $TARGET"
+  echo "== готов к работе: pipeline v7.0 installed in $TARGET"
   echo "   first run: prompt P01 from eval/example-prompts.md (rubric: eval/eval-rubric.md)"
 else
   echo "fail: self-test red — do not use the pipeline until fixed" >&2

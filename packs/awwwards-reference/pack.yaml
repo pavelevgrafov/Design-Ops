@@ -1,0 +1,16 @@
+id: awwwards-reference
+type: local
+conveyor: [K2]
+class: peripheral
+provides: [curated_reference_directions]
+requires_env: []
+contract_fields: [visual.calibration, integrations]
+acceptance_test: 'python3 "{pack_dir}/scripts/search-references.py" --self-test'
+degradation: "no cache/API — calibration falls back to category anchors + base skin; never blocks K2B"
+cost_profile: free (offline cache); live Awwwards/Apify API = future enhancement, owner decision
+license_notes: >
+  References carry style principles and CSS-level facts (tokens), never
+  copied markup, imagery, or copy. Extracted tokens are facts, not
+  copyrightable expression; direction docs name the source site for
+  attribution.
+version: "0.1.0"

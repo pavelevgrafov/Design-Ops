@@ -1,0 +1,17 @@
+site_name: Design-Ops Pipeline
+site_description: Design Production Pipeline — documentation portal (v7.0)
+repo_url: https://github.com/pavelevgrafov/Design-Ops
+docs_dir: docs
+theme:
+  name: readthedocs
+  navigation_depth: 3
+nav:
+  - Home: index.md
+  - v7.0 release:
+    - ТЗ v7.0: v7/ТЗ-v7.0.md
+    - Бэклог v7.0: v7/Бэклог-v7.0.md
+    - Чек-лист выпуска: v7/Чеклист-выпуска-v7.0.md
+markdown_extensions:
+  - tables
+  - toc:
+      permalink: true

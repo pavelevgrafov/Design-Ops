@@ -62,3 +62,26 @@ luminance: 4.5:1 text / 3:1 large text (≥24px or ≥18.66px bold) and UI chrom
 Tokens live in the repo; any token edit after Gate 2 = `changelog` entry
 (field `tokens`, reason) + decision-log line. A restyle is a tokens diff +
 recompile + K3 re-check (D3/D9/D11, +D4–D8 if type changed) — nothing else.
+
+## v7.0 — extended categories + component layer
+
+New primitive categories (both base skins): `color.semantic.*` (error/
+success/warning/info with `dark` variants), `font.size` (named xs…3xl
+aliases over the modular scale), `font.weight`, `font.tracking`,
+`font.fluid` (clamp), `lineHeight.caption`, `radius.full`, `shadow`
+(two-layer, 3 elevations), `motion` (duration/easing/spring),
+`elevation` (dark state overlays). New semantic groups: `textPrimary/
+Secondary/Tertiary` (three text tiers), `semanticError/Success/Warning/
+Info`, `shadow.*`, `radius.*`, `motion.*`, plus a full `semantic.dark`
+layer (solid pre-computed values from the overlay model — text 87/60/38%
+over #121212; sources: knowledge/dark-theme-rules, knowledge/text-hierarchy-tiers,
+knowledge/motion-budgets, knowledge/modular-type-scale, knowledge/spacing-8pt-grid).
+
+4. **Component** (`component.*`, v7.0): per-element bindings
+   (`button.primaryBg`, `card.radius`, `input.focusRing`). Component
+   tokens reference semantic ONLY [A.21]; the compiler fails the build on
+   `component → primitive` or `semantic → component` references and emits
+   component vars (`--button-primary-bg`, `--card-radius`).
+
+Layer discipline is machine-enforced at compile time (A.21); see also the
+`token-validator` pack (D.37) for project-side verification.

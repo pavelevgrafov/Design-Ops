@@ -5,7 +5,7 @@ url: https://habr.com/ru/companies/bitrix/articles/947396/
 evidence_level: curated
 verified_at: 2026-07-21
 tags: [reward, ethics, dark-patterns, ru, b2b]
-thesis: "Нейромеханики награды; этическая граница: ложная срочность, скрытая цена."
+thesis: "Нейромеханики награды; этическая граница: ложная срочность."
 ---
 
 ## Что это

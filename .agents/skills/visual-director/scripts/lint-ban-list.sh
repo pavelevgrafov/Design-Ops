@@ -81,10 +81,44 @@ if [ -n "$ALLOW_DIR" ] && [ "$HITS" -gt 0 ]; then
   printf 'note: --allow %s given; verify each BAN line has an "ALLOW:" justification in that direction doc.\n' "$ALLOW_DIR"
 fi
 
+# --- Tier 2 (v7.0): warnings, never block alone; --strict upgrades to fail --------
+STRICT=0
+for arg in "$@"; do [ "$arg" = "--strict" ] && STRICT=1; done
+WARNS=0
+warn() { printf 'WARN[%s]: %s\n' "$1" "$2"; WARNS=$((WARNS+1)); }
+
+# rounded-2xl / shadow-lg overuse (uniform component reflex)
+R2XL=$(grep -rnoE 'rounded-2xl' "$ROOT" --include='*.css' --include='*.html' \
+  --include='*.tsx' --include='*.jsx' 2>/dev/null | grep -v node_modules | wc -l | tr -d ' ')
+case "$R2XL" in ''|*[!0-9]*) R2XL=0 ;; esac
+[ "$R2XL" -gt 3 ] && warn "rounded-2xl-overuse" "$R2XL occurrences (one radius vocabulary, not one radius everywhere)"
+
+SHLG=$(grep -rnoE 'shadow-lg' "$ROOT" --include='*.css' --include='*.html' \
+  --include='*.tsx' --include='*.jsx' 2>/dev/null | grep -v node_modules | wc -l | tr -d ' ')
+case "$SHLG" in ''|*[!0-9]*) SHLG=0 ;; esac
+[ "$SHLG" -gt 3 ] && warn "shadow-lg-overuse" "$SHLG occurrences (shadows: 3 semantic elevations, not default-big everywhere)"
+
+# gradient text on metrics / headings
+GTEXT=$(grep -rniE '(background-clip:[[:space:]]*text|-webkit-text-fill-color:[[:space:]]*transparent)' "$ROOT" \
+  --include='*.css' --include='*.html' --include='*.tsx' --include='*.jsx' 2>/dev/null \
+  | grep -v node_modules | grep -v 'lint-ban-list' || true)
+[ -n "$GTEXT" ] && warn "gradient-text" "$(printf '%s\n' "$GTEXT" | wc -l | tr -d ' ') occurrence(s) — gradient on text is a metric/headline slop marker"
+
+# bounce / elastic easing on everything
+BOUNCE=$(grep -rniE 'cubic-bezier\([^)]*(-[0-9.]+|[2-9][0-9.]*)[^)]*\)|ease-elastic|ease-bounce|spring[^}]*bounce:[[:space:]]*0\.[4-9]' "$ROOT" \
+  --include='*.css' --include='*.html' --include='*.tsx' --include='*.jsx' 2>/dev/null \
+  | grep -v node_modules | grep -v 'lint-ban-list' || true)
+[ -n "$BOUNCE" ] && warn "bounce-easing" "$(printf '%s\n' "$BOUNCE" | wc -l | tr -d ' ') occurrence(s) — bounce > 0.3 reads as amateur (motion-budgets)"
+
 printf '%s\n' "---"
 if [ "$HITS" -gt 0 ]; then
-  printf 'lint-ban-list: FAIL (%s hit group(s)). Remove or justify in the direction doc.\n' "$HITS"
+  printf 'lint-ban-list: FAIL (%s hit group(s), %s warning(s)). Remove or justify in the direction doc.\n' "$HITS" "$WARNS"
   exit 1
+fi
+if [ "$WARNS" -gt 0 ]; then
+  printf 'lint-ban-list: PASS with %s tier-2 warning(s) (report lines; --strict fails).\n' "$WARNS"
+  [ "$STRICT" -eq 1 ] && exit 1
+  exit 0
 fi
 printf 'lint-ban-list: PASS — no banned defaults detected.\n'
 exit 0

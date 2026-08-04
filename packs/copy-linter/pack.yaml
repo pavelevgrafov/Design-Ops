@@ -1,0 +1,12 @@
+id: copy-linter
+type: local
+conveyor: [K1, K2, K3]
+class: peripheral
+provides: [copy_slop_scan]
+requires_env: []
+contract_fields: [integrations]
+acceptance_test: 'python3 "{pack_dir}/scripts/lint-copy.py" --self-test'
+degradation: "copy ships unlinted — D.36 reports unavailable (tier 2, never caps the verdict)"
+cost_profile: free
+license_notes: n/a
+version: "0.1.0"

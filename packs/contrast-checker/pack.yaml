@@ -1,0 +1,12 @@
+id: contrast-checker
+type: local
+conveyor: [K2, K3]
+class: core
+provides: [extended_contrast_pairs]
+requires_env: []
+contract_fields: [integrations]
+acceptance_test: 'python3 "{pack_dir}/scripts/check-all-pairs.py" --self-test'
+degradation: "extended pairs (status hues, text tiers) unchecked — D.25 reports unavailable; core D3 still runs"
+cost_profile: free
+license_notes: n/a
+version: "0.1.0"
