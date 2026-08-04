@@ -230,7 +230,7 @@ invocation. A slash command never skips a gate; it only presets the route.
 | `/design <request>` | full pipeline entry (S0 routing) | route by classification, Gate 1 mandatory |
 | `/restyle [scope]` | K2B over the finished foundation | requires a `ready`-family verdict; never touches markup [A.7] |
 | `/verify` | K3 floor re-run on the current build | D1–D24 (+D25–D38 as wired); verdict from the taxonomy |
-| `/deploy <target>` | K4 via the matching deploy pack | Gate 3 rules apply (ready-family + rollback dry-run + D23 green) |
+| `/deploy <target>` | K4 via the matching deploy pack | Gate 3 rules apply (ready-family + rollback dry-run + D23 green), verified mechanically: `gate-require.py gate3` refuses otherwise |
 
 Unknown or ambiguous commands fall back to normal S0 classification.
 

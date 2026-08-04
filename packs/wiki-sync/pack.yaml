@@ -1,0 +1,12 @@
+id: wiki-sync
+type: local
+conveyor: [K0, K3]
+class: core
+provides: [knowledge_provenance, drift_detection]
+requires_env: []
+contract_fields: [knowledge.sources_pin, integrations]
+acceptance_test: 'python3 "{pack_dir}/scripts/wiki-sync.py" --self-test'
+degradation: "knowledge provenance unverified — report line; vault content stays usable (frozen snapshot)"
+cost_profile: free
+license_notes: "wiki content is consumed as data (rules/constraints), pinned by tag+sha256; live runtime fetching is forbidden (trust boundary, meta-analysis S2.2)"
+version: "0.1.0"

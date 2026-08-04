@@ -473,6 +473,47 @@ OUT=$(env -u GITHUB_TOKEN -u GITHUB_REPOSITORY python3 "$ROOT/radar/radar.py" 2>
   && ok "radar: missing env is an explicit usage error, never a silent run" \
   || bad "radar env-honesty broken (rc=$RC)"
 
+# --- v7.1: wiki-sync + gate enforcement + install --update -------------------
+OUT=$(python3 "$ROOT/packs/wiki-sync/scripts/wiki-sync.py" --self-test 2>&1); RC=$?
+[ "$RC" -eq 0 ] && ok "wiki-sync: pin -> check -> tamper-detect cycle works" \
+  || bad "wiki-sync self-test: $(printf '%s' "$OUT" | tail -1)"
+OUT=$(python3 "$PO/pack-resolve.py" "$ROOT/packs" wiki-sync --json 2>&1)
+has '"status": "active"' "$OUT" \
+  && ok "pack-resolve: wiki-sync active (acceptance green)" \
+  || bad "pack-resolve: wiki-sync not active: $(printf '%s' "$OUT" | tr '\n' ' ' | head -c 160)"
+
+GRWORK=$(mktemp -d 2>/dev/null || mktemp -d -t gr)
+printf 'meta: {schema_version: "7.0"}\ngates: {gate1: pending}\nstatus: {verdict: not_ready}\ndeploy: {prod: {rollback_tested: false}}\n' > "$GRWORK/c.yaml"
+python3 "$PO/gate-require.py" "$GRWORK/c.yaml" gate1 >/dev/null 2>&1
+[ "$?" -eq 1 ] && ok "gate-require: unpassed gate1 is mechanically refused" \
+  || bad "gate-require let a pending gate1 through"
+printf 'meta: {schema_version: "7.0"}\ngates: {gate1: passed}\nstatus: {verdict: ready}\ndeploy: {prod: {rollback_tested: true}}\n' > "$GRWORK/c.yaml"
+python3 "$PO/gate-require.py" "$GRWORK/c.yaml" gate1 >/dev/null 2>&1 \
+  && ok "gate-require: passed gate1 admits the stage" \
+  || bad "gate-require refused a legal gate1"
+
+UPDWORK=$(mktemp -d 2>/dev/null || mktemp -d -t upd)
+DESIGN_OPS_SKIP_SELFTEST=1 bash "$ROOT/install.sh" "$UPDWORK" >/dev/null 2>&1 \
+  || { bad "install.sh fresh install red in update test"; }
+if [ -d "$UPDWORK/.agents" ]; then
+  printf 'broken\n' > "$UPDWORK/knowledge/index.yaml"
+  printf 'local\n' > "$UPDWORK/LOCAL-NOTES.md"
+  OUT=$(DESIGN_OPS_SKIP_SELFTEST=1 bash "$ROOT/install.sh" --update --dry-run "$UPDWORK" 2>&1)
+  if has "change:  knowledge/index.yaml" "$OUT" && has "nothing written" "$OUT"; then
+    grep -q broken "$UPDWORK/knowledge/index.yaml" \
+      && ok "install --update --dry-run: reports the diff, writes nothing" \
+      || bad "install --dry-run wrote anyway"
+  else
+    bad "install --dry-run report wrong: $(printf '%s' "$OUT" | tail -2 | tr '\n' ' ')"
+  fi
+  DESIGN_OPS_SKIP_SELFTEST=1 bash "$ROOT/install.sh" --update "$UPDWORK" >/dev/null 2>&1 \
+    && ! grep -q broken "$UPDWORK/knowledge/index.yaml" && [ -f "$UPDWORK/LOCAL-NOTES.md" ] \
+    && ok "install --update: overlays the package, preserves local files" \
+    || bad "install --update broke overlay semantics"
+else
+  bad "install.sh fresh install red in update test"
+fi
+
 printf '%s\n' "== self-test: browser smoke [TZ-2.2/2.3/3.1/3.2] =="
 
 if node -e "require.resolve('playwright')" >/dev/null 2>&1; then

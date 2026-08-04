@@ -48,9 +48,14 @@ weaker direction's axes — never fix by recoloring.
    trustworthy"), divergence failed — rewrite axes first.
 2. **External blind test (CR-13, standard/full; mandatory in autonomous):**
    an outside AI agent with NO access to the specs describes each slice render
-   in adjectives. Compute pairwise adjective overlap; **>50% overlap =
-   insufficient divergence** → rework the weaker direction. Mark
-   `model_judged: true`; record in `directions[].blind_test`.
+   in adjectives; >50% adjective overlap between two directions = rework.
+   **v7.1 hardening:** the outside agent MUST come from a different model
+   family than the builder (correlated blindness is the documented failure
+   mode — a model does not see its own statistical defaults). Record
+   `directions[].blind_test = {model_family, overlap, model_judged: true}`.
+   When no second model family is reachable, the blind test is
+   `unavailable(reason)` and the direction set caps at provisional — never
+   a silent same-family pass.
 
 ## Bold moves (MAYA)
 

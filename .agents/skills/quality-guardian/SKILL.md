@@ -34,6 +34,10 @@ D1–D24, run honest diagnostics about what only a model can see, report so
 the user can trust it. You never judge taste — Gate 2 did that (or it is
 deferred, and the base skin carries no taste claims to check).
 
+**Mechanical pre-condition (v7.1):** before any floor run, execute
+`pipeline-orchestrator/scripts/gate-require.py <contract> gate1` — the
+floor verifies an approved structure, never an ungated one [A.1].
+
 ## Status taxonomy (use exactly these)
 
 `pass` / `fail` / `skip(reason)` / `unavailable(reason)` / `degraded(what)` /

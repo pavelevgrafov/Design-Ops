@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# pre-commit — Design-Ops pipeline integrity hook (v7.1).
+# Installed by install.sh into .git/hooks/pre-commit of the target repo.
+# Blocks a commit when the contract is inconsistent (D19) or a gate was
+# skipped mechanically. Honest degradation: no contract yet → pass.
+set -u
+ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
+CONTRACT="$ROOT/artifacts/design-contract.yaml"
+[ -f "$CONTRACT" ] || exit 0
+
+QG="$ROOT/.agents/skills/quality-guardian/scripts"
+OUT=$(python3 "$QG/validate-pipeline.py" "$ROOT" 2>&1); RC=$?
+if [ "$RC" -ne 0 ]; then
+  echo "pre-commit: pipeline integrity FAIL (D19):" >&2
+  printf '%s\n' "$OUT" | grep FAIL | head -5 >&2
+  echo "pre-commit: fix the contract or run contract-migrate; commit refused." >&2
+  exit 1
+fi
+exit 0
