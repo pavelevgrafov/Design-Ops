@@ -411,12 +411,34 @@ has "skip D.38" "$OUT" || has "OK:" "$OUT" || [ "$RC" -eq 0 ] \
   || bad "D.38 unexpected failure on fixture (rc=$RC): $OUT"
 
 # --- pack bus: new packs resolve through pack-resolve ----------------------
-for v7pack in ai-look-detector contrast-checker token-validator state-generator copy-linter; do
+for v7pack in ai-look-detector contrast-checker token-validator state-generator copy-linter awwwards-reference; do
   OUT=$(python3 "$PO/pack-resolve.py" "$ROOT/packs" "$v7pack" --json 2>&1)
   has '"status": "active"' "$OUT" \
     && ok "pack-resolve: $v7pack active (acceptance green)" \
     || bad "pack-resolve: $v7pack not active: $(printf '%s' "$OUT" | tr '\n' ' ' | head -c 160)"
 done
+
+# --- v7.0 K2B: tier-2 ban-list + awwwards-reference flows -------------------
+T2WORK=$(mktemp -d 2>/dev/null || mktemp -d -t t2)
+printf 'h1{background-clip:text;-webkit-text-fill-color:transparent}\n.x{border-radius:2rem}\n' > "$T2WORK/t.css"
+OUT=$(bash "$VD/lint-ban-list.sh" "$T2WORK" 2>&1); RC=$?
+if [ "$RC" -eq 0 ] && has "tier-2 warning" "$OUT"; then
+  bash "$VD/lint-ban-list.sh" "$T2WORK" --strict >/dev/null 2>&1
+  [ "$?" -eq 1 ] && ok "lint-ban-list: tier-2 warns without blocking, --strict fails" \
+    || bad "lint-ban-list --strict did not fail on tier-2 hits"
+else
+  bad "lint-ban-list tier-2 behavior broken (rc=$RC): $(printf '%s' "$OUT" | tail -1)"
+fi
+bash "$VD/lint-ban-list.sh" "$FIX/clean" >/dev/null 2>&1 \
+  && ok "lint-ban-list: clean fixture stays green with tier-2 active" \
+  || bad "lint-ban-list false-positive on clean fixture"
+
+OUT=$(python3 "$ROOT/packs/awwwards-reference/scripts/search-references.py" --self-test 2>&1); RC=$?
+[ "$RC" -eq 0 ] && ok "awwwards-reference: search honors hard stops (<=3, scored)" \
+  || bad "awwwards-reference search self-test: $(printf '%s' "$OUT" | tail -1)"
+OUT=$(python3 "$ROOT/packs/awwwards-reference/scripts/extract-tokens.py" --self-test 2>&1); RC=$?
+[ "$RC" -eq 0 ] && ok "awwwards-reference: CSS-only token extraction drafts DTCG" \
+  || bad "awwwards-reference extract self-test: $(printf '%s' "$OUT" | tail -1)"
 
 printf '%s\n' "== self-test: browser smoke [TZ-2.2/2.3/3.1/3.2] =="
 

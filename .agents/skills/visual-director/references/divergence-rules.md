@@ -72,3 +72,26 @@ predictable nav, state affordances) are off-limits for differentiation.
 - All three at the same boldness point — hidden recolor.
 - Differences listed but not visible in renders — spec/render drift; the
   contact sheet is the ground truth, re-render.
+
+## Three Dials calibration (v7.0)
+
+A compact position fix for every direction, recorded in
+`directions[].dials` (source: taste-skill concept, adapted to the 7 axes).
+Dials make the «vibe» measurable and let the user steer after the contact
+sheet without redesigning seeds:
+
+| Dial | Range | What it moves (axes) |
+| :-- | :-- | :-- |
+| **VARIANCE** | 0–10 | composition asymmetry, type_voice contrast, imagery treatment — how far from the category center |
+| **MOTION** | 0–10 | motion quantity/character: 0 = static, 3–4 = functional transitions only, 8–10 = expressive choreography (always within motion-budgets) |
+| **DENSITY** | 0–10 | spacing ladder position, measure, surface filling: 0 = maximal air, 10 = dense work surface |
+
+Anchor presets (starting points, not cages): «awwwards minimal» ≈
+VARIANCE 5–6 / MOTION 3–4 / DENSITY 2–3; «awwwards agency» ≈ VARIANCE
+9–10 / MOTION 8–10 / DENSITY 3–4; «quiet SaaS» ≈ VARIANCE 3 / MOTION 2 /
+DENSITY 5; «dense ops console» ≈ VARIANCE 2 / MOTION 2 / DENSITY 8.
+
+Rules: dials never override category anchors [K2.6.3] or invariants
+(A.14, A.17, D.25–D.38); a dial change after Gate 2 = re-render the slice,
+not a full reseed; the spread rule still binds — no two directions share
+all three dial values.

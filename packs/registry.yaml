@@ -16,3 +16,4 @@ packs:
   token-validator:       {version: "0.1.0", status: active}   # v7.0, D.37
   state-generator:       {version: "0.1.0", status: active}   # v7.0, D.38
   copy-linter:           {version: "0.1.0", status: active}   # v7.0, D.36
+  awwwards-reference:    {version: "0.1.0", status: active}   # v7.0, K2B calibration

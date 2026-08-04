@@ -1,0 +1,72 @@
+# top-references.yaml — curated local cache of reference archetypes.
+# HONESTY NOTE: entries are curated style archetypes distilled from public
+# award-site patterns (Awwwards SOTD families), NOT a scraped live feed.
+# Live API integration (Apify/Awwwards) is a future enhancement; this cache
+# is the designed offline fallback. Update consciously, record sources.
+entries:
+  - id: arch-minimal-editorial
+    kind: archetype
+    name: "Minimal editorial"
+    categories: [Startups, Technology, Portfolio]
+    tags: [minimal, clean, editorial, saas]
+    dials: {variance: 5, motion: 3, density: 2}
+    tokens_hint:
+      palette: "warm near-white canvas, near-black ink, one restrained accent"
+      type: "serif display + neutral sans body, scale 1.25"
+      surface: "flat, hairline borders, no shadows"
+    source_note: "pattern family of minimal award sites (editorial SaaS)"
+  - id: arch-brutalist-type
+    kind: archetype
+    name: "Tactile brutalism"
+    categories: [Portfolio, Design Agencies]
+    tags: [creative, editorial, brutalist]
+    dials: {variance: 9, motion: 4, density: 4}
+    tokens_hint:
+      palette: "high-contrast duo (paper + ink), single signal color"
+      type: "oversized display, visible grid, scale 1.333+"
+      surface: "raw borders, no radius or full-sharp, zero softness"
+    source_note: "pattern family of brutalist award sites"
+  - id: arch-agency-immersive
+    kind: archetype
+    name: "Immersive agency"
+    categories: [Design Agencies, Portfolio]
+    tags: [creative, motion, dark]
+    dials: {variance: 10, motion: 9, density: 3}
+    tokens_hint:
+      palette: "dark-first, desaturated accent ~20pp, elevation by lightness"
+      type: "display-led, fluid clamp() sizing"
+      surface: "layered depth, glow-free shadows, liquid glass only over imagery"
+    source_note: "pattern family of immersive dark award sites"
+  - id: arch-corporate-trust
+    kind: archetype
+    name: "Corporate trust"
+    categories: [Business & Corporate]
+    tags: [local, trust, service]
+    dials: {variance: 3, motion: 2, density: 5}
+    tokens_hint:
+      palette: "conservative neutral + deep brand hue, semantic states"
+      type: "single sans family, weight-driven hierarchy"
+      surface: "subtle raised cards, 1px borders, restrained shadow-sm"
+    source_note: "pattern family of corporate award sites"
+  - id: arch-data-console
+    kind: archetype
+    name: "Data console"
+    categories: [Technology, Mobile & Apps]
+    tags: [dashboard, admin, data]
+    dials: {variance: 2, motion: 2, density: 8}
+    tokens_hint:
+      palette: "muted neutrals, status-hue discipline (error/success/warning/info)"
+      type: "compact sans + mono for data, scale 1.125"
+      surface: "dense tables, zebra/dividers, minimal elevation"
+    source_note: "pattern family of award-winning dashboards"
+  - id: arch-commerce-product
+    kind: archetype
+    name: "Product-led commerce"
+    categories: [E-commerce]
+    tags: [shop, product, checkout]
+    dials: {variance: 4, motion: 3, density: 6}
+    tokens_hint:
+      palette: "product-neutral canvas, action accent reserved for buy-flow"
+      type: "sans pair, price/numerals tabular"
+      surface: "cards as product frames, single elevation, fast transitions"
+    source_note: "pattern family of commerce award sites"

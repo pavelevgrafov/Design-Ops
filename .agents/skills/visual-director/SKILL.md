@@ -52,11 +52,21 @@ In priority order, stop at the first that works:
    (spacing rhythm, type contrast, color strategy, surface model) — never
    copyable surfaces. ≤1 user reference may feed any single direction's
    seed; every direction needs ≥3 reference domains total.
-2. **No references, but opinions:** the style-card test — 8–10 micro-renders
+2. **Curated reference pack (v7.0):** if `integrations[]` includes
+   `awwwards-reference`, offer at most 3 cached reference archetypes
+   matching the project profile (`search-references.py --profile …`) as
+   calibration candidates. The user picks one, refuses all (fall through
+   to the next calibration route), or supplies their own. A picked
+   reference fills `direction.seed` per
+   `packs/awwwards-reference/assets/direction-template.md`; optional
+   `extract-tokens.py` drafts DTCG tokens from saved reference CSS
+   (CSS-only, curated into layers). Hard stops: K2B only, ≤3 candidates,
+   budget violations = warnings, never blocks.
+3. **No references, but opinions:** the style-card test — 8–10 micro-renders
    (typography + color + surface, NOT screenshots of other people's sites)
    spanning the boldness band. Ask only: "which 2–3 feel closest, which are
    definitely not?" No why-questions.
-3. **Autonomous / no signal:** category anchors + `visual_boldness`;
+4. **Autonomous / no signal:** category anchors + `visual_boldness`;
    `status: skipped_autonomous`.
 
 Record `anti_references` whenever the user volunteers dislikes — they bound
@@ -81,7 +91,10 @@ For each direction (full rules: `references/divergence-rules.md`):
    renders in adjectives; >50% adjective overlap between two directions =
    insufficient divergence → rework. Mark `model_judged: true`, record in
    `directions[].blind_test`.
-7. **Ban-list:** `scripts/lint-ban-list.sh` on every direction spec.
+7. **Ban-list + AI-look (v7.0):** `scripts/lint-ban-list.sh` on every
+   direction spec (tier 1 fails, tier 2 warns); `packs/ai-look-detector`
+   scan on every slice render BEFORE the contact sheet — a tier-1 hit
+   means redesign the direction, never anonymize and ship it [A.24].
 
 #### Step 3. TWO-screen slice + blind contact sheet (CR-04)
 
@@ -101,6 +114,11 @@ For each direction (full rules: `references/divergence-rules.md`):
 
 #### Step 4. Merge with a coherence gate (CR-06, rules: `references/merge-rules.md`)
 
+- **Design review audit FIRST (v7.0):** run the pass/fail rubric
+  (`references/design-review-audit.md`) on the chosen direction before any
+  merge work — critique → audit → polish → normalize. `design_review:
+  pass` is the entry ticket to the merge; a fail returns the direction to
+  the named stage, never to prose justification.
 - Resolve adopted elements axis-by-axis onto the base; write ALL 7 resolved
   axes into `visual.final_direction` (never "see direction A").
 - **Coherence gate [K2.16]:** render the merged direction on the slice (both

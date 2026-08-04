@@ -1,0 +1,24 @@
+# reference-taxonomy.yaml — Design-Ops profile → reference categories/tags.
+# Used by search-references.py to filter the local cache. Extend consciously.
+profiles:
+  site/landing-saas:
+    categories: [Startups, Technology]
+    tags: [minimal, clean, saas]
+  site/landing-local:
+    categories: [Business & Corporate]
+    tags: [local, trust, service]
+  site/portfolio:
+    categories: [Portfolio, Design Agencies]
+    tags: [creative, editorial]
+  app/dashboard:
+    categories: [Technology, Mobile & Apps]
+    tags: [dashboard, admin, data]
+  app/e-commerce:
+    categories: [E-commerce]
+    tags: [shop, product, checkout]
+hard_stops:
+  only_k2b_divergence: true      # never feeds K2A base skin
+  max_candidates: 3              # choice paradox guard
+  css_only_extraction: true      # colors/typography/spacing/borders/shadows; no WebGL/JS motion
+  performance_budget: warn_only  # extracted tokens violating LCP/CLS/INP targets → warning, not block
+  fallback: base_skin            # pack unavailable → category anchors + base skin
