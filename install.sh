@@ -1,29 +1,101 @@
 #!/usr/bin/env bash
-# install.sh — one-command install of the Design-Ops pipeline (v6.0, TZ-12).
+# install.sh — one-command install of the Design-Ops pipeline (v7.1).
 #
-#   bash install.sh [target-dir]
+#   bash install.sh [target-dir]            fresh install (C12: zero edits)
+#   bash install.sh --update [target-dir]   safe update of an existing install:
+#                                           overlay sync, no deletions, local
+#                                           files preserved, diff report shown
+#   bash install.sh --update --dry-run [t]  report only, no writes
 #
 # Copies the package into the target repo (default: current directory),
 # restores script permissions, checks dependencies, runs the self-test and
 # prints the ready line. C12 applies: a fresh copy must work with zero edits.
 set -euo pipefail
 
+MODE="install"
+DRYRUN=0
+ARGS=""
+for a in "$@"; do
+  case "$a" in
+    --update) MODE="update" ;;
+    --dry-run) DRYRUN=1 ;;
+    *) ARGS="$a" ;;
+  esac
+done
+
 SRC="$(cd "$(dirname "$0")" && pwd)"
-TARGET="${1:-.}"
+TARGET="${ARGS:-.}"
 mkdir -p "$TARGET"
 TARGET="$(cd "$TARGET" && pwd)"
 
-echo "== install: $SRC -> $TARGET"
+ITEMS="AGENTS.md README.md INSTALL.md LICENSE install.sh mkdocs.yml .agents eval starters skins packs knowledge docs showcase radar"
+# Paths that belong to the LOCAL project, never to the package overlay:
+LOCAL_KEEP=".agents/config.yaml .agents/knowledge-sync .pack-cache"
 
-# --- copy -----------------------------------------------------------------
-for item in AGENTS.md README.md INSTALL.md LICENSE .agents eval starters \
-            skins packs knowledge docs showcase radar; do
-  [ -e "$SRC/$item" ] || continue
-  if [ "$TARGET" != "$SRC" ]; then
-    rm -rf "$TARGET/$item"
-    cp -R "$SRC/$item" "$TARGET/$item"
+echo "== $MODE: $SRC -> $TARGET"
+
+is_local_keep() {
+  case "$1" in
+    *.agents/config.yaml*|*.agents/knowledge-sync*|*.pack-cache*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+if [ "$MODE" = "update" ] && [ "$TARGET" != "$SRC" ]; then
+  # --- safe overlay sync: add/change package files, never delete local ones --
+  ADDED=0; CHANGED=0
+  REPORT=$(mktemp 2>/dev/null || mktemp -t upd)
+  for item in $ITEMS; do
+    [ -e "$SRC/$item" ] || continue
+    find "$SRC/$item" -type f ! -path '*/.pack-cache/*' ! -name '.DS_Store'
+  done | while read -r f; do
+    rel="${f#$SRC/}"
+    if is_local_keep "$rel"; then continue; fi
+    dst="$TARGET/$rel"
+    if [ ! -f "$dst" ]; then
+      printf 'add:     %s\n' "$rel"
+    elif ! cmp -s "$f" "$dst"; then
+      printf 'change:  %s\n' "$rel"
+    fi
+  done > "$REPORT"
+  ADDED=$(grep -c '^add:' "$REPORT" 2>/dev/null || true)
+  CHANGED=$(grep -c '^change:' "$REPORT" 2>/dev/null || true)
+  ADDED=${ADDED:-0}; CHANGED=${CHANGED:-0}
+  cat "$REPORT"
+  echo "== update report: $ADDED to add, $CHANGED to change (local-only files untouched)"
+  if [ "$DRYRUN" -eq 1 ]; then
+    echo "== dry-run: nothing written"
+    rm -f "$REPORT"
+    exit 0
   fi
-done
+  for item in $ITEMS; do
+    [ -e "$SRC/$item" ] || continue
+    find "$SRC/$item" -type f ! -path '*/.pack-cache/*' ! -name '.DS_Store'
+  done | while read -r f; do
+    rel="${f#$SRC/}"
+    if is_local_keep "$rel"; then continue; fi
+    dst="$TARGET/$rel"
+    if [ ! -f "$dst" ] || ! cmp -s "$f" "$dst"; then
+      mkdir -p "$(dirname "$dst")"
+      cp "$f" "$dst"
+    fi
+  done
+  rm -f "$REPORT"
+  # contract schema follows the package version (idempotent)
+  if [ -f "$TARGET/artifacts/design-contract.yaml" ]; then
+    python3 "$TARGET/.agents/skills/pipeline-orchestrator/scripts/contract-migrate.py" \
+      "$TARGET/artifacts/design-contract.yaml" || true
+  fi
+else
+  # --- fresh install: full replace of package items ---------------------------
+  for item in $ITEMS; do
+    [ -e "$SRC/$item" ] || continue
+    if [ "$TARGET" != "$SRC" ]; then
+      rm -rf "$TARGET/$item"
+      cp -R "$SRC/$item" "$TARGET/$item"
+    fi
+  done
+fi
 
 # --- permissions ------------------------------------------------------------
 chmod +x "$TARGET"/.agents/skills/*/scripts/*.sh \
@@ -81,9 +153,36 @@ else
   done
 fi
 
+# --- knowledge provenance (v7.1 wiki-sync) ----------------------------------
+# If UX_WIKI_PATH points at a local ux-wiki clone, vendor its constraints and
+# pin the provenance in the contract; otherwise record an honest skip.
+if [ -n "${UX_WIKI_PATH:-}" ] && [ -d "${UX_WIKI_PATH:-}/constraints" ]; then
+  if [ -f "$TARGET/artifacts/design-contract.yaml" ]; then
+    python3 "$TARGET/packs/wiki-sync/scripts/wiki-sync.py" \
+      --contract "$TARGET/artifacts/design-contract.yaml" \
+      --update --wiki-path "$UX_WIKI_PATH" \
+      && echo "== wiki-sync: constraints vendored + pinned from $UX_WIKI_PATH"
+  else
+    echo "== wiki-sync: skipped (no contract yet; run after K0 creates artifacts/)"
+  fi
+else
+  echo "== wiki-sync: UX_WIKI_PATH not set — provenance pin skipped (offline install)"
+fi
+
+# --- git hook (v7.1 gate enforcement) ----------------------------------------
+if [ -d "$TARGET/.git" ]; then
+  mkdir -p "$TARGET/.git/hooks"
+  cp "$SRC/.agents/hooks/pre-commit" "$TARGET/.git/hooks/pre-commit"
+  chmod +x "$TARGET/.git/hooks/pre-commit"
+  echo "== git hook: pre-commit pipeline integrity (D19) installed"
+else
+  echo "== git hook: skipped (no .git in target)"
+fi
+
 # --- self-test ---------------------------------------------------------------
-echo "== self-test"
-if bash "$TARGET/eval/selftest/run-self-test.sh"; then
+if [ "${DESIGN_OPS_SKIP_SELFTEST:-0}" = "1" ]; then
+  echo "== self-test: skipped (DESIGN_OPS_SKIP_SELFTEST=1 — nested invocation)"
+elif bash "$TARGET/eval/selftest/run-self-test.sh"; then
   echo "== готов к работе: pipeline v7.0 installed in $TARGET"
   echo "   first run: prompt P01 from eval/example-prompts.md (rubric: eval/eval-rubric.md)"
 else

@@ -27,6 +27,10 @@ skeleton is your canvas: you restyle it, you do not restructure it.
 
 ## K2A — base skin (always, automatic)
 
+0. **Mechanical pre-condition (v7.1):** run
+   `pipeline-orchestrator/scripts/gate-require.py <contract> gate1` —
+   without `passed | autonomous_passed` the stage REFUSES to start [A.1].
+   No prose overrides.
 1. Pick the skin by profile: `skins/base-site` or `skins/base-app`.
 2. Compile its tokens (`scripts/compile-tokens.py`) and apply to the whole
    skeleton. No calibration, no directions, no gate, no taste questions.

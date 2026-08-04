@@ -16,10 +16,14 @@ recorded. 0 = visual work before Gate 1 / named or sequential variants /
 **C2. Divergence was real.**
 check-divergence.py green AND (manual sample) directions visibly differ in
 composition/type voice, not just color; seeds: personas + ≥3 non-overlapping
-domains each; boldness points SPREAD; 1–2 bold moves each; standard/full:
-external blind test recorded (overlap ≤50%, model_judged).
+domains each; boldness points SPREAD; 1–2 bold moves each; Three Dials
+(variance/motion/density, v7.0) recorded per direction with no two
+directions sharing all three values; standard/full: external blind test
+recorded (overlap ≤50%, model_judged, **a different model family than the
+builder**, v7.1).
 0 = "3 variants = 3 recolors"; overlapping domains; coinciding boldness
-points ignored; missing blind test in standard/full.
+points ignored; missing blind test in standard/full; blind test run by the
+same model family that built the directions.
 
 **C3. Merge worked with the confirming render.**
 Merge follow-up asked after a plain pick; on merge: axes resolved into
@@ -49,6 +53,15 @@ green on the target platform; smoke logs show zero 30-second stalls and a
 quick run ≤ 90 s; every PASS in the report is backed by a measured/checked
 evidence (spot-check D5, D15, D21, placeholders, screens). 0 = any package
 edit needed, any unmeasured pass, or self-test red/skipped silently.
+
+**C13. Design review audit ran honestly (v7.0, blocking when K2B ran).**
+Before merge/scale, the chosen direction passed the 10-line pass/fail rubric
+(`visual-director/references/design-review-audit.md`): `visual.design_review`
+is `pass`, each line is backed by an artifact (machine floor lines by script
+output, judgment lines marked `model_judged: true`), and any `fail(<lines>)`
+led to rework + re-audit, not prose override. 0 = merge started without the
+audit, a fail overridden by prose, or a pass declared without evidence [A.11].
+Skip (not 0) when K2B never ran in this project.
 
 ## Quality criteria
 
