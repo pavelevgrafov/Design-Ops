@@ -1,7 +1,7 @@
 id: site-portfolio
 profile: site
 category: personal / studio portfolio
-pattern: evidence-first
+pattern: answer-first
 description: >
   Single-page portfolio for an individual or a small studio. P1 = "is this
   person right for my problem", answered by cases stated as OUTCOMES, not as

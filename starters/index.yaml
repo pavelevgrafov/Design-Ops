@@ -28,7 +28,7 @@
 - id: site-portfolio
   profile: site
   category: personal / studio portfolio
-  pattern: evidence-first
+  pattern: answer-first
   line: "Portfolio: positioning line, cases stated as outcomes, about with concrete facts, contact. Empty state for NDA work."
   tags: [portfolio, personal, studio, cases, cv, freelance]
   verified_at: 2026-08-04
@@ -36,7 +36,7 @@
 - id: site-content
   profile: site
   category: blog / small publication
-  pattern: browse-first
+  pattern: object-first
   line: "Publication home: masthead, lead piece, latest list with byline/date/reading time, topics, subscribe form."
   tags: [blog, publication, media, articles, newsletter, subscribe]
   verified_at: 2026-08-04

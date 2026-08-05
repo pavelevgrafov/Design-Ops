@@ -4,7 +4,7 @@ experience:
   primary_job: "When I arrive, I want to find one thing worth reading now — and a way to be told about the next one."
   key_screens: [{id: home, name: "Home", purpose: "surface the lead piece, list the recent ones, capture a subscription"}]
   required_states: [empty, success, error]
-content_model: {pattern: browse-first, pattern_reason: "the visitor is scanning for something interesting, not completing a task"}
+content_model: {pattern: object-first, pattern_reason: "the page is a set of article objects the reader scans to pick one"}
 starters: {route: starter_first, chosen: site-content, harvest_decision: "reused:site-content"}
 gates: {gate1: passed, gate2: deferred, gate2_deferred: true, mode: batched}
 # The starter's own factory verdict lives in starter.yaml

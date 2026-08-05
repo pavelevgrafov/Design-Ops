@@ -1,0 +1,76 @@
+# Shipped WITH the starter, not derived at run time. Without it a
+# starter_first run leaves D18 and D.38 `unavailable` for its whole life —
+# the structure arrives pre-verified, but the model that proves it does not.
+version: "5.1"
+primary_job:
+  statement: "When a manager opens the dashboard, I want today's queue and its exceptions in one glance."
+  actor: "an operations manager starting a shift"
+  success_signal: "the exceptions seen and acted on before the queue grows"
+
+audience:
+  roles: ["manager", "operator", "viewer"]
+  primary: "manager"
+
+localization: {risk: false, reason: "internal tool, one language", content_variants: []}
+
+screens:
+  - id: dashboard
+    name: "Operations dashboard"
+    purpose: "show the day's numbers, the order queue and the exceptions"
+    route: "/"
+    p1_content: ["today's KPI row", "the orders needing attention"]
+    blocks:
+      - {id: kpi, kind: list, priority: p1, copy_source: real}
+      - {id: orders, kind: list, priority: p1, copy_source: real}
+      - {id: new-order, kind: form, priority: p2, copy_source: real}
+      - {id: nav, kind: nav, priority: p2, copy_source: real}
+    states: [loading, empty, validation_error, system_error, success, permission_denied]
+    transitions:
+      - {to_screen: dashboard, trigger: "new order submitted"}
+      - {to_screen: dashboard, trigger: "filter applied to the queue"}
+
+scenarios:
+  - id: work-the-queue
+    name: "Clear today's exceptions"
+    steps:
+      - {screen: dashboard, action: "open at the start of a shift", expect: "loading state, then the KPI row and the queue"}
+      - {screen: dashboard, action: "sort by exception", expect: "the orders needing attention first"}
+    covers_screens: [dashboard]
+  - id: create-order
+    name: "Add an order by hand"
+    steps:
+      - {screen: dashboard, action: "submit the new-order form", expect: "success state and the row appearing in the queue"}
+      - {screen: dashboard, action: "submit it incomplete", expect: "validation error at the field, nothing lost"}
+    covers_screens: [dashboard]
+  - id: no-permission
+    name: "A viewer opens the dashboard"
+    steps:
+      - {screen: dashboard, action: "open without write rights", expect: "permission_denied on the actions, the data still readable"}
+    covers_screens: [dashboard]
+  - id: backend-down
+    name: "The API is unavailable"
+    steps:
+      - {screen: dashboard, action: "open while the API is down", expect: "a system error state that says what to do, not a blank table"}
+    covers_screens: [dashboard]
+
+# App profile: D.38 reads this and verifies every async module covers the
+# seven-state automaton [A.12]. A dashboard with only its ideal state is the
+# defect this exists to catch.
+state_matrix:
+  - {module: kpi, screen: dashboard, async: true,
+     states: [idle, loading, skeleton, populated, empty, error, success]}
+  - {module: orders, screen: dashboard, async: true,
+     states: [idle, loading, skeleton, populated, empty, error, success]}
+  - {module: new-order, screen: dashboard, async: true,
+     states: [idle, loading, skeleton, populated, empty, error, success]}
+
+information_pattern:
+  pattern: task-first
+  reason: "the user came to work the queue, not to browse it"
+  p1_rule: "the exceptions are above the fold; the totals support them"
+
+risks:
+  - description: "a queue that looks the same whether it is empty or still loading"
+    mitigation: "skeleton and empty are distinct states in the matrix, and D.38 verifies both exist"
+  - description: "role differences discovered at the first permission error"
+    mitigation: "permission_denied is a declared state of the screen, not an error page"

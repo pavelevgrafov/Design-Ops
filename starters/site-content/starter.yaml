@@ -1,7 +1,7 @@
 id: site-content
 profile: site
 category: blog / small publication
-pattern: browse-first
+pattern: object-first
 description: >
   Home page of a small publication or a personal blog. P1 = find something
   worth reading now; the second job is to keep the reader (subscribe).

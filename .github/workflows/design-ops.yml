@@ -67,8 +67,8 @@ jobs:
           yaml.safe_dump(vals, open("/tmp/e2e/values.yaml", "w"),
                          allow_unicode=True, sort_keys=False)
           PY
-          python3 starters/inject.py starters/landing-event /tmp/e2e/values.yaml --out /tmp/e2e/site
-          cp starters/landing-event/ux/experience-model.yaml /tmp/e2e/artifacts/ux/
+          python3 starters/inject.py starters/landing-event /tmp/e2e/values.yaml \
+            --out /tmp/e2e/site --ux-out /tmp/e2e/artifacts/ux
           # The mode belongs to the RUN, not to the starter: we are exercising
           # the standard profile, and the project carries a UX model inherited
           # from the starter. (Open doctrine question for the design side:

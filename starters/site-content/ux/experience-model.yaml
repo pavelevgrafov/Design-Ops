@@ -1,0 +1,56 @@
+# Shipped WITH the starter, not derived at run time. Without it a
+# starter_first run leaves D18 and D.38 `unavailable` for its whole life —
+# the structure arrives pre-verified, but the model that proves it does not.
+version: "5.1"
+primary_job:
+  statement: "When I arrive, I want to find one thing worth reading now — and a way to be told about the next one."
+  actor: "a reader who followed a link or came back after a while"
+  success_signal: "a piece opened, or a subscription made"
+
+audience:
+  roles: ["reader", "subscriber"]
+  primary: "reader"
+
+localization: {risk: false, reason: "single-language publication", content_variants: []}
+
+screens:
+  - id: home
+    name: "Home"
+    purpose: "surface the lead piece, list the recent ones, capture a subscription"
+    route: "/"
+    p1_content: ["the lead piece and what it found", "how recent the publication is"]
+    blocks:
+      - {id: lead, kind: hero, priority: p1, copy_source: real}
+      - {id: latest, kind: list, priority: p1, copy_source: real}
+      - {id: topics, kind: nav, priority: p2, copy_source: real}
+      - {id: subscribe, kind: form, priority: p1, copy_source: real}
+    states: [empty, success, validation_error]
+    transitions: [{to_screen: home, trigger: "subscribe form submit"}]
+
+scenarios:
+  - id: find-something-now
+    name: "Find one thing worth reading"
+    steps:
+      - {screen: home, action: "read the lead standfirst", expect: "what the piece found, not that it 'explores' something"}
+      - {screen: home, action: "check the byline", expect: "date and reading time visible without opening"}
+    covers_screens: [home]
+  - id: subscribe
+    name: "Be told about the next one"
+    steps:
+      - {screen: home, action: "submit the email form", expect: "a success state and a privacy line"}
+      - {screen: home, action: "submit an invalid address", expect: "a validation error at the field, not a page reload"}
+    covers_screens: [home]
+  - id: nothing-published
+    name: "A publication with nothing out yet"
+    steps:
+      - {screen: home, action: "open before the first issue", expect: "an empty state that offers the subscription instead of a blank list"}
+    covers_screens: [home]
+
+information_pattern:
+  pattern: object-first
+  reason: "the page is a set of article objects the reader scans to pick one"
+  p1_rule: "the lead piece and its finding are above the fold; navigation is not"
+
+risks:
+  - description: "excerpts written as teasers ('explores the question of…') give the reader nothing to decide on"
+    mitigation: "the copy-map requires an excerpt to state a finding"

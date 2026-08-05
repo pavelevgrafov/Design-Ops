@@ -1,0 +1,50 @@
+# Shipped WITH the starter, not derived at run time. Without it a
+# starter_first run leaves D18 and D.38 `unavailable` for its whole life —
+# the structure arrives pre-verified, but the model that proves it does not.
+version: "5.1"
+primary_job:
+  statement: "When I need someone for a problem, I want to see fast whether they have solved that problem before."
+  actor: "a hiring manager or a client with a specific problem"
+  success_signal: "an email sent, or a case opened in full"
+
+audience:
+  roles: ["client", "hiring manager"]
+  primary: "client"
+
+localization: {risk: false, reason: "one working language", content_variants: []}
+
+screens:
+  - id: home
+    name: "Single page"
+    purpose: "prove relevant experience and open a conversation"
+    route: "/"
+    p1_content: ["what kind of problems this person solves", "the first case outcome"]
+    blocks:
+      - {id: intro, kind: hero, priority: p1, copy_source: real}
+      - {id: work, kind: list, priority: p1, copy_source: real}
+      - {id: about, kind: detail, priority: p2, copy_source: real}
+      - {id: contact, kind: detail, priority: p1, copy_source: real}
+    states: [empty, success]
+    transitions: [{to_screen: home, trigger: "anchor navigation between sections"}]
+
+scenarios:
+  - id: judge-relevance
+    name: "Decide in thirty seconds whether this is the right person"
+    steps:
+      - {screen: home, action: "read the positioning line", expect: "a domain, not an adjective"}
+      - {screen: home, action: "scan the cases", expect: "each states an outcome with a number or a concrete change"}
+    covers_screens: [home]
+  - id: nda-portfolio
+    name: "Everything is under NDA"
+    steps:
+      - {screen: home, action: "open the work section with no public cases", expect: "a deliberate empty state that invites a conversation, not a blank page"}
+    covers_screens: [home]
+
+information_pattern:
+  pattern: answer-first
+  reason: "the visitor asks 'have you solved my problem?'; the positioning line answers it and the cases are the support"
+  p1_rule: "the first case outcome is above the fold; the biography is not"
+
+risks:
+  - description: "cases written as process diaries ('redesigned the dashboard') tell a hiring reader nothing"
+    mitigation: "the copy-map documents that every result slot needs a number or a concrete change"

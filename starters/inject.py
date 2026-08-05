@@ -6,9 +6,11 @@
 Usage:
   python3 inject.py <starter-dir> <values.yaml> [--out <dir>]
 
-  <starter-dir>  starter root with copy-map.yaml + skeleton/
+  <starter-dir>  starter root with copy-map.yaml + skeleton/ (+ ux/)
   <values.yaml>  flat {field: value} map (subset of copy-map fields)
   --out          output dir (default: <starter-dir>/_injected)
+  --ux-out       where the starter's experience model lands
+                 (default: <out>/../artifacts/ux)
 
 Prints the coverage line and the explicit leftover list. Acceptance:
 coverage >= 95% of mapped slots (exit 1 below that).
@@ -41,6 +43,9 @@ def main():
         cmap = yaml.safe_load(f) or {}
     with open(values_path, encoding="utf-8") as f:
         values = yaml.safe_load(f) or {}
+    ux_dir = None
+    if "--ux-out" in sys.argv:
+        ux_dir = sys.argv[sys.argv.index("--ux-out") + 1]
     src = os.path.join(starter, "skeleton")
     if not os.path.isdir(src):
         print(f"fail: {src} not found", file=sys.stderr)
@@ -49,6 +54,21 @@ def main():
     if os.path.isdir(out):
         shutil.rmtree(out)
     shutil.copytree(src, out)
+
+    # The starter's verified experience model travels WITH the structure.
+    # Without it a starter_first project leaves D18 and D.38 `unavailable`
+    # forever: the structure arrives pre-verified, but the model that proves
+    # it stays behind in the starter. `--ux-out` puts it where K3 looks.
+    model = os.path.join(starter, "ux", "experience-model.yaml")
+    if os.path.isfile(model):
+        ux_out = ux_dir or os.path.join(os.path.dirname(out.rstrip(os.sep)),
+                                        "artifacts", "ux")
+        os.makedirs(ux_out, exist_ok=True)
+        shutil.copy2(model, os.path.join(ux_out, "experience-model.yaml"))
+        print("experience model -> %s" % ux_out)
+    else:
+        print("note: %s ships no experience model — D18/D.38 will report "
+              "`unavailable` for this project" % starter)
 
     filled, leftovers = 0, []
     unknown = [k for k in values if k not in cmap]

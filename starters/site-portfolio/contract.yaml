@@ -4,7 +4,7 @@ experience:
   primary_job: "When I need someone for a problem, I want to see fast whether they have solved that problem before."
   key_screens: [{id: home, name: "Single page", purpose: "prove relevant experience and open a conversation"}]
   required_states: [empty, success]
-content_model: {pattern: evidence-first, pattern_reason: "the visitor is evaluating, not acting — cases are the argument"}
+content_model: {pattern: answer-first, pattern_reason: "the visitor asks 'have you solved my problem?'; the positioning line answers it and the cases are the support"}
 starters: {route: starter_first, chosen: site-portfolio, harvest_decision: "reused:site-portfolio"}
 gates: {gate1: passed, gate2: deferred, gate2_deferred: true, mode: batched}
 # The starter's own factory verdict lives in starter.yaml
