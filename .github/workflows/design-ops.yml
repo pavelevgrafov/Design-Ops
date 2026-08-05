@@ -1,0 +1,52 @@
+name: Design-Ops Heavy Floor
+
+on:
+  push:
+    branches: [main, speedup-waves-1-2-3]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Nightly run with the full standard profile (browser + tier-2 packs)
+    - cron: "0 3 * * *"
+
+jobs:
+  quick-floor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Quick floor (fs-level)
+        run: |
+          python3 tools/dops_verify.py --profile quick --out /tmp/floor.json
+      - name: Self-test
+        run: |
+          bash eval/selftest/run-self-test.sh
+
+  standard-floor:
+    if: github.event_name == 'pull_request' || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install Playwright
+        run: |
+          npm install -D playwright
+          npx playwright install chromium
+      - name: Standard floor (fs + browser)
+        run: |
+          python3 tools/dops_verify.py --profile standard --out /tmp/floor.json
+      - name: Upload floor report
+        uses: actions/upload-artifact@v4
+        with:
+          name: floor-report
+          path: /tmp/floor.json
