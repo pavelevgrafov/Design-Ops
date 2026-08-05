@@ -615,7 +615,7 @@ if [ -x "$DOPS" ]; then
     bad "dops selftest (rc=$RC): $OUT"
   fi
   # [У-2/У-3] checkpoints and the control queue: windows with handles.
-  for probe in dops_checkpoint dops_control; do
+  for probe in dops_checkpoint dops_control dops_guard; do
     OUT=$(cd "$ROOT" && python3 "tools/$probe.py" --self-test 2>&1); RC=$?
     if [ "$RC" -eq 0 ]; then
       ok "$probe: self-test"

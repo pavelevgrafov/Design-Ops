@@ -23,6 +23,7 @@
 #   dops control issue|apply|list         [У-3] commands to the process, applied at control points
 #   dops report                         stage timings + instruction tokens
 #   dops cost [--write]                 measured cost.actual for the contract
+#   dops guard [--diff|--staged|--since <ref>|<file>...]  pre-edit sentinel for verified rules (A.22, A.24)
 #   dops selftest                       acceptance probes of the tooling itself
 #
 # Every subcommand accepts --root DIR (default: current directory).
@@ -77,6 +78,9 @@ case "$cmd" in
   announce)
     exec "$PY" "$HERE/dops_announce.py" "$@"
     ;;
+  guard)
+    exec "$PY" "$HERE/dops_guard.py" "$@"
+    ;;
   checkpoint)
     exec "$PY" "$HERE/dops_checkpoint.py" "$@"
     ;;
@@ -111,6 +115,7 @@ case "$cmd" in
     "$PY" "$HERE/dops_harvest.py" --self-test || rc=1
     "$PY" "$HERE/dops_hash.py" --self-test || rc=1
     "$PY" "$HERE/dops_announce.py" --self-test || rc=1
+    "$PY" "$HERE/dops_guard.py" --self-test || rc=1
     "$PY" "$HERE/dops_checkpoint.py" --self-test || rc=1
     "$PY" "$HERE/dops_control.py" --self-test || rc=1
     "$PY" "$HERE/dops_verify.py" --audit-registry || rc=1
