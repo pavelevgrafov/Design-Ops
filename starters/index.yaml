@@ -17,6 +17,30 @@
   tags: [landing, saas, pricing, product]
   verified_at: 2026-07-21
   status: active
+- id: landing-event
+  profile: site
+  category: event / festival promo
+  pattern: task-first
+  line: "Dated event promo: dateline hero, day-by-day programme, ticket tiers with sold-out, getting there + FAQ."
+  tags: [landing, event, festival, conference, tickets, programme, dates]
+  verified_at: 2026-08-04
+  status: active
+- id: site-portfolio
+  profile: site
+  category: personal / studio portfolio
+  pattern: evidence-first
+  line: "Portfolio: positioning line, cases stated as outcomes, about with concrete facts, contact. Empty state for NDA work."
+  tags: [portfolio, personal, studio, cases, cv, freelance]
+  verified_at: 2026-08-04
+  status: active
+- id: site-content
+  profile: site
+  category: blog / small publication
+  pattern: browse-first
+  line: "Publication home: masthead, lead piece, latest list with byline/date/reading time, topics, subscribe form."
+  tags: [blog, publication, media, articles, newsletter, subscribe]
+  verified_at: 2026-08-04
+  status: active
 - id: app-dashboard
   profile: app
   category: operations dashboard shell

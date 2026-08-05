@@ -1,0 +1,36 @@
+# Content-injection map: brief field -> CSS selector in skeleton/index.html.
+owner_name:     "[data-slot=owner_name]"
+headline:       "[data-slot=headline]"
+intro:          "[data-slot=intro]"
+
+case_1_title:   "[data-slot=case_1_title]"
+case_1_client:  "[data-slot=case_1_client]"
+case_1_year:    "[data-slot=case_1_year]"
+case_1_role:    "[data-slot=case_1_role]"
+case_1_result:  "[data-slot=case_1_result]"
+case_2_title:   "[data-slot=case_2_title]"
+case_2_client:  "[data-slot=case_2_client]"
+case_2_year:    "[data-slot=case_2_year]"
+case_2_role:    "[data-slot=case_2_role]"
+case_2_result:  "[data-slot=case_2_result]"
+case_3_title:   "[data-slot=case_3_title]"
+case_3_client:  "[data-slot=case_3_client]"
+case_3_year:    "[data-slot=case_3_year]"
+case_3_role:    "[data-slot=case_3_role]"
+case_3_result:  "[data-slot=case_3_result]"
+work_empty:     "[data-slot=work_empty]"
+
+about_text:     "[data-slot=about_text]"
+fact_1_label:   "[data-slot=fact_1_label]"
+fact_1_value:   "[data-slot=fact_1_value]"
+fact_2_label:   "[data-slot=fact_2_label]"
+fact_2_value:   "[data-slot=fact_2_value]"
+fact_3_label:   "[data-slot=fact_3_label]"
+fact_3_value:   "[data-slot=fact_3_value]"
+
+contact_line:   "[data-slot=contact_line]"
+contact_email:  "[data-slot=contact_email]"
+footer_note:    "[data-slot=footer_note]"
+
+# case_N_result MUST state an outcome with a number or a concrete change.
+# "Redesigned the dashboard" is a process line and belongs nowhere on this page.

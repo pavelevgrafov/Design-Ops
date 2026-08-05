@@ -1,0 +1,533 @@
+{
+  "schema": "dops-floor-registry/1",
+  "version": "1.0",
+  "note": "Declarative registry of the deterministic floor. The canonical prose registry stays in .agents/skills/quality-guardian/references/deterministic-floor.md — it is documentation for humans; THIS file is what the runner executes. Keep ids in sync: a check here without a registry entry there (or vice versa) is a defect caught by `dops verify --audit-registry`.",
+  "lanes": {
+    "fs": "parallel-safe, no browser, no network",
+    "browser": "needs playwright + a served build; run sequentially (one browser at a time)"
+  },
+  "profiles": {
+    "quick": [
+      "core",
+      "browser",
+      "tier1"
+    ],
+    "standard": [
+      "core",
+      "browser",
+      "tier1",
+      "tier2"
+    ],
+    "full": [
+      "core",
+      "browser",
+      "tier1",
+      "tier2"
+    ]
+  },
+  "profile_note": "Profiles select which GROUPS run. The blocking core (D1-D14, D16-D21) is present in every profile — [E.4] holds: budgets never downgrade blocking checks. quick omits only Tier-2 advisory checks, which never block by definition.",
+  "checks": [
+    {
+      "id": "D1",
+      "title": "Build / typecheck",
+      "group": "core",
+      "lane": "fs",
+      "blocking": true,
+      "covers": [
+        "D1"
+      ],
+      "cmd": [
+        "{build_cmd}"
+      ],
+      "shell": true,
+      "needs": [
+        "build_cmd"
+      ],
+      "fix_hint": "Fix the build error before anything else — every downstream check reads the built output."
+    },
+    {
+      "id": "D2+D12+D13+D15+D20+D21",
+      "title": "Browser floor: console, viewports, tap targets, lab perf, a11y, functional paths",
+      "group": "browser",
+      "lane": "browser",
+      "blocking": true,
+      "cap_only_parts": [
+        "D15"
+      ],
+      "covers": [
+        "D2",
+        "D12",
+        "D13",
+        "D15",
+        "D20",
+        "D21",
+        "D.26",
+        "D.34"
+      ],
+      "cmd": [
+        "bash",
+        "{skills}/quality-guardian/scripts/run-ui-checks.sh",
+        "{url}",
+        "{routes}",
+        "{shots}",
+        "{paths_json}",
+        "{mode}"
+      ],
+      "needs": [
+        "playwright",
+        "url"
+      ],
+      "fix_hint": "Read the per-check lines in the output: each names the route, viewport and measured value."
+    },
+    {
+      "id": "D3",
+      "title": "Contrast (WCAG core token pairs)",
+      "group": "core",
+      "lane": "fs",
+      "blocking": true,
+      "covers": [
+        "D3"
+      ],
+      "cmd": [
+        "{python}",
+        "{skills}/quality-guardian/scripts/check-contrast.py",
+        "{tokens_css}",
+        "--dark"
+      ],
+      "needs": [
+        "tokens_css"
+      ],
+      "fix_hint": "Adjust the semantic token, never the component. Re-run compile-tokens.py afterwards."
+    },
+    {
+      "id": "D4-D8",
+      "title": "Typography: base size, measure, line-height, scale, font usage",
+      "group": "core",
+      "lane": "fs",
+      "blocking": true,
+      "covers": [
+        "D4",
+        "D5",
+        "D6",
+        "D7",
+        "D8"
+      ],
+      "cmd": [
+        "{python}",
+        "{skills}/quality-guardian/scripts/check-typography.py",
+        "{src}"
+      ],
+      "needs": [],
+      "fix_hint": "All five live in the type scale — fix the scale in tokens, not per-element."
+    },
+    {
+      "id": "D9",
+      "title": "Token usage (no raw values in components)",
+      "group": "core",
+      "lane": "fs",
+      "blocking": true,
+      "covers": [
+        "D9"
+      ],
+      "cmd": [
+        "bash",
+        "{skills}/quality-guardian/scripts/check-token-usage.sh",
+        "{src}"
+      ],
+      "needs": [],
+      "fix_hint": "A raw color/font/spacing in a component breaks the restyle property [A.7]. Move it to a semantic token."
+    },
+    {
+      "id": "D10+D14",
+      "title": "Placeholders, hotlinks, image hygiene",
+      "group": "core",
+      "lane": "fs",
+      "blocking": true,
+      "covers": [
+        "D10",
+        "D14"
+      ],
+      "cmd": [
+        "bash",
+        "{skills}/quality-guardian/scripts/check-placeholders.sh",
+        "{root}",
+        "{assets}"
+      ],
+      "needs": [],
+      "fix_hint": "All images local, real alt, <=300KB, declared width/height; no lorem, no external CDN."
+    },
+    {
+      "id": "D11",
+      "title": "Ban-list (AI-look defaults) on the final build",
+      "group": "core",
+      "lane": "fs",
+      "blocking": true,
+      "covers": [
+        "D11"
+      ],
+      "cmd": [
+        "bash",
+        "{skills}/visual-director/scripts/lint-ban-list.sh",
+        "{src}"
+      ],
+      "needs": [],
+      "fix_hint": "A justified exception needs an ALLOW: line in the final direction doc — not a silent pass."
+    },
+    {
+      "id": "D16",
+      "title": "Skeleton marker state",
+      "group": "core",
+      "lane": "fs",
+      "blocking": true,
+      "covers": [
+        "D16"
+      ],
+      "cmd": [
+        "{python}",
+        "{tools}/dops_check_marker.py",
+        "{root}",
+        "{contract}"
+      ],
+      "needs": [],
+      "fix_hint": "While Gate 2 is deferred the marker is KEPT by design; after K2B scaling it must be gone."
+    },
+    {
+      "id": "D17",
+      "title": "Divergence (only when K2B ran)",
+      "group": "tier1",
+      "lane": "fs",
+      "blocking": true,
+      "covers": [
+        "D17"
+      ],
+      "cmd": [
+        "{python}",
+        "{skills}/visual-director/scripts/check-divergence.py",
+        "{contract}"
+      ],
+      "needs": [
+        "pyyaml"
+      ],
+      "skip_when": "k2b_not_run",
+      "fix_hint": "Directions must differ on >=4 axes; overlap <=50% in the blind test."
+    },
+    {
+      "id": "D18",
+      "title": "UX model validation",
+      "group": "tier1",
+      "lane": "fs",
+      "blocking": true,
+      "covers": [
+        "D18"
+      ],
+      "cmd": [
+        "{python}",
+        "{skills}/structure-builder/scripts/validate_experience_model.py",
+        "{experience_model}"
+      ],
+      "needs": [
+        "pyyaml",
+        "experience_model"
+      ],
+      "fix_hint": "Pattern, screens, one p1 per screen, states, scenario coverage — all required in standard/full."
+    },
+    {
+      "id": "D19",
+      "title": "Pipeline integrity (gate order, enums, decision log)",
+      "group": "core",
+      "lane": "fs",
+      "blocking": true,
+      "covers": [
+        "D19"
+      ],
+      "cmd": [
+        "{python}",
+        "{skills}/quality-guardian/scripts/validate-pipeline.py",
+        "{root}"
+      ],
+      "needs": [
+        "pyyaml"
+      ],
+      "fix_hint": "This one catches retro-fitted compliance: fix the process record, never the check."
+    },
+    {
+      "id": "A.26",
+      "title": "Nothing silently: autonomous granted, machine gate decisions announced",
+      "group": "core",
+      "lane": "fs",
+      "blocking": true,
+      "covers": [
+        "D19"
+      ],
+      "cmd": [
+        "{python}",
+        "{tools}/dops_announce.py",
+        "--check",
+        "--root",
+        "{root}"
+      ],
+      "needs": [],
+      "fix_hint": "Announce the decision AT THE MOMENT with a rollback command (`dops announce`), and record the owner's grant before switching to autonomous. Silence is not a grant."
+    },
+    {
+      "id": "U.2",
+      "title": "Checkpoint log integrity (closed registry, no action on a superseded artifact)",
+      "group": "core",
+      "lane": "fs",
+      "blocking": true,
+      "covers": [
+        "D19"
+      ],
+      "cmd": [
+        "{python}",
+        "{tools}/dops_checkpoint.py",
+        "--check",
+        "--root",
+        "{root}"
+      ],
+      "needs": [],
+      "fix_hint": "A machine decision needs announced_at [A.26]; a decision on a superseded checkpoint means the owner acted on an artifact that no longer exists in that form — republish it and ask again."
+    },
+    {
+      "id": "A.25",
+      "title": "Provisional work is never delivered as product (gate-overtaking)",
+      "group": "core",
+      "lane": "fs",
+      "blocking": true,
+      "covers": [
+        "D19"
+      ],
+      "cmd": [
+        "{python}",
+        "{skills}/pipeline-orchestrator/scripts/gate-require.py",
+        "{contract}",
+        "verdict"
+      ],
+      "needs": [
+        "pyyaml"
+      ],
+      "fix_hint": "The machine may work ahead of an unanswered gate; it may not call the result ready. Batch-confirm the gate, or veto it — `dops hash plan <changed-input>` scopes the rework."
+    },
+    {
+      "id": "D22",
+      "title": "Visual regression",
+      "group": "browser",
+      "lane": "browser",
+      "blocking": true,
+      "covers": [
+        "D22"
+      ],
+      "cmd": [
+        "sh",
+        "{skills}/quality-guardian/scripts/visual-regression.sh",
+        "test",
+        "{url}",
+        "{shots_baseline}",
+        "{routes_space}"
+      ],
+      "needs": [
+        "playwright",
+        "url"
+      ],
+      "fix_hint": "An unapproved diff blocks. `approve` is a HUMAN decision recorded in the decision log."
+    },
+    {
+      "id": "D23",
+      "title": "Secrets scan",
+      "group": "core",
+      "lane": "fs",
+      "blocking": true,
+      "covers": [
+        "D23"
+      ],
+      "cmd": [
+        "{python}",
+        "{skills}/quality-guardian/scripts/check-secrets.py",
+        "{root}"
+      ],
+      "needs": [],
+      "fix_hint": "Secrets live in env only. A documented false positive carries SECRET-ALLOW: on the same line."
+    },
+    {
+      "id": "D24",
+      "title": "Service packs acceptance",
+      "group": "tier1",
+      "lane": "fs",
+      "blocking": false,
+      "cap_only": true,
+      "covers": [
+        "D24"
+      ],
+      "cmd": [
+        "{python}",
+        "{skills}/quality-guardian/scripts/check-packs.py",
+        "{contract}",
+        "{packs}"
+      ],
+      "needs": [
+        "pyyaml"
+      ],
+      "fix_hint": "A core pack not active caps the verdict at ready_with_caveats [A.6]; peripheral is a report line."
+    },
+    {
+      "id": "D.25",
+      "title": "Extended contrast (text tiers, status hues, focus ring, both themes)",
+      "group": "tier1",
+      "lane": "fs",
+      "blocking": true,
+      "covers": [
+        "D.25"
+      ],
+      "cmd": [
+        "{python}",
+        "{packs}/contrast-checker/scripts/check-all-pairs.py",
+        "{tokens_css}"
+      ],
+      "needs": [
+        "tokens_css"
+      ],
+      "fix_hint": "Extends D3 to the full semantic contract — fix in tokens, both themes."
+    },
+    {
+      "id": "D.27",
+      "title": "Focus visible",
+      "group": "core",
+      "lane": "fs",
+      "blocking": true,
+      "covers": [
+        "D.27"
+      ],
+      "cmd": [
+        "{python}",
+        "{skills}/quality-guardian/scripts/check-focus-visible.py",
+        "{src}"
+      ],
+      "needs": [],
+      "fix_hint": "No naked `outline: none`; style :focus-visible with >=2px indicator."
+    },
+    {
+      "id": "D.28",
+      "title": "Semantic HTML",
+      "group": "core",
+      "lane": "fs",
+      "blocking": true,
+      "covers": [
+        "D.28"
+      ],
+      "cmd": [
+        "{python}",
+        "{skills}/quality-guardian/scripts/check-semantic-html.py",
+        "{src}"
+      ],
+      "needs": [],
+      "fix_hint": "One h1, continuous hierarchy, <main> present, no interactive divs [A.18]."
+    },
+    {
+      "id": "D.29",
+      "title": "Reduced motion",
+      "group": "core",
+      "lane": "fs",
+      "blocking": true,
+      "covers": [
+        "D.29"
+      ],
+      "cmd": [
+        "{python}",
+        "{skills}/quality-guardian/scripts/check-reduced-motion.py",
+        "{src}"
+      ],
+      "needs": [],
+      "fix_hint": "Any motion needs a prefers-reduced-motion quiet version [A.17]."
+    },
+    {
+      "id": "D.30",
+      "title": "AI-look markers",
+      "group": "core",
+      "lane": "fs",
+      "blocking": true,
+      "covers": [
+        "D.30"
+      ],
+      "cmd": [
+        "{python}",
+        "{packs}/ai-look-detector/scripts/scan.py",
+        "{src}"
+      ],
+      "needs": [],
+      "fix_hint": "Tier-1 markers (indigo-600, slate-900, indigo->purple) are statistical defaults — replace the palette."
+    },
+    {
+      "id": "D.35",
+      "title": "Jank-safe motion (transform/opacity only)",
+      "group": "tier2",
+      "lane": "fs",
+      "blocking": false,
+      "covers": [
+        "D.35"
+      ],
+      "cmd": [
+        "{python}",
+        "{skills}/quality-guardian/scripts/check-motion-properties.py",
+        "{src}"
+      ],
+      "needs": [],
+      "fix_hint": "Animate transform/opacity only; linear easing is banned."
+    },
+    {
+      "id": "D.36",
+      "title": "Copy audit (corporate slop)",
+      "group": "tier2",
+      "lane": "fs",
+      "blocking": false,
+      "covers": [
+        "D.36"
+      ],
+      "cmd": [
+        "{python}",
+        "{packs}/copy-linter/scripts/lint-copy.py",
+        "{src}"
+      ],
+      "needs": [],
+      "fix_hint": "Replace slop with concrete claims and numbers [A.22]."
+    },
+    {
+      "id": "D.37",
+      "title": "Token architecture (primitive -> semantic -> component)",
+      "group": "tier1",
+      "lane": "fs",
+      "blocking": true,
+      "covers": [
+        "D.37"
+      ],
+      "cmd": [
+        "{python}",
+        "{packs}/token-validator/scripts/validate-layers.py",
+        "{tokens_json}"
+      ],
+      "needs": [
+        "tokens_json"
+      ],
+      "fix_hint": "A component token may reference semantic only — never back down the chain [A.21]."
+    },
+    {
+      "id": "D.38",
+      "title": "Seven states per async module",
+      "group": "tier1",
+      "lane": "fs",
+      "blocking": true,
+      "covers": [
+        "D.38"
+      ],
+      "cmd": [
+        "{python}",
+        "{skills}/quality-guardian/scripts/check-seven-states.py",
+        "{experience_model}"
+      ],
+      "needs": [
+        "pyyaml",
+        "experience_model"
+      ],
+      "fix_hint": "idle/loading/skeleton/populated/empty/error/success — designing only the ideal state is a defect [A.12]."
+    }
+  ]
+}

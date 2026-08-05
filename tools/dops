@@ -1,0 +1,127 @@
+#!/usr/bin/env bash
+# dops — single entry point of the Design-Ops machine contour (v7.2).
+#
+# Why this exists: the deterministic floor used to be ~25 separate script
+# invocations, i.e. ~25 agent turns per verification. Cost and wall-clock of
+# an agent pipeline are linear in the number of turns, so the floor is now
+# ONE command returning ONE JSON. The agent reads the failures, not the
+# registry.
+#
+# Usage:
+#   dops doctor [--fix]                 environment capabilities (run first)
+#   dops verify [--profile P] [--url U] the whole deterministic floor, one JSON
+#   dops card [--audit]                 regenerate the resident rule card
+#   dops handoff <stage>                context packet for a stage subagent
+#   dops shots [--budget N]             pick the shots diagnostics may open
+#   dops harvest --check|--decide "..."  the flywheel gate: record what the run leaves behind
+#   dops hash record|check|plan <in>    [E.3] reuse and targeted invalidation by input hash
+#   dops stage start|end|mark <name>    run instrumentation: history + pulse in one call
+#   dops stage checkpoint "<name>"      publish an intermediate artifact (причал)
+#   dops status                         current pulse; stale pulse = silent incident
+#   dops announce --gate G --decision D --rollback "..."   [A.26] declare a machine decision
+#   dops checkpoint publish|decide|list   [У-2] publish an artifact the owner can act on
+#   dops control issue|apply|list         [У-3] commands to the process, applied at control points
+#   dops report                         stage timings + instruction tokens
+#   dops cost [--write]                 measured cost.actual for the contract
+#   dops selftest                       acceptance probes of the tooling itself
+#
+# Every subcommand accepts --root DIR (default: current directory).
+# bash 3.2 / BSD-safe: no associative arrays, no GNU-only flags.
+set -uo pipefail
+
+HERE="$(cd "$(dirname "$0")" && pwd)"
+# A project venv wins when present: modern system Pythons are externally
+# managed (PEP 668), so the pipeline's own dependencies live in .venv rather
+# than in an interpreter we are not allowed to touch. `dops doctor --fix`
+# creates it.
+if [ -n "${PYTHON:-}" ]; then
+  PY="$PYTHON"
+elif [ -x "$PWD/.venv/bin/python" ]; then
+  PY="$PWD/.venv/bin/python"
+elif [ -x "$(cd "$HERE/.." && pwd)/.venv/bin/python" ]; then
+  PY="$(cd "$HERE/.." && pwd)/.venv/bin/python"
+else
+  PY="python3"
+fi
+PROGRESS="$(cd "$HERE/.." && pwd)/.agents/skills/pipeline-orchestrator/scripts/progress.py"
+
+usage() {
+  sed -n '3,20p' "$0" | sed 's/^# \{0,1\}//'
+}
+
+cmd="${1:-}"
+[ $# -gt 0 ] && shift
+
+case "$cmd" in
+  doctor)
+    exec "$PY" "$HERE/dops_doctor.py" "$@"
+    ;;
+  verify)
+    exec "$PY" "$HERE/dops_verify.py" "$@"
+    ;;
+  card)
+    exec "$PY" "$HERE/dops_card.py" "$@"
+    ;;
+  handoff)
+    exec "$PY" "$HERE/dops_handoff.py" "$@"
+    ;;
+  shots)
+    exec "$PY" "$HERE/dops_shots.py" "$@"
+    ;;
+  harvest)
+    exec "$PY" "$HERE/dops_harvest.py" "$@"
+    ;;
+  hash)
+    exec "$PY" "$HERE/dops_hash.py" "$@"
+    ;;
+  announce)
+    exec "$PY" "$HERE/dops_announce.py" "$@"
+    ;;
+  checkpoint)
+    exec "$PY" "$HERE/dops_checkpoint.py" "$@"
+    ;;
+  control)
+    exec "$PY" "$HERE/dops_control.py" "$@"
+    ;;
+  stage)
+    sub="${1:?usage: dops stage start|end|mark|checkpoint <name>}"; shift
+    if [ "$sub" = "checkpoint" ]; then
+      # a published intermediate artifact the owner may act on without
+      # stopping the conveyor — same pulse file as `dops stage`
+      exec "$PY" "$PROGRESS" checkpoint --name "$@"
+    fi
+    exec "$PY" "$HERE/dops_trace.py" "$sub" "$@"
+    ;;
+  status)
+    exec "$PY" "$PROGRESS" status "$@"
+    ;;
+  report)
+    exec "$PY" "$HERE/dops_trace.py" report "$@"
+    ;;
+  cost)
+    exec "$PY" "$HERE/dops_trace.py" cost "$@"
+    ;;
+  selftest)
+    rc=0
+    "$PY" "$HERE/dops_verify.py" --self-test || rc=1
+    "$PY" "$HERE/dops_trace.py" --self-test || rc=1
+    "$PY" "$HERE/dops_card.py" --self-test || rc=1
+    "$PY" "$HERE/dops_handoff.py" --self-test || rc=1
+    "$PY" "$HERE/dops_shots.py" --self-test || rc=1
+    "$PY" "$HERE/dops_harvest.py" --self-test || rc=1
+    "$PY" "$HERE/dops_hash.py" --self-test || rc=1
+    "$PY" "$HERE/dops_announce.py" --self-test || rc=1
+    "$PY" "$HERE/dops_checkpoint.py" --self-test || rc=1
+    "$PY" "$HERE/dops_control.py" --self-test || rc=1
+    "$PY" "$HERE/dops_verify.py" --audit-registry || rc=1
+    exit $rc
+    ;;
+  ""|-h|--help|help)
+    usage
+    ;;
+  *)
+    printf 'dops: unknown command "%s"\n\n' "$cmd" >&2
+    usage >&2
+    exit 2
+    ;;
+esac

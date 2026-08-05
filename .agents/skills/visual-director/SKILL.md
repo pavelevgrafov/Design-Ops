@@ -78,6 +78,12 @@ the space without anchoring it.
 
 #### Step 2. Construct the directions (quick: 2, standard/full: 3)
 
+Generate the directions in PARALLEL, each in its own context (one subagent
+per direction, packet from `tools/dops handoff K2B`). Serial generation
+makes each direction read the previous ones, which is both slower and the
+main mechanism by which "constructed divergence" quietly collapses into
+three variations of the first idea.
+
 For each direction (full rules: `references/divergence-rules.md`):
 1. **Seed:** persona + ≥3 non-overlapping reference domains + a boldness
    point. Points must SPREAD across the band [K2.4.1]: quick = safer + bolder;

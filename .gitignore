@@ -1,1 +1,7 @@
 packs/.pack-cache/
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+package-lock.json
+package.json

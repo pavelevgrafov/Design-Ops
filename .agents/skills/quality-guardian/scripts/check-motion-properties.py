@@ -15,6 +15,23 @@ Exit: 0 pass/warnings, 1 fail (--strict), 2 usage.
 """
 import os, re, sys
 
+# --- scan scope: never audit the vendored pipeline itself ---------------------
+# A project installs the toolkit INTO itself (install.sh), so walking the
+# project root would scan .agents/, packs/ and eval/selftest/fixture/ (which
+# holds deliberate traps) and report them as product defects. Override with
+# DOPS_SCAN_EXCLUDE="dir1,dir2" when a project genuinely ships such a folder.
+_DEFAULT_SKIP_SCAN = ("node_modules .git .agents eval packs packs-pro starters "
+                      "starters-pro skins skins-pro knowledge docs radar "
+                      "showcase tools dist build __pycache__ .pack-cache")
+SKIP_SCAN_DIRS = set((os.environ.get("DOPS_SCAN_EXCLUDE") or "")
+                     .replace(",", " ").split() or _DEFAULT_SKIP_SCAN.split())
+
+def _scan_skips(root):
+    """Exclusions protect a project-root walk. Scanning an excluded directory
+    deliberately (a fixture, a vendored subtree) disables them."""
+    parts = set(os.path.abspath(root).split(os.sep))
+    return set() if parts & SKIP_SCAN_DIRS else SKIP_SCAN_DIRS
+
 TRANSITION = re.compile(r"transition(?:-property)?\s*:\s*([^;]+);", re.I)
 FORBIDDEN = re.compile(r"\b(width|height|top|left|right|bottom|margin|padding)\b", re.I)
 LINEAR = re.compile(r"\blinear\b", re.I)
@@ -42,7 +59,9 @@ def main():
     warnings_ = []
     for p in args:
         if os.path.isdir(p):
+            _skips = _scan_skips(p)
             for dirpath, _d, files in os.walk(p):
+                _d[:] = [d for d in _d if d not in _skips]
                 for fn in files:
                     if fn.endswith((".css", ".html")):
                         scan_file(os.path.join(dirpath, fn), warnings_)

@@ -28,7 +28,7 @@ TARGET="${ARGS:-.}"
 mkdir -p "$TARGET"
 TARGET="$(cd "$TARGET" && pwd)"
 
-ITEMS="AGENTS.md README.md INSTALL.md LICENSE install.sh mkdocs.yml .agents eval starters skins packs knowledge docs showcase radar"
+ITEMS="AGENTS.md README.md INSTALL.md LICENSE install.sh mkdocs.yml .agents tools eval starters skins packs knowledge docs showcase radar"
 # Paths that belong to the LOCAL project, never to the package overlay:
 LOCAL_KEEP=".agents/config.yaml .agents/knowledge-sync .pack-cache"
 
@@ -101,7 +101,8 @@ fi
 chmod +x "$TARGET"/.agents/skills/*/scripts/*.sh \
          "$TARGET"/.agents/skills/*/scripts/*.py \
          "$TARGET"/starters/recheck.sh "$TARGET"/starters/harvest.py \
-         "$TARGET"/packs/recheck.sh 2>/dev/null || true
+         "$TARGET"/packs/recheck.sh \
+         "$TARGET"/tools/dops "$TARGET"/tools/*.py 2>/dev/null || true
 
 # --- dependencies -------------------------------------------------------------
 MISSING=""

@@ -1,0 +1,24 @@
+# constraints/performance.yaml — единый источник истины для Core Web Vitals и бюджетов.
+# Первичный текст: guidelines/performance-perceived.md
+version: 1
+updated: 2026-08-02
+core-web-vitals:
+  percentile: 75                # оценка по полевым данным CrUX, не по синтетике
+  lcp-s:
+    good: {value: 2.5, level: MUST}
+    poor: 4.0
+  inp-ms:
+    good: {value: 200, level: MUST}
+    poor: 500
+  cls:
+    good: {value: 0.1, level: MUST}
+    poor: 0.25
+budget:
+  js-max-kb: {value: 300, level: SHOULD}
+  page-max-mb: {value: 1.5, level: SHOULD}
+  third-party-scripts-max: {value: 3, level: SHOULD}
+long-task-ms: 50                # длинные JS-задачи — главная причина плохого INP
+notes:
+  - Между good и poor — зона «нужно улучшить», не проходной порог.
+  - CLS: резервировать место под медиа заранее (width/height или aspect-ratio).
+  - Лабораторный тест зелёный ≠ полевые данные зелёные.

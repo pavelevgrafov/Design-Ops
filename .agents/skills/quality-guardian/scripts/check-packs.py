@@ -43,7 +43,10 @@ def main():
         if not pack:
             continue
         r = subprocess.run(
-            ["python3", resolver, packs_dir, pack, "--json"],
+            # same interpreter as this process: a bare "python3" can resolve to
+            # a different install without PyYAML and turn every pack into a
+            # phantom "resolver error"
+            [sys.executable or "python3", resolver, packs_dir, pack, "--json"],
             capture_output=True, text=True)
         try:
             res = json.loads(r.stdout)

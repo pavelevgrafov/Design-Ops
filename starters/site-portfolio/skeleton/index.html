@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title data-slot="owner_name">Anna Weber — product designer</title>
+<link rel="stylesheet" href="../../../skins/base-site/tokens.css">
+<style>
+  body { margin: 0; font-family: var(--font-body); background: var(--canvas); color: var(--ink); line-height: var(--font-line-height-body); }
+  header, main, footer { max-width: 60rem; margin: 0 auto; padding: 0 var(--space-4); }
+  header { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-4); padding-top: var(--space-4); padding-bottom: var(--space-4); }
+  nav a { color: var(--ink-muted); text-decoration: none; margin-left: var(--space-4); padding: var(--space-2) 0; display: inline-block; min-height: 1.5rem; }
+  nav a:hover { color: var(--ink); }
+  a:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  h1, h2, h3 { font-family: var(--font-display); line-height: var(--font-line-height-tight); }
+  h1 { font-size: var(--font-scale-step4); margin: var(--space-8) 0 var(--space-4); max-width: 18ch; }
+  .intro { font-size: var(--font-scale-step1); color: var(--ink-muted); max-width: var(--measure-body); }
+  section { margin-top: var(--space-12); }
+  h2 { font-size: var(--font-scale-step2); margin-bottom: var(--space-5); }
+  .work { list-style: none; margin: 0; padding: 0; }
+  .work-item { border-top: 1px solid var(--border-subtle); padding: var(--space-5) 0; }
+  .work-item a { color: var(--ink); text-decoration: none; display: block; }
+  .work-item a:hover h3 { text-decoration: underline; }
+  .work-item h3 { font-size: var(--font-scale-step1); margin: 0 0 var(--space-1); }
+  .work-meta { color: var(--ink-muted); font-size: var(--font-scale-step-1); margin: 0 0 var(--space-2); }
+  .work-result { margin: 0; max-width: var(--measure-body); }
+  .empty-state { border: 1px dashed var(--border-subtle); border-radius: var(--radius-md); padding: var(--space-6); color: var(--ink-muted); max-width: var(--measure-body); }
+  .about p { max-width: var(--measure-body); }
+  .facts { list-style: none; margin: var(--space-4) 0 0; padding: 0; }
+  .facts li { padding: var(--space-2) 0; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; gap: var(--space-4); max-width: 32rem; }
+  .facts span:last-child { color: var(--ink-muted); }
+  .contact a { color: var(--ink); }
+  footer { margin-top: var(--space-12); padding-top: var(--space-4); padding-bottom: var(--space-6); border-top: 1px solid var(--border-subtle); color: var(--ink-muted); font-size: var(--font-scale-step-1); }
+  @media (prefers-reduced-motion: no-preference) {
+    .work-item a { transition: opacity var(--motion-duration-fast) var(--motion-easing-out); }
+    .work-item a:hover { opacity: 0.85; }
+  }
+</style>
+</head>
+<body data-not-approved="not_approved_visual_design">
+<header data-priority="p2">
+  <strong data-slot="owner_name">Anna Weber</strong>
+  <nav aria-label="Sections">
+    <a href="#work">Work</a>
+    <a href="#about">About</a>
+    <a href="#contact">Contact</a>
+  </nav>
+</header>
+
+<main>
+  <section id="intro" data-priority="p1" data-section="hero">
+    <h1 data-slot="headline">Product designer for data-heavy interfaces</h1>
+    <p class="intro" data-slot="intro">Eight years on dashboards, admin tools and internal systems. I take a workflow people already have and make it survive its own growth.</p>
+  </section>
+
+  <section id="work" data-priority="p1" data-section="work">
+    <h2>Selected work</h2>
+    <ul class="work">
+      <li class="work-item">
+        <a href="#">
+          <h3 data-slot="case_1_title">Logistics control room</h3>
+          <p class="work-meta"><span data-slot="case_1_client">Freight operator</span> · <span data-slot="case_1_year">2025</span> · <span data-slot="case_1_role">Lead designer</span></p>
+          <p class="work-result" data-slot="case_1_result">Dispatchers handle 40% more orders per shift; the training period dropped from three weeks to four days.</p>
+        </a>
+      </li>
+      <li class="work-item">
+        <a href="#">
+          <h3 data-slot="case_2_title">Clinical scheduling</h3>
+          <p class="work-meta"><span data-slot="case_2_client">Regional clinic network</span> · <span data-slot="case_2_year">2024</span> · <span data-slot="case_2_role">Designer, research</span></p>
+          <p class="work-result" data-slot="case_2_result">Double-booking incidents fell from 60 a month to 4; the fix was one screen, not a rebuild.</p>
+        </a>
+      </li>
+      <li class="work-item">
+        <a href="#">
+          <h3 data-slot="case_3_title">Warehouse mobile app</h3>
+          <p class="work-meta"><span data-slot="case_3_client">Retail chain</span> · <span data-slot="case_3_year">2023</span> · <span data-slot="case_3_role">Designer</span></p>
+          <p class="work-result" data-slot="case_3_result">Picking errors down 31%; the interface works one-handed with gloves on.</p>
+        </a>
+      </li>
+    </ul>
+    <p class="empty-state" data-slot="work_empty" hidden>No public cases yet — the current work is under NDA. Write to me and I will walk you through it.</p>
+  </section>
+
+  <section id="about" class="about" data-priority="p2" data-section="about">
+    <h2>About</h2>
+    <p data-slot="about_text">I work end to end: research, structure, interface, and the handoff that survives the first sprint. Most of my projects are systems someone already depends on daily, so the constraint is never the blank page.</p>
+    <ul class="facts">
+      <li><span data-slot="fact_1_label">Based in</span><span data-slot="fact_1_value">Lisbon, working across Europe</span></li>
+      <li><span data-slot="fact_2_label">Available</span><span data-slot="fact_2_value">From October, two days a week</span></li>
+      <li><span data-slot="fact_3_label">Tools</span><span data-slot="fact_3_value">Figma, HTML/CSS, whatever the team already uses</span></li>
+    </ul>
+  </section>
+
+  <section id="contact" class="contact" data-priority="p1" data-section="contact">
+    <h2>Contact</h2>
+    <p data-slot="contact_line">The fastest way is email. Tell me what the system does and who suffers most.</p>
+    <p><a href="mailto:hello@example.com" data-slot="contact_email">hello@example.com</a></p>
+  </section>
+</main>
+
+<footer>
+  <p><span data-slot="footer_note">Last updated September 2026</span></p>
+</footer>
+</body>
+</html>

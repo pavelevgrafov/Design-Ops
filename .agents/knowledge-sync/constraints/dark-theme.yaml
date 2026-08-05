@@ -1,0 +1,25 @@
+# constraints/dark-theme.yaml — единый источник истины для тёмной темы.
+# Первичный текст: guidelines/dark-theme.md
+version: 1
+updated: 2026-08-02
+background:
+  base: "#121212"               # Material
+  pure-black: forbidden         # не #000000
+desaturation-percent-points: 20  # насыщенность акцентов снижается ~20 п.п.
+elevation:
+  method: lightness-overlay     # высота — светлотой, не тенью
+  overlay-percent:
+    hover: 8
+    focus: 12
+    pressed: 12
+    drag: 16
+text-opacity-percent:
+  primary: 87
+  secondary: 60
+  disabled: 38
+contrast:
+  white-on-dark-min-ratio: 15.8
+semantic:
+  error-dark: "#CF6679"         # Material error для тёмной темы
+images:
+  brightness: 0.9               # лёгкое приглушение ярких изображений

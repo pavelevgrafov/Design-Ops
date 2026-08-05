@@ -29,16 +29,29 @@ completes the remaining cycles as pure re-runs (no new scope).
 
 ## [E.3] Reuse by input hash
 
-Artifacts are not regenerated if their inputs did not change:
+Artifacts are not regenerated if their inputs did not change. The derivation
+graph lives in `tools/hash-graph.json`; three commands operate it:
 
-- contract sections → skeleton (hash of product+experience+content_model);
-- calibration + seeds → directions;
-- final_direction → tokens;
-- tokens → compiled CSS.
+```
+dops hash record --stage K1     # pin what this stage just produced
+dops hash check                 # fresh / stale / drifted, per artifact
+dops hash plan contract:experience   # what a change forces, in order
+```
 
-Store input hashes next to artifacts (a comment line or manifest field). On a
-change request, recompute only downstream of the changed input. A restyle
-never rebuilds the structure; a structure delta never rebuilds directions.
+- `stale` — an input changed; recompute this artifact.
+- `drifted` — the artifact was hand-edited after generation while its inputs
+  stayed put. That is silent drift, a defect [A.10], not a change: fix the
+  source and regenerate, never keep the edit.
+- Whitespace reformatting of the contract is not a change (sections are
+  hashed normalised), so a tidy-up does not invalidate the run.
+
+This is what makes a change request cheap: `plan` names exactly what must be
+recomputed and what may be reused. A restyle never rebuilds the structure; a
+structure delta never rebuilds tokens — and now the machine, not the agent's
+memory, is what guarantees it.
+
+Until v7.2 this rule existed only as prose: nothing stored a hash, so every
+change request rebuilt everything and a gate veto could never be cheap.
 
 ## [E.4] Budgets never downgrade blocking checks
 

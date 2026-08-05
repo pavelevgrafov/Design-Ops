@@ -117,6 +117,17 @@ A.2 exemption (scaling over the base skin is legal when
 `status.base_skin_applied: true`); decision-log Gate-2 sections required
 only when K2B ran.
 
+### D19 companion — [A.26] "nothing silently". Blocking. Script.
+`tools/dops_announce.py --check`, run as part of the floor. Two conditions:
+`interaction_mode: autonomous` requires `meta.autonomous_granted_by` (the
+owner's explicit word for THIS run — being unresponsive is not a grant), and
+every machine-made gate decision (`autonomous_passed`, `provisional_ai`)
+requires an announcement recorded at the moment it was made, carrying a
+rollback command. A decision the owner learns about from the closing report
+is a violation even when the decision itself was legal. Origin: the
+kruto-landing run, where the pipeline broke no rule and the owner still lost
+control of it.
+
 ## D20 — Accessibility quick pass. Blocking (critical/serious). Script.
 axe-core (or equivalent) on key screens: zero critical/serious violations.
 Moderate/minor → residual risks. Tool missing = `unavailable` (caps verdict),

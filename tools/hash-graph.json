@@ -1,0 +1,44 @@
+{
+  "schema": "dops-hash-graph/1",
+  "note": "The derivation graph behind [E.3] 'reuse by input hash'. E.3 has been written down since v5 but never implemented — no artifact stored the hash of its inputs, so 'recompute only downstream of the change' had nothing to compute from, and any veto meant a full rebuild. This file states what derives from what; dops_hash.py records and verifies it.",
+  "input_forms": {
+    "path/to/file": "sha256 of the file",
+    "path/to/dir/": "sha256 over sorted (relpath, content) pairs",
+    "contract:<section>": "sha256 of that top-level block of artifacts/design-contract.yaml"
+  },
+  "artifacts": {
+    "skeleton.html": {
+      "stage": "K1",
+      "inputs": ["contract:product", "contract:experience", "contract:content_model"],
+      "note": "structure derives from the information model, never from taste [A.3]"
+    },
+    "index.html": {
+      "stage": "K1",
+      "inputs": ["contract:product", "contract:experience", "contract:content_model"],
+      "note": "the shipped page when a project has no separate skeleton file"
+    },
+    "artifacts/ux/experience-model.yaml": {
+      "stage": "K1",
+      "inputs": ["contract:product", "contract:experience"]
+    },
+    "artifacts/visual/tokens.json": {
+      "stage": "K2A/K2B",
+      "inputs": ["contract:visual", "skins/base-site/tokens.json", "skins/base-app/tokens.json"],
+      "note": "a direction change re-derives tokens; a structure change does not"
+    },
+    "artifacts/visual/tokens.css": {
+      "stage": "K2A/K2B",
+      "inputs": ["artifacts/visual/tokens.json"],
+      "note": "compiled output — a hand edit here is drift [A.10], not a change"
+    },
+    "artifacts/visual/tokens.theme.css": {
+      "stage": "K2A/K2B",
+      "inputs": ["artifacts/visual/tokens.json"]
+    },
+    "artifacts/audit/floor.json": {
+      "stage": "K3",
+      "inputs": ["skeleton.html", "index.html", "artifacts/visual/tokens.css", "contract:acceptance"],
+      "note": "the verdict is only as fresh as what it was measured against"
+    }
+  }
+}

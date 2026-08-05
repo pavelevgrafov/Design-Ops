@@ -1,0 +1,18 @@
+id: landing-event
+profile: site
+category: event / festival promo
+pattern: task-first
+description: >
+  Single-page promo for a dated event (festival, conference, fair, open day).
+  P1 = buy a ticket; the second job is "what is on, when, and can I get
+  there". Sections: dateline hero, day-by-day programme, ticket tiers with a
+  sold-out state, getting-there + FAQ. Copy slots only, no stock imagery
+  required.
+base_skin: base-site
+verified_at: 2026-08-04
+floor_verdict: ready_with_caveats   # browser checks (D12/D13/D20) pending first hosted run
+shots: pending_hosted_run   # D22 baseline is taken by visual-regression.sh on the first hosted run
+origin: >
+  Harvested from the gap the kruto-landing run exposed: a dated event with a
+  day-by-day lineup did not match any starter, so the run went from_scratch
+  and paid roughly twice.

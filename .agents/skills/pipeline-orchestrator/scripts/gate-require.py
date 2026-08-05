@@ -12,7 +12,12 @@ Requirements (fixed by stage):
   gate3 — deploy prod requires gates.gate3 ∈ {passed} AND
           deploy.prod.rollback_tested: true AND verdict ∈ ready-family
 
-Usage: python3 gate-require.py <contract> <gate1|gate2|gate3>
+Gate-overtaking (v7.2, [A.25], mechanics: references/gate-overtaking.md):
+  stage:<name> — may this stage run while a gate is `provisional`?
+  verdict      — may a ready-family verdict be issued right now?
+  deliver      — may the result be handed over / deployed right now?
+
+Usage: python3 gate-require.py <contract> <gate1|gate2|gate3|stage:NAME|verdict|deliver>
 Exit: 0 requirement met, 1 refused (reason printed), 2 usage/io.
 """
 import sys
@@ -30,9 +35,88 @@ REQUIRED = {
 }
 READY_FAMILY = {"ready", "ready_with_caveats"}
 
+# [A.25] What the machine may do while the owner has not yet answered a gate.
+# Reversible and cheap: yes. Anything that turns work into a PRODUCT, or that
+# is visible outside, or that cannot be undone: no.
+PROVISIONAL_ALLOWED = {
+    "K2A": "base skin — reversible, no taste claim",
+    "K3": "floor run — measurement, not delivery",
+    "K2B-slice": "direction preparation on the two-screen slice only",
+}
+PROVISIONAL_FORBIDDEN = {
+    "K2B-scale": "scaling beyond the slice needs Gate 2 [A.2]",
+    "verdict": "a verdict is a product claim",
+    "deliver": "delivery is a product claim",
+    "deploy": "externally visible",
+    "gate3": "prod requires every gate answered",
+    "harvest": "writes into the shared starter library",
+    "marker-removal": "the not_approved_visual_design marker stays while unanswered",
+}
+PROVISIONAL = "provisional"
+
+
+def provisional_gates(gates):
+    return sorted(g for g, v in gates.items()
+                  if isinstance(v, str) and v.strip() == PROVISIONAL)
+
+
+def overtaking_check(c, query):
+    """[A.25] Provisional work is never delivered as product."""
+    gates = c.get("gates") or {}
+    status = c.get("status") or {}
+    pending = provisional_gates(gates)
+    blocked = bool(status.get("deliverable_blocked"))
+
+    # the flag and the gates must agree — a stale flag is silent drift [A.10]
+    if pending and not blocked:
+        print(f"REFUSED: {', '.join(pending)} is provisional but "
+              f"status.deliverable_blocked is not true — the contract claims "
+              f"the result is deliverable while a gate is unanswered [A.25/A.10]")
+        return 1
+    if blocked and not pending:
+        print("REFUSED: status.deliverable_blocked is true but no gate is "
+              "provisional — clear the flag when the last gate is answered")
+        return 1
+
+    if query.startswith("stage:"):
+        stage = query.split(":", 1)[1]
+        if not pending:
+            print(f"OK: no provisional gate — stage '{stage}' unrestricted")
+            return 0
+        if stage in PROVISIONAL_ALLOWED:
+            print(f"OK: '{stage}' may run under provisional "
+                  f"({PROVISIONAL_ALLOWED[stage]}); pending: {', '.join(pending)}")
+            return 0
+        why = PROVISIONAL_FORBIDDEN.get(
+            stage, "unknown stage — closed taxonomy, so it is refused [A.11]")
+        print(f"REFUSED: '{stage}' while {', '.join(pending)} is provisional: {why}")
+        return 1
+
+    if not pending:
+        print(f"OK: no provisional gate — {query} permitted")
+        return 0
+
+    verdict = str(status.get("verdict") or "")
+    if query == "verdict":
+        if verdict in READY_FAMILY:
+            print(f"REFUSED: verdict '{verdict}' with {', '.join(pending)} "
+                  f"still provisional — the machine may work ahead, it may not "
+                  f"call the result ready [A.25]")
+            return 1
+        print(f"OK: no ready-family verdict claimed while {', '.join(pending)} "
+              f"is provisional")
+        return 0
+
+    print(f"REFUSED: {query} while {', '.join(pending)} is provisional. "
+          f"Legal path: batch-confirm the gate, or veto it "
+          f"(`dops hash plan <changed-input>` scopes the rework).")
+    return 1
+
 
 def main():
-    if len(sys.argv) != 3 or sys.argv[2] not in REQUIRED:
+    valid = (sys.argv[2] in REQUIRED or sys.argv[2] in ("verdict", "deliver")
+             or sys.argv[2].startswith("stage:")) if len(sys.argv) == 3 else False
+    if not valid:
         print(__doc__, file=sys.stderr)
         return 2
     path, gate = sys.argv[1], sys.argv[2]
@@ -42,6 +126,9 @@ def main():
     except (OSError, yaml.YAMLError) as e:
         print(f"gate-require: cannot read contract: {e}", file=sys.stderr)
         return 2
+
+    if gate not in REQUIRED:
+        return overtaking_check(c, gate)
 
     gates = c.get("gates") or {}
     value = str(gates.get(gate) or "pending")

@@ -1,0 +1,31 @@
+# constraints/typography.yaml — единый источник истины для типографических констант.
+# Первичный текст: guidelines/typography.md
+version: 1
+updated: 2026-08-02
+scale:
+  ratios: [1.125, 1.25, 1.333]      # Major Second / Major Third / Perfect Fourth
+  recommended: [1.25, 1.333]
+  base-px: 16
+fonts:
+  max-families: {value: 2, level: MUST}
+  mono-third-allowed: true          # только для кода/цифровых данных
+  weights: [400, 500, 600, 700]     # сверхлёгкие и сверхтяжёлые — не для UI
+line-height:
+  headings: [1.1, 1.3]              # чем крупнее — тем плотнее
+  body: [1.5, 1.7]                  # минимум 1.5 по WCAG
+  captions: [1.3, 1.4]
+tracking:
+  display-em: -0.02                 # крупные заголовки >= 32px
+  body-em: 0
+  caps-em: [0.05, 0.15]
+measure-ch:
+  optimal: [45, 75]
+  ideal: 65
+sizes-px:
+  body-min: {value: 16, level: MUST}
+  absolute-min: {value: 12, level: MUST}
+units: rem                          # не px — уважение к системному размеру шрифта
+text-contrast-steps-percent: [100, [70, 80], [40, 50]]  # три ступени текста
+fluid:
+  method: clamp()
+  example-h1: "clamp(1.75rem, 4vw + 0.5rem, 3rem)"

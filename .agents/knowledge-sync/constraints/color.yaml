@@ -1,0 +1,19 @@
+# constraints/color.yaml — единый источник истины для цветовых констант.
+# Первичный текст: guidelines/color-system.md, guidelines/visual-hierarchy.md
+version: 1
+updated: 2026-08-02
+proportion-60-30-10:
+  dominant: 60
+  secondary: 30
+  accent: 10
+  unit: percent
+palette:
+  neutral-steps: [8, 10]
+  semantic: [error, success, warning, info]
+  base-hues: [5, 7]
+text:
+  not-pure-black: MUST          # смягчённый почти-чёрный (#1C1917–#111827)
+  steps-percent: [100, [70, 80], [40, 50]]
+notes:
+  - Насыщенный акцент — только на малой площади.
+  - Смысл не кодируется одним цветом (см. constraints/a11y.yaml).

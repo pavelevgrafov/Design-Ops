@@ -21,6 +21,11 @@ PATTERNS = [
     ("generic_secret",    re.compile(r"(?i)\b(api[_-]?key|secret|password|passwd|token)\b\s*[:=]\s*['\"][^'\"]{12,}['\"]")),
 ]
 SKIP_DIRS = {"node_modules", ".git", "dist", "build", ".pack-cache", "__pycache__"}
+# The vendored pipeline is not the product under audit (see dops verify).
+SKIP_DIRS |= set((os.environ.get("DOPS_SCAN_EXCLUDE") or "").replace(",", " ").split()
+                 or [".agents", "eval", "packs", "packs-pro", "starters",
+                     "starters-pro", "skins", "skins-pro", "knowledge",
+                     "docs", "radar", "showcase", "tools"])
 SKIP_FILES = {"check-secrets.py", "package-lock.json", "yarn.lock", "pnpm-lock.yaml"}
 ALLOW_MARK = "SECRET-ALLOW:"   # documented false positive on the same line
 

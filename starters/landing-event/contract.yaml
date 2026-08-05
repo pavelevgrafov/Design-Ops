@@ -1,0 +1,12 @@
+meta: {schema_version: "7.0", mode: quick, artifact_profile: site}
+product: {name: "Starter: landing-event", category: event promo, risk_level: low}
+experience:
+  primary_job: "When I hear about the event, I want to know when it is and get a ticket before it sells out."
+  key_screens: [{id: home, name: "Single page", purpose: "state the dates, show the programme, sell a ticket"}]
+  required_states: [success, empty]
+content_model: {pattern: task-first, pattern_reason: "the visitor came to act (buy), the programme is the evidence that it is worth acting on"}
+starters: {route: starter_first, chosen: landing-event, harvest_decision: "reused:landing-event"}
+gates: {gate1: passed, gate2: deferred, gate2_deferred: true, mode: batched}
+status: {base_skin_applied: true, verdict: ready_with_caveats}
+visual: {}
+acceptance: {}

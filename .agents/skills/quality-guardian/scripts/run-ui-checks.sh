@@ -53,7 +53,10 @@ fi
 
 RUNNER="$OUT/_runner.cjs"
 cat > "$RUNNER" <<'NODE'
-const { chromium } = require('playwright');
+// The runner lives in the OUT directory, which is usually outside any
+// node_modules tree — a bare specifier would resolve against OUT and fail.
+// The shell resolves playwright from ITS cwd and passes the absolute path.
+const { chromium } = require(process.env.DOPS_PLAYWRIGHT || 'playwright');
 const fs = require('fs');
 const crypto = require('crypto');
 
@@ -314,6 +317,13 @@ const results = { console: [], overflow: [], taps: [], perf: [], inp: [], shots:
 NODE
 
 NODE_EXIT=0
+# A caller that already resolved playwright (dops verify does, from the
+# toolkit as well as the project) passes it in; only resolve locally when it
+# did not, and never overwrite a good value with an empty one.
+if [ -z "${DOPS_PLAYWRIGHT:-}" ]; then
+  DOPS_PLAYWRIGHT="$(node -e "console.log(require.resolve('playwright'))" 2>/dev/null || true)"
+fi
+export DOPS_PLAYWRIGHT
 node "$RUNNER" "$BASE_URL" "$ROUTES" "$OUT" "$PATHS_JSON" "$MODE" || NODE_EXIT=$?
 
 echo "---"
