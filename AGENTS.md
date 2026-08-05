@@ -155,6 +155,7 @@ never a sequence of them:
 | `dops stage checkpoint` / `dops status` | "is it working, thinking or stuck?" — the pulse answers without a chat question; a stale pulse is a silent incident |
 | `dops checkpoint publish\|decide` | a run with one window (the final report); now every artifact is published with the actions the owner may take on it |
 | `dops control issue\|apply` | the owner could change the product but not steer the run: speed up, pause, roll back, cut scope, go deeper — applied at control points, never mid-script |
+| `dops pins classify` | every edit cost the same and met the big model; now pins are sorted into 4 lanes first — 67% measured never reach it |
 | `dops stage start\|end <name>` / `dops cost --write` | prose in `cost.actual`; the script measures, the model does not narrate |
 
 The prose registry in `quality-guardian/references/deterministic-floor.md`

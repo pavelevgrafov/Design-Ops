@@ -21,6 +21,7 @@
 #   dops announce --gate G --decision D --rollback "..."   [A.26] declare a machine decision
 #   dops checkpoint publish|decide|list   [У-2] publish an artifact the owner can act on
 #   dops control issue|apply|list         [У-3] commands to the process, applied at control points
+#   dops pins classify|list|stats         [П-2] sort owner edits into 4 lanes before the model
 #   dops report                         stage timings + instruction tokens
 #   dops cost [--write]                 measured cost.actual for the contract
 #   dops guard [--diff|--staged|--since <ref>|<file>...]  pre-edit sentinel for verified rules (A.22, A.24)
@@ -87,6 +88,9 @@ case "$cmd" in
   control)
     exec "$PY" "$HERE/dops_control.py" "$@"
     ;;
+  pins)
+    exec "$PY" "$HERE/dops_pins.py" "$@"
+    ;;
   stage)
     sub="${1:?usage: dops stage start|end|mark|checkpoint <name>}"; shift
     if [ "$sub" = "checkpoint" ]; then
@@ -118,6 +122,7 @@ case "$cmd" in
     "$PY" "$HERE/dops_guard.py" --self-test || rc=1
     "$PY" "$HERE/dops_checkpoint.py" --self-test || rc=1
     "$PY" "$HERE/dops_control.py" --self-test || rc=1
+    "$PY" "$HERE/dops_pins.py" --self-test || rc=1
     "$PY" "$HERE/dops_verify.py" --audit-registry || rc=1
     exit $rc
     ;;

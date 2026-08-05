@@ -271,6 +271,28 @@ normal mode for the non-designer persona.
 
 - Any user edit lands in contract + decision log first, then routes per S0.
   Silent drift = defect [A.10].
+### Revisions: pins and the sorting station (v7.2, П-1/П-2)
+
+Every edit used to cost the same. "Make the button darker" and "add a booking
+flow" both ran the full cycle, and the big model met both. Now:
+
+- **Pins live on the artifact, not in chat.** `assets/gate-annotate.js` is
+  always-on: embed it in the skeleton, the landing, the app. A click on an
+  element records selector + viewport + kind, so "that blue button on the
+  third screen, you know the one" stops being a conversation.
+- **`tools/dops pins classify` sorts before the model sees anything:**
+  lane **A** token/copy (a script, seconds), **B** block swap or reorder,
+  **C** structure (narrow K1 + targeted gate), **D** taste or ambiguous
+  (options, or one question — and it waits).
+- The classifier is a dictionary, not a model: it must be cheaper than the
+  work it routes. Where the wording does not determine the action it says so
+  and routes to D. **A wrong cheap lane costs more than an honest question.**
+- Measured on a realistic 15-pin revision set: **67% never reach the big
+  model** (the design estimate was ~80% — report the measured number, not the
+  estimate).
+- Duplicate pins are marked, never dropped: the owner wrote it twice for a
+  reason.
+
 - **Scope the change before doing it:** `tools/dops hash plan <changed-input>`
   prints exactly what must be recomputed, in derivation order, and what may
   be reused. Rebuilding what did not change is the most expensive habit in

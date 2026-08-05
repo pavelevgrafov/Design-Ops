@@ -614,6 +614,21 @@ if [ -x "$DOPS" ]; then
   else
     bad "dops selftest (rc=$RC): $OUT"
   fi
+  # [П-1/П-2] pins on the artifact, sorted into lanes before the model sees them.
+  OUT=$(cd "$ROOT" && python3 tools/dops_pins.py --self-test 2>&1); RC=$?
+  if [ "$RC" -eq 0 ]; then
+    ok "dops pins: 4 lanes, structure beats token words, ambiguity asks"
+  else
+    bad "dops pins self-test (rc=$RC): $OUT"
+  fi
+  # the always-on pin script must keep the v6 field names, or the existing
+  # annotations validator stops reading its own artifacts
+  GA="$ROOT/.agents/skills/pipeline-orchestrator/assets/gate-annotate.js"
+  if has "target_selector" "$(cat "$GA")" && has "created_at" "$(cat "$GA")"; then
+    ok "gate-annotate: always-on schema stays backward compatible"
+  else
+    bad "gate-annotate lost a field annotations-log.py requires"
+  fi
   # [У-2/У-3] checkpoints and the control queue: windows with handles.
   for probe in dops_checkpoint dops_control dops_guard; do
     OUT=$(cd "$ROOT" && python3 "tools/$probe.py" --self-test 2>&1); RC=$?

@@ -41,6 +41,7 @@ tools/dops announce --gate gate2 --decision provisional_ai --rollback "..."   # 
 tools/dops status                # current pulse; stale pulse = silent incident
 tools/dops checkpoint publish --id sitemap --artifact ... [--provisional]   # [У-2]
 tools/dops control issue --command speed_up      # [У-3] steer the run, not the product
+tools/dops pins classify         # [П-2] sort owner edits into 4 lanes before the model
 tools/dops stage start K1        # run instrumentation
 tools/dops stage end   K1
 tools/dops report                # per-stage wall-clock + instruction tokens
@@ -123,6 +124,20 @@ Both live in append-only logs (`artifacts/checkpoints.jsonl`,
 rewriting the contract on every publish would destroy its comments.
 `contract-read.py checkpoints|checkpoint <id>|control_queue [status]` reads
 them, so the contract stays the single entry point [A.10].
+
+## Pins and the sorting station
+
+A comment is born in the artifact and used to be expressed in chat, so half
+of every revision went into working out which element was meant.
+`gate-annotate.js` is now always-on — a pin carries selector, viewport and
+kind — and `dops pins classify` routes each pin into a lane **before** the
+model is involved: A token/copy (script, seconds), B block swap, C structure
+(narrow K1 + gate), D taste or ambiguous (waits for one word from the owner).
+
+The classifier is a word list, not a model: it has to be cheaper than the work
+it routes. Structure rules are checked before token rules, so "add a page
+about prices" is not mistaken for a colour edit. On a realistic 15-pin set,
+67% of edits never reach the big model.
 
 ## Scan scope
 
