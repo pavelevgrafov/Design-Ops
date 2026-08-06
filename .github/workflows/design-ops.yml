@@ -36,7 +36,12 @@ jobs:
 
   end-to-end:
     name: End-to-end floor on a real build
-    if: github.event_name == 'pull_request' || github.event_name == 'schedule'
+    # Runs on every event, including push. It used to skip on push, which was
+    # cheap and quietly dangerous: a skipped job still publishes a check run
+    # under the same name, so a branch protection rule requiring this check
+    # could be satisfied by the skip instead of by the real run. A required
+    # check that a skip can satisfy is not a gate. One extra minute per push
+    # is the price of the gate meaning what it says.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
