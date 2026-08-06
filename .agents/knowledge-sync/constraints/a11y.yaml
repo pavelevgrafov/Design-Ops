@@ -1,0 +1,28 @@
+# constraints/a11y.yaml — единый источник истины для констант доступности.
+# Проза объясняет и ссылается сюда; скилл и CI читают значения отсюда.
+# Первичный текст: guidelines/accessibility.md, guidelines/inclusive-design.md
+version: 1
+updated: 2026-08-02
+standard: WCAG 2.2
+contrast:
+  text-normal-aa: {value: 4.5, unit: ratio, level: MUST, sc: "1.4.3"}
+  text-normal-aaa: {value: 7.0, unit: ratio, level: SHOULD, sc: "1.4.6"}
+  text-large-aa: {value: 3.0, unit: ratio, level: MUST, sc: "1.4.3"}
+  non-text-aa: {value: 3.0, unit: ratio, level: MUST, sc: "1.4.11"}
+  focus-indicator: {value: 3.0, unit: ratio, level: MUST, sc: "1.4.11"}
+  rounding: forbidden  # 4.499 не округляется до 4.5
+text-large-definition:
+  regular-pt: 18
+  bold-pt: 14
+target-size:
+  min-css-px: {value: 24, level: MUST, sc: "2.5.8"}
+  comfort-apple-pt: {value: 44, level: SHOULD}
+  comfort-material-dp: {value: 48, level: SHOULD}
+text-scaling:
+  max-percent: {value: 200, level: MUST, sc: "1.4.4"}
+focus:
+  outline-min-px: 2
+  visible: MUST  # запрет outline: none без замены
+notes:
+  - Смысл не передаётся только цветом (SC 1.4.1): цвет + иконка/текст.
+  - Бесконечно крутящийся спиннер без возможности остановки — нарушение (SC 2.2.2).

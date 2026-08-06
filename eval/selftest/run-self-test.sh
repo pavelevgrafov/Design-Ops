@@ -366,6 +366,23 @@ OUT=$(python3 "$ROOT/packs/contrast-checker/scripts/check-all-pairs.py" --self-t
 [ "$RC" -eq 0 ] && ok "D.25 contrast-checker: both skins, both themes green" \
   || bad "D.25 contrast-checker self-test: $(printf '%s' "$OUT" | tail -1)"
 
+# --- D3 vs $meta.contrastPairs: one geometry, not two ---------------------
+# The skin DECLARES its pairs and check-contrast.py GATES them. Two copies of
+# the same list drift, and this one had: three declared pairs went unmeasured
+# for two versions, hiding a 3.39:1 tertiary tier. Now a declaration without a
+# floor fails the build [A.10].
+CPWORK=$(mktemp -d 2>/dev/null || mktemp -d -t cp)
+CPDRIFT=0
+for SKIN in base-site base-app; do
+  python3 "$VD/compile-tokens.py" "$ROOT/skins/$SKIN/tokens.json" \
+    --out-css "$CPWORK/$SKIN.css" --out-tailwind "$CPWORK/$SKIN.t.css" >/dev/null 2>&1
+  OUT=$(python3 "$QG/check-contrast.py" "$CPWORK/$SKIN.css" \
+        --tokens "$ROOT/skins/$SKIN/tokens.json" 2>&1); RC=$?
+  [ "$RC" -eq 0 ] || { bad "D3: $SKIN fails its own declared pairs: $(printf '%s' "$OUT" | grep FAIL | head -1)"; CPDRIFT=1; }
+  has "declared-not-gated" "$OUT" && { bad "D3: $SKIN declares a contrast pair the gate does not measure"; CPDRIFT=1; }
+done
+[ "$CPDRIFT" -eq 0 ] && ok "D3: every declared contrast pair is gated, both skins, both themes"
+
 # --- D.27 focus visible ---------------------------------------------------
 python3 "$QG/check-focus-visible.py" "$FIX/v7/focus-ok.css" >/dev/null 2>&1 \
   && ok "D.27 focus-visible: styled focus passes" \
@@ -603,6 +620,148 @@ if node -e "require.resolve('playwright')" >/dev/null 2>&1; then
   kill "$SRV" 2>/dev/null
 else
   skip "browser smoke: playwright not resolvable by node (install per INSTALL.md; fs-level checks above already ran)"
+fi
+
+printf '%s\n' "== self-test: dops machine contour (single-entry floor, run trace) =="
+DOPS="$ROOT/tools/dops"
+if [ -x "$DOPS" ]; then
+  OUT=$("$DOPS" selftest 2>&1); RC=$?
+  if [ "$RC" -eq 0 ]; then
+    ok "dops: registry shape, profile floors, verdict rules, trace, cost.actual"
+  else
+    bad "dops selftest (rc=$RC): $OUT"
+  fi
+  # [П-1/П-2] pins on the artifact, sorted into lanes before the model sees them.
+  OUT=$(cd "$ROOT" && python3 tools/dops_pins.py --self-test 2>&1); RC=$?
+  if [ "$RC" -eq 0 ]; then
+    ok "dops pins: 4 lanes, structure beats token words, ambiguity asks"
+  else
+    bad "dops pins self-test (rc=$RC): $OUT"
+  fi
+  # [П-3] the checker at the door: refusals must carry alternatives, dead
+  # selectors must ask, and lanes A/B must cost zero model calls.
+  OUT=$(cd "$ROOT" && python3 tools/dops_pins_check.py --self-test 2>&1); RC=$?
+  if [ "$RC" -eq 0 ]; then
+    ok "dops pins check: 10 probes (alternatives, questions, duplicates, script-only)"
+  else
+    bad "dops pins check self-test (rc=$RC): $OUT"
+  fi
+  # A refusal without an alternative is a wall. The validator must say so.
+  PINWORK=$(mktemp -d 2>/dev/null || mktemp -d -t pin)
+  printf '%s' '[{"target_selector":"#a","x":1,"y":2,"text":"t","at":"2026-08-06T09:00:00","check":{"verdict":"rejected","checked_at":"2026-08-06T09:01:00","checker":"script","reason":"r","alternatives":[]}}]' > "$PINWORK/wall.json"
+  OUT=$(python3 "$PO/annotations-log.py" "$PINWORK/wall.json" 2>&1); RC=$?
+  [ "$RC" -eq 1 ] && ok "П-3: a refusal without alternatives is rejected by the validator" \
+    || bad "П-3 accepted a refusal with no way out (rc=$RC): $OUT"
+  printf '%s' '[{"target_selector":"#a","x":1,"y":2,"text":"t","at":"2026-08-06T09:00:00","check":{"verdict":"rejected","checked_at":"2026-08-06T09:01:00","checker":"script","reason":"contrast 1.5:1","alternatives":["use #6e6a64"]}}]' > "$PINWORK/ok.json"
+  OUT=$(python3 "$PO/annotations-log.py" "$PINWORK/ok.json" 2>&1); RC=$?
+  [ "$RC" -eq 0 ] && ok "П-3: a negotiated refusal validates and reaches the decision log" \
+    || bad "П-3 rejected a well-formed refusal (rc=$RC): $OUT"
+
+  # [AC-23] the quick ceiling limits production, not inheritance.
+  ACWORK=$(mktemp -d 2>/dev/null || mktemp -d -t ac23)
+  mkdir -p "$ACWORK/artifacts/ux"
+  printf 'meta: {mode: quick, schema_version: "7.0"}\n' > "$ACWORK/artifacts/design-contract.yaml"
+  printf 'artifacts:\n  ux: {origin: inherited, source_starter: "landing-event"}\n' >> "$ACWORK/artifacts/design-contract.yaml"
+  OUT=$(python3 "$QG/validate-pipeline.py" "$ACWORK" 2>&1)
+  if has "ceiling violated" "$OUT"; then
+    bad "AC-23: an inherited starter model was counted as production"
+  else
+    ok "AC-23: an inherited experience model does not break the quick ceiling"
+  fi
+  printf 'meta: {mode: quick, schema_version: "7.0"}\n' > "$ACWORK/artifacts/design-contract.yaml"
+  printf 'artifacts:\n  ux: {origin: produced, source_starter: ""}\n' >> "$ACWORK/artifacts/design-contract.yaml"
+  OUT=$(python3 "$QG/validate-pipeline.py" "$ACWORK" 2>&1)
+  if has "ceiling violated" "$OUT"; then
+    ok "AC-23: a model produced inside a quick run still violates the ceiling"
+  else
+    bad "AC-23: silence bought an exemption — produced/absent origin let through"
+  fi
+
+  # the always-on pin script must keep the v6 field names, or the existing
+  # annotations validator stops reading its own artifacts
+  GA="$ROOT/.agents/skills/pipeline-orchestrator/assets/gate-annotate.js"
+  if has "target_selector" "$(cat "$GA")" && has "created_at" "$(cat "$GA")"; then
+    ok "gate-annotate: always-on schema stays backward compatible"
+  else
+    bad "gate-annotate lost a field annotations-log.py requires"
+  fi
+  # [У-2/У-3] checkpoints and the control queue: windows with handles.
+  for probe in dops_checkpoint dops_control dops_guard; do
+    OUT=$(cd "$ROOT" && python3 "tools/$probe.py" --self-test 2>&1); RC=$?
+    if [ "$RC" -eq 0 ]; then
+      ok "$probe: self-test"
+    else
+      bad "$probe self-test (rc=$RC): $OUT"
+    fi
+  done
+  # [A.25] gate-overtaking: work ahead is allowed, calling it a product is not.
+  OVWORK=$(mktemp -d 2>/dev/null || mktemp -d -t ov)
+  printf 'gates: {gate1: provisional}\nstatus: {deliverable_blocked: true, verdict: ""}\n' > "$OVWORK/c.yaml"
+  OUT=$(python3 "$PO/gate-require.py" "$OVWORK/c.yaml" stage:K2A 2>&1); RC=$?
+  [ "$RC" -eq 0 ] && ok "A.25: K2A may run under a provisional gate" \
+    || bad "A.25 K2A refused under provisional (rc=$RC): $OUT"
+  OUT=$(python3 "$PO/gate-require.py" "$OVWORK/c.yaml" stage:K2B-scale 2>&1); RC=$?
+  [ "$RC" -eq 1 ] && ok "A.25: scaling beyond the slice refused under provisional" \
+    || bad "A.25 let K2B-scale through (rc=$RC): $OUT"
+  printf 'gates: {gate1: provisional}\nstatus: {deliverable_blocked: true, verdict: ready}\n' > "$OVWORK/c.yaml"
+  OUT=$(python3 "$PO/gate-require.py" "$OVWORK/c.yaml" verdict 2>&1); RC=$?
+  [ "$RC" -eq 1 ] && ok "A.25: a ready verdict under a provisional gate is refused" \
+    || bad "A.25 allowed a ready verdict under provisional (rc=$RC): $OUT"
+  printf 'gates: {gate1: provisional}\nstatus: {deliverable_blocked: false}\n' > "$OVWORK/c.yaml"
+  OUT=$(python3 "$PO/gate-require.py" "$OVWORK/c.yaml" deliver 2>&1); RC=$?
+  [ "$RC" -eq 1 ] && ok "A.25: a stale deliverable_blocked flag is caught" \
+    || bad "A.25 missed the flag/gate mismatch (rc=$RC): $OUT"
+
+  # [A.26] the kruto incident must now fail mechanically, not be regretted later.
+  OUT=$(cd "$ROOT" && python3 tools/dops_announce.py --self-test 2>&1); RC=$?
+  if [ "$RC" -eq 0 ]; then
+    ok "dops announce: A.26 enforced (grant required, decisions announced)"
+  else
+    bad "dops announce self-test (rc=$RC): $OUT"
+  fi
+  # [E.3] for real: reuse by input hash, and drift detection on generated files.
+  OUT=$(cd "$ROOT" && python3 tools/dops_hash.py --self-test 2>&1); RC=$?
+  if [ "$RC" -eq 0 ]; then
+    ok "dops hash: freshness, drift, targeted invalidation [E.3]"
+  else
+    bad "dops hash self-test (rc=$RC): $OUT"
+  fi
+  # The flywheel gate: a run that leaves no starter and no reason is a defect.
+  OUT=$(cd "$ROOT" && python3 tools/dops_harvest.py --self-test 2>&1); RC=$?
+  if [ "$RC" -eq 0 ]; then
+    ok "dops harvest: decision required at delivery, taxonomy enforced"
+  else
+    bad "dops harvest self-test (rc=$RC): $OUT"
+  fi
+  # Stage isolation: a packet must be buildable for every conveyor stage.
+  OUT=$(cd "$ROOT" && python3 tools/dops_handoff.py K1 --stdout 2>&1); RC=$?
+  if [ "$RC" -eq 0 ] && has "Do NOT read" "$OUT"; then
+    ok "dops handoff: stage packet builds with its exclusion list"
+  else
+    bad "dops handoff K1 (rc=$RC): $OUT"
+  fi
+  # The card must stay in sync with its sources and inside its context budget.
+  OUT=$(cd "$ROOT" && python3 tools/dops_card.py --audit 2>&1); RC=$?
+  if [ "$RC" -eq 0 ]; then
+    ok "dops card: sources aligned, resident set inside budget"
+  else
+    bad "dops card audit (rc=$RC): $OUT"
+  fi
+  # The floor must be reachable as ONE command: agent turns are the cost driver.
+  DOPS_OUT="$(mktemp -d)/floor.json"
+  OUT=$(cd "$ROOT" && python3 tools/dops_verify.py --root eval/selftest \
+        --profile quick --out "$DOPS_OUT" 2>&1); RC=$?
+  if [ "$RC" -eq 0 ] || [ "$RC" -eq 1 ]; then
+    if has "checks in" "$OUT"; then
+      ok "dops verify: whole floor runs as one command, one report"
+    else
+      bad "dops verify: no summary line: $OUT"
+    fi
+  else
+    bad "dops verify (rc=$RC): $OUT"
+  fi
+else
+  bad "tools/dops missing or not executable"
 fi
 
 printf '%s\n' "---"

@@ -7,6 +7,10 @@ experience:
 content_model: {pattern: comparison-first, pattern_reason: "visitor is choosing among alternatives"}
 starters: {route: starter_first, chosen: landing-saas}
 gates: {gate1: passed, gate2: deferred, gate2_deferred: true, mode: batched}
-status: {base_skin_applied: true, verdict: ready_with_caveats}
+# The starter's own factory verdict lives in starter.yaml
+# (`floor_verdict`). THIS is the project's contract: a materialised
+# project has earned nothing yet, and a verdict it did not earn is
+# exactly the retro-fitted compliance D19 exists to catch.
+status: {base_skin_applied: true, verdict: ""}
 visual: {}
 acceptance: {}

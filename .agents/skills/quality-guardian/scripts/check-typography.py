@@ -24,14 +24,36 @@ GENERIC = {"system-ui", "sans-serif", "serif", "monospace", "ui-sans-serif",
            "ui-monospace", "ui-serif", "ui-rounded", "cursive", "fantasy", "emoji",
            "math", "fangsong"}
 
+# --- scan scope: never audit the vendored pipeline itself ---------------------
+# A project installs the toolkit INTO itself (install.sh), so walking the
+# project root would scan .agents/, packs/ and eval/selftest/fixture/ (which
+# holds deliberate traps) and report them as product defects. Override with
+# DOPS_SCAN_EXCLUDE="dir1,dir2" when a project genuinely ships such a folder.
+_DEFAULT_SKIP_SCAN = ("node_modules .git .agents eval packs packs-pro starters "
+                      "starters-pro skins skins-pro knowledge docs radar "
+                      "showcase tools dist build __pycache__ .pack-cache")
+SKIP_SCAN_DIRS = set((os.environ.get("DOPS_SCAN_EXCLUDE") or "")
+                     .replace(",", " ").split() or _DEFAULT_SKIP_SCAN.split())
+
+
+def _scan_skips(root):
+    """Exclusions protect a project-root walk. Scanning an excluded directory
+    deliberately (a fixture, a vendored subtree) disables them."""
+    parts = set(os.path.abspath(root).split(os.sep))
+    return set() if parts & SKIP_SCAN_DIRS else SKIP_SCAN_DIRS
+
+
 def collect_css(paths):
     files = []
     for p in paths:
         if os.path.isdir(p):
-            files += glob.glob(os.path.join(p, "**", "*.css"), recursive=True)
+            skips = _scan_skips(p)
+            found = glob.glob(os.path.join(p, "**", "*.css"), recursive=True)
+            files += [f for f in found
+                      if not (set(os.path.abspath(f).split(os.sep)) & skips)]
         elif os.path.isfile(p):
-            files.append(p)
-    return [f for f in files if "node_modules" not in f]
+            files.append(p)          # explicitly named: never filtered
+    return files
 
 def main():
     paths = sys.argv[1:] or ["."]

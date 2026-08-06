@@ -1,0 +1,111 @@
+name: Design-Ops Heavy Floor
+
+# What CI checks here is the TOOLKIT, not a product. Running `dops verify`
+# against this repository's own root asks "does the toolkit pass the floor it
+# applies to sites?" — and the answer is meaninglessly no: there is no
+# skeleton, no tokens and no contract to verify. The first live run failed
+# exactly that way (D16: no not_approved_visual_design marker).
+#
+# So: the self-test is the toolkit's acceptance, and the end-to-end job
+# materialises a real project from a starter and runs the floor against THAT.
+
+on:
+  push:
+    branches: [main, speedup-waves-1-2-3]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Nightly: the end-to-end job with the browser lane
+    - cron: "0 3 * * *"
+
+jobs:
+  selftest:
+    name: Self-test (fs-level)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install Python dependencies
+        run: python3 -m pip install --quiet pyyaml
+      - name: Tooling acceptance
+        run: bash tools/dops selftest
+      - name: Package self-test
+        run: bash eval/selftest/run-self-test.sh
+
+  end-to-end:
+    name: End-to-end floor on a real build
+    # Runs on every event, including push. It used to skip on push, which was
+    # cheap and quietly dangerous: a skipped job still publishes a check run
+    # under the same name, so a branch protection rule requiring this check
+    # could be satisfied by the skip instead of by the real run. A required
+    # check that a skip can satisfy is not a gate. One extra minute per push
+    # is the price of the gate meaning what it says.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --quiet pyyaml
+          npm install -D playwright axe-core
+          npx playwright install --with-deps chromium
+      - name: Environment capabilities
+        run: bash tools/dops doctor
+      - name: Materialise a project from a starter
+        run: |
+          set -eux
+          mkdir -p /tmp/e2e/artifacts/ux /tmp/e2e/artifacts/visual
+          python3 - <<'PY'
+          import os, re, yaml
+          # fill every slot with its own name: content is irrelevant here,
+          # coverage is what the injector asserts
+          cmap = yaml.safe_load(open("starters/landing-event/copy-map.yaml"))
+          vals = {k: "CI %s" % k.replace("_", " ") for k in cmap}
+          os.makedirs("/tmp/e2e", exist_ok=True)
+          yaml.safe_dump(vals, open("/tmp/e2e/values.yaml", "w"),
+                         allow_unicode=True, sort_keys=False)
+          PY
+          # The contract goes first so the injector can stamp the model's
+          # origin into it. AC-23 is now decided: the quick-mode ceiling limits
+          # what a run PRODUCES, not what a Verified Starter carries in — so
+          # this rehearsal stays in quick mode, which is the real starter_first
+          # case, and exercises the exemption end to end.
+          cp starters/landing-event/contract.yaml /tmp/e2e/artifacts/design-contract.yaml
+          python3 starters/inject.py starters/landing-event /tmp/e2e/values.yaml \
+            --out /tmp/e2e/site --ux-out /tmp/e2e/artifacts/ux \
+            --contract /tmp/e2e/artifacts/design-contract.yaml
+          grep -q "origin: inherited" /tmp/e2e/artifacts/design-contract.yaml
+          cp skins/base-site/tokens.json skins/base-site/tokens.css /tmp/e2e/artifacts/visual/
+          cp skins/base-site/tokens.css /tmp/e2e/site/tokens.css
+          sed -i 's|\.\./\.\./\.\./skins/base-site/tokens.css|tokens.css|' /tmp/e2e/site/index.html
+      - name: Serve the build
+        run: |
+          cd /tmp/e2e/site && nohup python3 -m http.server 8901 >/dev/null 2>&1 &
+          for _ in $(seq 1 20); do curl -sf http://localhost:8901/ >/dev/null && break; sleep 0.5; done
+      - name: Record the visual-regression baseline
+        run: |
+          DOPS_PLAYWRIGHT="$(node -e "console.log(require.resolve('playwright'))")" \
+          sh .agents/skills/quality-guardian/scripts/visual-regression.sh \
+             reference http://localhost:8901 /tmp/e2e/artifacts/audit/shots "/"
+      - name: Standard floor (fs + browser)
+        run: |
+          python3 tools/dops_verify.py --root /tmp/e2e --profile standard \
+            --url http://localhost:8901 --routes / --out /tmp/floor.json
+      - name: Shot budget for diagnostics
+        if: always()
+        run: python3 tools/dops_shots.py --root /tmp/e2e --budget 6 || true
+      - name: Upload floor report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: floor-report
+          path: |
+            /tmp/floor.json
+            /tmp/e2e/artifacts/audit/shots-manifest.json

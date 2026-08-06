@@ -1,0 +1,20 @@
+id: direction-drafter
+type: local
+conveyor: [K2B]
+class: peripheral
+provides: [external_direction_drafts]
+requires_env: []  # DIRECTION_DRAFTER_ENDPOINT optional; without it — manual drafting mode
+contract_fields: [integrations, visual.direction_drafts]
+acceptance_test: 'python3 "{pack_dir}/scripts/draft-directions.py" --self-test'
+degradation: "no external drafts — directions are constructed in-house as before; K2B unaffected"
+cost_profile: paid_external  # v0/Lovable subscriptions are the owner's accounts
+license_notes: "drafts enter only as Gate-2 candidates (origin: external_draft); they never bypass neutralize->tokens->floor; service+version+prompt pinned in contract [A.27]"
+version: "0.1.0"
+notes: >
+  Topology (doc 12): the service SKETCHES, the system MANUFACTURES. Two modes:
+  (1) manual — emits prompt packets (one per direction, with dials, persona,
+  hard stops); the owner pastes them into v0/Lovable, exports screenshots/HTML
+  to artifacts/directions/external/; the pack ingests them into the blind
+  contact sheet manifest. (2) api — same packets go to DIRECTION_DRAFTER_ENDPOINT
+  when configured; identical ingest path. Never a live runtime dependency:
+  failure of the endpoint degrades to manual mode, never blocks K2B.

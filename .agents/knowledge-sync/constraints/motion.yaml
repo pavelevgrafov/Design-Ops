@@ -1,0 +1,43 @@
+# constraints/motion.yaml — единый источник истины для длительностей, easing и fps-бюджетов.
+# Первичный текст: patterns/motion.md, patterns/live-data.md, guidelines/performance-perceived.md
+version: 1
+updated: 2026-08-02
+duration-ms:
+  micro: [100, 200]        # hover, тоггл, нажатие
+  standard: [200, 500]     # модалка, аккордеон, фейд
+  page: [500, 700]         # смена экрана, хореография
+  max-readable: 700        # дольше — воспринимается как «тормозит»
+doherty-threshold-ms: {value: 400, level: MUST}  # реакция на действие начинается раньше
+perception-ms:
+  instant: 100             # воспринимается как мгновенное
+  min-perceptible: 230     # минимум для визуального восприятия
+  action-unity: 1000       # потолок связности действия и реакции
+ai-chat:
+  first-token-ms: {value: 800, level: MUST}
+easing:
+  entrance: ease-out       # 80% всех UI-анимаций
+  exit: ease-in
+  move-within: ease-in-out
+  linear: forbidden
+  expressive-on: entrance  # expressive чаще на появлении, productive на исчезновении
+spring:
+  bounce-max: 0.4          # выше — чрезмерно для UI
+  bounce-noticeable: 0.3
+  bounce-default: 0        # начинать с 0, наращивать постепенно
+performance:
+  animated-properties: [transform, opacity]
+  forbidden-properties: [width, height, top, left]
+  frame-budget-ms:
+    at-60hz: 16.6
+    at-120hz: 8.3
+  jank-percent:
+    good: 1
+    noticeable: 5
+    bad: 10
+    broken: 20
+  metric-priority: p95-frame-time  # важнее среднего FPS
+accessibility:
+  prefers-reduced-motion: MUST     # обязательная «тихая» версия без движения
+notes:
+  - Анимация обязана прерываться новым вводом (nonblocking).
+  - Сложная easing (bounce, elastic) требует +20–30 мс, чтобы «прочитаться».

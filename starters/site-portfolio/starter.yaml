@@ -1,0 +1,14 @@
+id: site-portfolio
+profile: site
+category: personal / studio portfolio
+pattern: answer-first
+description: >
+  Single-page portfolio for an individual or a small studio. P1 = "is this
+  person right for my problem", answered by cases stated as OUTCOMES, not as
+  process diaries. Sections: positioning line, selected work with result
+  lines, about with concrete facts, contact. Carries an empty state for the
+  NDA case, so a portfolio with nothing public still reads as deliberate.
+base_skin: base-site
+verified_at: 2026-08-04
+floor_verdict: ready_with_caveats   # browser checks (D12/D13/D20) pending first hosted run
+shots: pending_hosted_run   # D22 baseline is taken by visual-regression.sh on the first hosted run

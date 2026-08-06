@@ -20,7 +20,16 @@ PATTERNS = [
     ("stripe_key",        re.compile(r"\b(sk|pk)_(live|test)_[0-9A-Za-z]{16,}\b")),
     ("generic_secret",    re.compile(r"(?i)\b(api[_-]?key|secret|password|passwd|token)\b\s*[:=]\s*['\"][^'\"]{12,}['\"]")),
 ]
-SKIP_DIRS = {"node_modules", ".git", "dist", "build", ".pack-cache", "__pycache__"}
+SKIP_DIRS = {"node_modules", ".git", "dist", "build", ".pack-cache", "__pycache__",
+             # installed dependencies are not the project's secrets: pip's
+             # vendored data trips the entropy heuristic, and a scan that
+             # cries wolf on every run stops being read
+             ".venv", "venv", ".tox", "site-packages"}
+# The vendored pipeline is not the product under audit (see dops verify).
+SKIP_DIRS |= set((os.environ.get("DOPS_SCAN_EXCLUDE") or "").replace(",", " ").split()
+                 or [".agents", "eval", "packs", "packs-pro", "starters",
+                     "starters-pro", "skins", "skins-pro", "knowledge",
+                     "docs", "radar", "showcase", "tools"])
 SKIP_FILES = {"check-secrets.py", "package-lock.json", "yarn.lock", "pnpm-lock.yaml"}
 ALLOW_MARK = "SECRET-ALLOW:"   # documented false positive on the same line
 

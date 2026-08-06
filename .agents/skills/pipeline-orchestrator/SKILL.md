@@ -42,13 +42,23 @@ back to the last valid gate state, and redo the work properly.
    (explicit delegation, or the user unresponsive after one round). Record
    `meta.interaction_mode`; a switch needs `meta.mode_override_reason`.
 5. **Cost estimate before start** (TZ-12): after classification, tell the
-   user "режим, ~время, ~токены" from `assets/cost-table.yaml`; after the
-   run write the fact to `cost.actual` and show it against the estimate.
-6. **Context budget:** log every instruction/note file you read via
+   user "режим, ~время, ~токены" from `assets/cost-table.yaml`.
+   **Measure the run, never narrate it:** open every stage with
+   `tools/dops stage start <K0|K1|gate1|K2A|K3|K2B|deliver>` and close it
+   with `tools/dops stage end <name>`; at delivery run
+   `tools/dops cost --write`, which computes `cost.actual` from the trace
+   and the context log and writes it into the contract. A prose
+   `cost.actual` ("one session") is a defect: what is not measured cannot
+   be managed, and every later speed claim becomes unfalsifiable.
+6. **Context budget:** the resident set is `.agents/RULES.card.md` plus the
+   contract — load it once and hand it to every conveyor skill. Everything
+   else is on demand: a reference file when a decision is contested, a
+   knowledge note by id, a pack manifest only when the pack is in
+   `integrations[]`. Log every instruction/note file you read via
    `scripts/context-budget.py read <file>`; run `report --mode <mode>` at
    delivery. Over limit = wave defect (decision log + delivery report).
-   Lazy-loading is the rule: inactive packs and unreferenced knowledge notes
-   are never read.
+   Reading a full reference "to be safe" is the defect the card exists to
+   prevent: it is paid on every turn that follows.
 
 ## 1. Request routing (S0)
 
@@ -83,6 +93,16 @@ locking key_screens, ask once whether any screen can be solved without a
 screen (default, automation, existing habit) — cut it before Gate 1.
 
 ## 3. Conveyor orchestration
+
+**Hand off, do not accumulate.** Each conveyor stage runs in a FRESH context
+built by `tools/dops handoff <K0|K1|K2A|K2B|K3|deliver>`: the rule card, that
+stage's slice of the contract, its inputs, its outputs, its acceptance
+command and an explicit do-not-read list (~1.7–2.8k tokens, flat). The stage
+returns its artifacts plus a summary of at most ten lines — never its whole
+working transcript. One continuous context instead would still be carrying
+K0's research at K3 and paying for it on every turn. Verify with
+`dops handoff --check <stage>` that a stage produced what it promised before
+moving on.
 
 ### 3.0 K0 — discovery
 
@@ -136,6 +156,8 @@ maintained asset (contract tests, revisions).
 
 ### 3.4 K3 — Verification (skill: quality-guardian)
 
+The floor is ONE command — `tools/dops verify --profile <mode>` — returning
+one JSON; read its `failures[]`, never the check registry.
 Floor D1–D24 (D15/D22-field/INP cap at `ready_with_caveats`, the rest block)
 + AI diagnostics + D19 contract consistency + D23 secrets + D24 pack block.
 Cycles: quick 1, standard 2, full 3. Verdicts per [A.8]; core-pack failure
@@ -164,6 +186,67 @@ changelog records it. K2B never touches structure [A.7]; D9/D22 prove it.
   **dry-run rollback passed** (deploy → rollback → previous version in
   place, `deploy.prod.rollback_tested: true`).
 
+### 3.2b Gate-overtaking and the announcement duty (v7.2)
+
+`gates.mode: overtaking` — the machine keeps working past a SHOWN gate under
+`provisional` instead of idling. Full mechanics: `references/gate-overtaking.md`.
+Two rules make it safe, and neither is optional:
+
+- **[A.25]** provisional work is never a product. Before any stage,
+  `gate-require.py <contract> stage:<K2A|K3|K2B-slice|…>`; before a verdict,
+  `… verdict`. Scaling, verdict, delivery, deploy, harvest and marker removal
+  are refused while a gate is provisional, and `status.deliverable_blocked`
+  must agree with the gates or the contract itself is the defect.
+- **[A.26]** nothing silently. `autonomous` requires
+  `meta.autonomous_granted_by` — the owner's word for THIS run; silence is
+  not a grant. Every machine gate decision is announced AT THE MOMENT with a
+  rollback command: `dops announce --gate gate2 --decision provisional_ai
+  --rollback "<how the owner undoes it>"`. It lands in the pulse as a
+  checkpoint, so the owner sees it while it matters, not in the closing
+  report. `dops verify` refuses a run where either rule was skipped.
+
+Overtaking without A.26 recreates the kruto-landing incident at a larger
+scale: work runs ahead, decisions are made quietly, the owner finds out at
+the end. Ship them together or not at all.
+
+Veto is cheap by construction: `dops hash plan <changed-input>` names exactly
+what must be recomputed and what may be reused.
+
+### 3.2c Checkpoints and the control queue (v7.2, У-2/У-3)
+
+A run used to have exactly one window: the final report. Every intermediate
+artifact is now published the moment it exists, with the actions the owner
+may take on it — and publishing never stops the conveyor.
+
+```
+dops checkpoint publish --id sitemap --artifact artifacts/sitemap.html --provisional
+dops checkpoint decide  --id sitemap --action accept
+dops control issue --command speed_up
+dops control apply --at "checkpoint:sitemap"
+```
+
+- **Closed registry** (`tools/checkpoint-registry.json`): brief-card, sitemap,
+  skeleton, base-skin, directions, merge, tokens, k3-report, lod-transition.
+  A checkpoint carrying no actions is a status line — the illusion of control
+  — and `publish` refuses it. Adding a type means editing the registry, not
+  inventing one at run time.
+- `accept` on a gate checkpoint (sitemap, directions) **is** the batched
+  confirmation of that gate and of everything done on credit under A.25.
+- **Commands run only at control points** — a stage script finishing, a
+  checkpoint publishing, a stage starting. Never mid-script: a command applied
+  halfway through leaves a half-written artifact.
+- `rollback_to` costs only what actually changed — it walks the input-hash
+  graph and supersedes the checkpoints after the target. Without recorded
+  hashes it is REFUSED with the reason [A.6], because a rollback that silently
+  means "rebuild everything" is worse than one that says so.
+- `skip_scope` can never reach the core floor [E.4], whoever asks.
+- Write `meta.run_plan` at classification — stages, checkpoints, eta, where the
+  owner is needed and for how long in total. The owner should know the price
+  of their attention before the run starts, not after.
+- `meta.target_lod` is the agreed depth. A result "not detailed enough" is
+  usually a target nobody set; `status.lod` records what was reached, and a
+  gap without an owner command is a defect line in the delivery report.
+
 ## 4. Gates: delegation
 
 "I trust the machine" is a legal third answer at any gate: explicit
@@ -188,6 +271,34 @@ normal mode for the non-designer persona.
 
 - Any user edit lands in contract + decision log first, then routes per S0.
   Silent drift = defect [A.10].
+### Revisions: pins and the sorting station (v7.2, П-1/П-2)
+
+Every edit used to cost the same. "Make the button darker" and "add a booking
+flow" both ran the full cycle, and the big model met both. Now:
+
+- **Pins live on the artifact, not in chat.** `assets/gate-annotate.js` is
+  always-on: embed it in the skeleton, the landing, the app. A click on an
+  element records selector + viewport + kind, so "that blue button on the
+  third screen, you know the one" stops being a conversation.
+- **`tools/dops pins classify` sorts before the model sees anything:**
+  lane **A** token/copy (a script, seconds), **B** block swap or reorder,
+  **C** structure (narrow K1 + targeted gate), **D** taste or ambiguous
+  (options, or one question — and it waits).
+- The classifier is a dictionary, not a model: it must be cheaper than the
+  work it routes. Where the wording does not determine the action it says so
+  and routes to D. **A wrong cheap lane costs more than an honest question.**
+- Measured on a realistic 15-pin revision set: **67% never reach the big
+  model** (the design estimate was ~80% — report the measured number, not the
+  estimate).
+- Duplicate pins are marked, never dropped: the owner wrote it twice for a
+  reason.
+
+- **Scope the change before doing it:** `tools/dops hash plan <changed-input>`
+  prints exactly what must be recomputed, in derivation order, and what may
+  be reused. Rebuilding what did not change is the most expensive habit in
+  the pipeline. After each stage, `dops hash record --stage <S>` re-pins;
+  `dops hash check` at K3 catches a generated artifact that was hand-edited
+  instead of regenerated.
 - Conflicts: contract > any markdown/memory; later changelog > earlier
   fields; where silent — brief > direction > tokens > components; the
   user's latest explicit instruction beats all (record before acting).
@@ -198,8 +309,13 @@ normal mode for the non-designer persona.
 
 ## 7. Knowledge vault
 
-Rules cite sources (`source: knowledge/<id>`); you read only
-`knowledge/index.yaml`, full notes by id on demand (context budget).
+Numbers come from the frozen constraints snapshot
+(`.agents/knowledge-sync/constraints/`) via `RULES.card.md` — one door, no
+live wiki read at runtime. Prose notes explain *why* a number is what it is:
+rules cite sources (`source: knowledge/<id>`); you read only
+`knowledge/index.yaml`, full notes by id on demand (context budget). Where
+a note and the constraints disagree, the YAML wins — it is what the checkers
+read.
 Discipline (enforced by `scripts/knowledge-validate.py`): a rule without a
 note does not exist; an orphan note is deleted; levels
 research > industry-standard > curated; `verified_at` older than 12 months →
@@ -218,7 +334,13 @@ Plain language, no jargon:
 4. **Cost** — actual vs the pre-start estimate (`cost.actual` vs
    `cost.estimate`).
 5. **What remains** — accepted limitations (risk owners), suggested next
-   steps (K2B later, deploy pack, harvest), how to ask for changes.
+   steps (K2B later, deploy pack), how to ask for changes.
+6. **Harvest decision** — before delivering, run `tools/dops harvest --check`
+   and record `candidate:<id>` (the run produced a pattern the library
+   lacks), `reused:<id>` (it rode an existing starter), or
+   `declined: <reason>`. A Definition-of-Done item, not a nicety:
+   `starter_first` costs roughly half of `from_scratch`, and the library
+   only grows if every run answers the question.
 
 ## 9. Slash commands (v7.0)
 

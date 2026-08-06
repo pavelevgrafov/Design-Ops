@@ -1,0 +1,22 @@
+# constraints/responsive.yaml — единый источник истины для адаптивности.
+# Первичный текст: guidelines/responsive-design.md
+version: 1
+updated: 2026-08-02
+breakpoints-px: [360, 768, 1024, 1280]
+breakpoint-units: rem
+breakpoint-rule: "ставить там, где ломается контент, а не где ширина устройства"
+touch:
+  target-min-px: {value: 44, level: SHOULD}
+  comfort-px: 48
+  primary-actions-zone: bottom-half   # зона большого пальца
+grid:
+  fluid-pattern: "repeat(auto-fit, minmax(280px, 1fr))"
+images:
+  rule: "max-width: 100%; height: auto"
+  explicit-dimensions: MUST           # width/height против CLS
+  formats: [AVIF, WebP]
+viewport-units: [svh, dvh, lvh]       # корректная работа с мобильными панелями
+notes:
+  - Mobile-first: базовые стили для мобильного, наращивание через min-width.
+  - Container queries для компонентов; медиазапросы — для страничных решений.
+  - Hover не несёт критичной информации (на таче hover нет).

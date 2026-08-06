@@ -47,9 +47,27 @@ check in the report also carries an EXECUTOR: `script` / `model_judged: true`
 
 ## Workflow
 
-### 1. Deterministic floor D1–D24
+### 1. Deterministic floor — ONE command
 
-Canonical registry: `references/deterministic-floor.md`. Tooling map:
+```
+tools/dops verify --profile quick|standard|full [--url http://localhost:5173] [--build-cmd "npm run build"]
+```
+
+It runs the whole floor (fs checks in parallel, browser checks serially),
+writes `artifacts/audit/floor.json`, and returns the verdict as its exit
+code (0 = ready-family, 1 = not_ready).
+
+**Read `failures[]`, not the registry.** Each entry carries `id`, `status`,
+`blocking`, the failing output and a `fix_hint` — that is everything needed
+to route the fix. The table below and
+`references/deterministic-floor.md` are documentation for humans and for
+debugging a single check; loading them on every run buys nothing, because
+the runner already applies them.
+
+Run `tools/dops doctor` once per environment first: a missing capability
+found check-by-check costs a turn each and degrades every run [A.6].
+
+Single checks can still be run by hand while debugging. Tooling map:
 
 | Check | Tool |
 | :-- | :-- |
@@ -106,7 +124,16 @@ discipline.
 ### 2. AI diagnostics (visible factors, classified)
 
 Methodology: `references/ai-diagnostics.md`. Section-wise screenshots, fixed
-checklist per section, swap-augmentation for comparisons. Every finding is
+checklist per section, swap-augmentation for comparisons.
+
+**Image budget (mandatory):** run `tools/dops shots --budget 6` and open ONLY
+the files in `artifacts/audit/shots-manifest.json`. It dedupes identical
+shots, keeps one overview per route x viewport for coverage, and fills the
+rest with the largest distinct sections. An image costs ~1–1.5k tokens AND
+stays resident for the remainder of the run — an unbudgeted pass over 36
+shots costs more than the entire instruction corpus. The full set stays on
+disk, and `artifacts/audit/contact-sheet.html` shows it to the human at zero
+cost to the run. Every finding is
 classified: **objective / heuristic / subjective** × **blocker / major /
 minor / polish** [AI.7]. Subjective findings are capped at minor and always
 `provisional` [AI.8]. Any visible defect caps its dimension score at ≤3/5
@@ -120,8 +147,10 @@ corroboration.
 - Design-substance fails (contrast pair, type scale, layout break): route to
   visual-director with the exact failing values.
 - Structure fails (unwalkable scenario, missing state): route via orchestrator.
-- After fixes, re-run ONLY the failed checks + dependents. Retest history is
-  kept: found → fixed → retested [A.8].
+- After fixes, re-run the floor (`tools/dops verify`) — it is one command and
+  takes seconds, so a targeted re-run buys nothing and risks missing a
+  regression the fix introduced. Retest history is kept: found → fixed →
+  retested [A.8].
 
 ### 4. Cycles and verdict
 

@@ -1,0 +1,41 @@
+# Content-injection map: brief field -> CSS selector in skeleton/index.html.
+publication_name:  "[data-slot=publication_name]"
+strapline:         "[data-slot=strapline]"
+
+lead_title:        "[data-slot=lead_title]"
+lead_standfirst:   "[data-slot=lead_standfirst]"
+lead_author:       "[data-slot=lead_author]"
+lead_date:         "[data-slot=lead_date]"
+lead_reading:      "[data-slot=lead_reading]"
+
+post_1_title:      "[data-slot=post_1_title]"
+post_1_excerpt:    "[data-slot=post_1_excerpt]"
+post_1_author:     "[data-slot=post_1_author]"
+post_1_date:       "[data-slot=post_1_date]"
+post_1_reading:    "[data-slot=post_1_reading]"
+post_2_title:      "[data-slot=post_2_title]"
+post_2_excerpt:    "[data-slot=post_2_excerpt]"
+post_2_author:     "[data-slot=post_2_author]"
+post_2_date:       "[data-slot=post_2_date]"
+post_2_reading:    "[data-slot=post_2_reading]"
+post_3_title:      "[data-slot=post_3_title]"
+post_3_excerpt:    "[data-slot=post_3_excerpt]"
+post_3_author:     "[data-slot=post_3_author]"
+post_3_date:       "[data-slot=post_3_date]"
+post_3_reading:    "[data-slot=post_3_reading]"
+latest_empty:      "[data-slot=latest_empty]"
+
+topic_1:           "[data-slot=topic_1]"
+topic_2:           "[data-slot=topic_2]"
+topic_3:           "[data-slot=topic_3]"
+topic_4:           "[data-slot=topic_4]"
+
+subscribe_title:   "[data-slot=subscribe_title]"
+subscribe_note:    "[data-slot=subscribe_note]"
+subscribe_label:   "[data-slot=subscribe_label]"
+subscribe_cta:     "[data-slot=subscribe_cta]"
+subscribe_privacy: "[data-slot=subscribe_privacy]"
+footer_note:       "[data-slot=footer_note]"
+
+# Excerpts are a claim, not a teaser: say what the piece found, not that it
+# "explores" something. Reading time is measured, not guessed.

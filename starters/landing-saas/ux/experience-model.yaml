@@ -1,0 +1,50 @@
+# Shipped WITH the starter, not derived at run time. Without it a
+# starter_first run leaves D18 and D.38 `unavailable` for its whole life —
+# the structure arrives pre-verified, but the model that proves it does not.
+version: "5.1"
+primary_job:
+  statement: "When a team lead compares tools, I want the plans and the deciding criteria visible at once."
+  actor: "a team lead with a shortlist of two or three tools"
+  success_signal: "a signup started, or the plan choice made"
+
+audience:
+  roles: ["evaluator", "end user"]
+  primary: "evaluator"
+
+localization: {risk: false, reason: "single-language launch", content_variants: []}
+
+screens:
+  - id: home
+    name: "Product landing"
+    purpose: "state the value, prove it, and let the plan be chosen"
+    route: "/"
+    p1_content: ["what the product does", "who it is for", "the deciding difference"]
+    blocks:
+      - {id: hero, kind: hero, priority: p1, copy_source: real}
+      - {id: proof, kind: list, priority: p1, copy_source: real}
+      - {id: pricing, kind: list, priority: p1, copy_source: real}
+      - {id: signup, kind: form, priority: p1, copy_source: real}
+    states: [success]
+    transitions: [{to_screen: home, trigger: "anchor navigation to pricing"}]
+
+scenarios:
+  - id: compare-plans
+    name: "Decide between two plans"
+    steps:
+      - {screen: home, action: "jump to pricing", expect: "plans side by side with the difference stated, not implied"}
+      - {screen: home, action: "pick a plan", expect: "signup starts with the plan carried over"}
+    covers_screens: [home]
+  - id: verify-claim
+    name: "Check whether the claim is real"
+    steps:
+      - {screen: home, action: "read the proof points", expect: "numbers or named customers, not adjectives"}
+    covers_screens: [home]
+
+information_pattern:
+  pattern: comparison-first
+  reason: "the visitor is choosing among alternatives, so the axis of comparison must be explicit"
+  p1_rule: "the deciding difference is above the fold; features come after it"
+
+risks:
+  - description: "pricing table that hides the real cost until signup"
+    mitigation: "every plan states its price and its limit in the table itself [ban-list: hidden price]"

@@ -1,0 +1,64 @@
+{
+  "schema": "dops-checkpoints/1",
+  "note": "Closed registry of checkpoint types (У-2). A checkpoint is a PUBLISHED intermediate artifact with a set of owner actions — publishing never stops the conveyor (gate-overtaking, A.25); the actions are executed at control points. A checkpoint without actions is a status line, which is the illusion of control, not control. Adding a type means editing this file AND the D19 rules — the list is closed on purpose.",
+  "source": "Most/tasks/2026-08-04-kimi-checkpoints-control-queue-mechanics.md (Kimi, design) §1.1",
+  "types": {
+    "brief-card": {
+      "stage": "K0",
+      "artifact": "artifacts/brief-card.md",
+      "actions": ["accept", "amend", "cancel-run"]
+    },
+    "sitemap": {
+      "stage": "K1",
+      "artifact": "artifacts/sitemap.html",
+      "actions": ["accept", "amend", "cancel-stage", "speed-up"],
+      "is_gate": "gate1",
+      "note": "accept here IS the batched confirmation of gate1 and of everything done on credit"
+    },
+    "skeleton": {
+      "stage": "K1",
+      "artifact": "skeleton.html",
+      "actions": ["accept", "amend", "cancel-stage"]
+    },
+    "base-skin": {
+      "stage": "K2A",
+      "artifact": "artifacts/audit/screenshots",
+      "actions": ["accept", "amend", "speed-up"]
+    },
+    "directions": {
+      "stage": "K2B",
+      "artifact": "artifacts/visual/contact-sheet.html",
+      "actions": ["choose", "merge", "regenerate", "defer"],
+      "is_gate": "gate2",
+      "regenerate_budget": 1
+    },
+    "merge": {
+      "stage": "K2B",
+      "artifact": "artifacts/visual/final-direction.md",
+      "actions": ["accept", "amend"]
+    },
+    "tokens": {
+      "stage": "K2B",
+      "artifact": "artifacts/visual/tokens.json",
+      "actions": ["accept", "amend"]
+    },
+    "k3-report": {
+      "stage": "K3",
+      "artifact": "artifacts/audit/quality-report.md",
+      "actions": ["accept-verdict", "assign-fixes", "accept-caveats"]
+    },
+    "lod-transition": {
+      "stage": "any",
+      "artifact": "current build",
+      "actions": ["deepen", "enough"]
+    }
+  },
+  "route_sets": {
+    "starter_first": ["brief-card", "base-skin", "k3-report"],
+    "from_scratch": ["brief-card", "sitemap", "skeleton", "base-skin", "k3-report"],
+    "k2b": ["directions", "merge", "tokens"]
+  },
+  "route_note": "Not every run passes every checkpoint. The set is computed at classification and written to meta.run_plan; the K2B set is appended only when K2B actually runs (gate2 deferred = no directions/merge/tokens checkpoints).",
+  "statuses": ["published", "acted", "superseded"],
+  "deciders": ["owner", "machine"]
+}

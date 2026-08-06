@@ -15,6 +15,17 @@ FAILS=0
 fail() { printf 'FAIL: %s\n' "$*"; FAILS=$((FAILS+1)); }
 pass() { printf 'pass: %s\n' "$*"; }
 
+# --- scan scope: never audit the vendored pipeline itself ---------------------
+# A project installs the toolkit INTO itself (install.sh), so a plain walk of
+# the project root scans .agents/, packs/, eval/selftest/fixture/ (which holds
+# deliberate traps) and reports them as product defects. Override with
+# DOPS_SCAN_EXCLUDE="dir1|dir2" when a project genuinely ships such a folder.
+DOPS_EXCLUDE_RE="${DOPS_SCAN_EXCLUDE:-node_modules|/\.git/|/\.agents/|/eval/|/packs/|/packs-pro/|/starters/|/starters-pro/|/skins/|/skins-pro/|/knowledge/|/docs/|/radar/|/showcase/|/tools/|/dist/|/build/|__pycache__|/\.pack-cache/|/artifacts/audit/}"
+# Scanning such a directory ON PURPOSE (e.g. eval/selftest/fixture) must not be
+# filtered away — the exclusion protects a project-root walk, nothing else.
+if printf '%s' "$(cd "$ROOT" 2>/dev/null && pwd || printf '%s' "$ROOT")" \
+   | grep -qE "$DOPS_EXCLUDE_RE"; then DOPS_EXCLUDE_RE='$^'; fi
+
 SRC_INCLUDES=(--include='*.html' --include='*.tsx' --include='*.jsx' --include='*.vue' --include='*.svelte' --include='*.md' --include='*.css')
 
 # file size in KB; GNU stat (-c) with BSD stat (-f) fallback
@@ -25,7 +36,7 @@ size_kb() {
 
 # --- 1. Placeholder copy (capture-then-test) -----------------------------------
 PLACEHOLDER_HITS=$(grep -rniE 'lorem ipsum|dolor sit amet|consectetur adipiscing|text goes here|TODO:?[[:space:]]*(copy|text)|placeholder text|coming soon™|(^|[^[:alnum:]_])xxx([^[:alnum:]_]|$)' \
-  "$ROOT" "${SRC_INCLUDES[@]}" 2>/dev/null | grep -v node_modules || true)
+  "$ROOT" "${SRC_INCLUDES[@]}" 2>/dev/null | grep -vE "$DOPS_EXCLUDE_RE" || true)
 if [ -n "$PLACEHOLDER_HITS" ]; then
   printf '%s\n' "$PLACEHOLDER_HITS" | head -5
   fail "placeholder copy found"
@@ -35,7 +46,7 @@ fi
 
 # --- 2. Hotlinked images / placeholder services -------------------------------
 HOTLINK=$(grep -rnoE 'https?://[^"'\'' )]*(unsplash\.com|picsum\.photos|placehold\.(co|it)|via\.placeholder\.com|dummyimage\.com|loremflickr\.com|placekitten\.com|source\.unsplash|images\.unsplash)[^"'\'' )]*' \
-  "$ROOT" "${SRC_INCLUDES[@]}" 2>/dev/null | grep -v node_modules || true)
+  "$ROOT" "${SRC_INCLUDES[@]}" 2>/dev/null | grep -vE "$DOPS_EXCLUDE_RE" || true)
 if [ -n "$HOTLINK" ]; then
   printf '%s\n' "$HOTLINK" | head -5
   fail "hotlinked/placeholder image URLs found"
@@ -46,7 +57,7 @@ fi
 # --- 3. External http(s) image src in markup (any host) ------------------------
 EXT_IMG=$(grep -rnoE '<img[^>]*src="https?://[^"]*"' "$ROOT" \
   --include='*.html' --include='*.tsx' --include='*.jsx' --include='*.vue' --include='*.svelte' 2>/dev/null \
-  | grep -v node_modules || true)
+  | grep -vE "$DOPS_EXCLUDE_RE" || true)
 if [ -n "$EXT_IMG" ]; then
   printf '%s\n' "$EXT_IMG" | head -5
   fail "external <img> sources (images must be local)"
@@ -57,7 +68,7 @@ fi
 # --- 4. Image alt + size (D14, fs-level) ----------------------------------------
 MISSING_ALT=$(grep -rnoE '<img[^>]*>' "$ROOT" \
   --include='*.html' --include='*.tsx' --include='*.jsx' 2>/dev/null \
-  | grep -v node_modules | grep -v 'alt=' || true)
+  | grep -vE "$DOPS_EXCLUDE_RE" | grep -v 'alt=' || true)
 if [ -n "$MISSING_ALT" ]; then
   printf '%s\n' "$MISSING_ALT" | head -5
   fail "images without alt attribute"

@@ -1,0 +1,51 @@
+# Shipped WITH the starter, not derived at run time. Without it a
+# starter_first run leaves D18 and D.38 `unavailable` for its whole life —
+# the structure arrives pre-verified, but the model that proves it does not.
+version: "5.1"
+primary_job:
+  statement: "When someone nearby needs the service, I want them to call or book in one tap."
+  actor: "a neighbour who just decided they need this service"
+  success_signal: "a call placed or a booking started"
+
+audience:
+  roles: ["visitor"]
+  primary: "visitor"
+
+localization: {risk: false, reason: "one location, one language", content_variants: []}
+
+screens:
+  - id: home
+    name: "Single page"
+    purpose: "present the offer and drive a call or booking"
+    route: "/"
+    p1_content: ["what this business does", "price anchor", "the call/book action"]
+    blocks:
+      - {id: hero, kind: hero, priority: p1, copy_source: real}
+      - {id: services, kind: list, priority: p1, copy_source: real}
+      - {id: prices, kind: list, priority: p1, copy_source: real}
+      - {id: visit, kind: detail, priority: p2, copy_source: real}
+    states: [success]
+    transitions: [{to_screen: home, trigger: "anchor navigation between sections"}]
+
+scenarios:
+  - id: call-now
+    name: "Call while standing on the street"
+    steps:
+      - {screen: home, action: "open on a phone", expect: "the action is reachable without scrolling"}
+      - {screen: home, action: "tap the phone number", expect: "the dialler opens"}
+    covers_screens: [home]
+  - id: check-price-first
+    name: "Check the price before calling"
+    steps:
+      - {screen: home, action: "follow the prices link", expect: "a price per named service, not 'from'"}
+      - {screen: home, action: "return to the action", expect: "the CTA is still in reach"}
+    covers_screens: [home]
+
+information_pattern:
+  pattern: task-first
+  reason: "the visitor came to act (call or book), not to read about the business"
+  p1_rule: "the action and the price anchor are above the fold; the story is not"
+
+risks:
+  - description: "opening hours out of date — the most common reason a local page loses a customer"
+    mitigation: "hours are a copy slot, flagged for review at every content update"

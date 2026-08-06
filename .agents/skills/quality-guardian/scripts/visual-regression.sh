@@ -18,7 +18,11 @@ if [ -z "$MODE" ] || [ -z "$BASE" ] || [ -z "$SHOTS" ]; then
   exit 1
 fi
 
-if ! node -e "require.resolve('playwright')" 2>/dev/null; then
+if [ -z "${DOPS_PLAYWRIGHT:-}" ]; then
+  DOPS_PLAYWRIGHT="$(node -e "console.log(require.resolve('playwright'))" 2>/dev/null || true)"
+fi
+export DOPS_PLAYWRIGHT
+if [ -z "$DOPS_PLAYWRIGHT" ] && ! node -e "require.resolve('playwright')" 2>/dev/null; then
   echo "unavailable D22 visual-regression: playwright not installed" \
        "(npm i -D playwright && npx playwright install chromium) — caps verdict"
   exit 2
@@ -30,7 +34,7 @@ run_shots() {  # $1 = target dir
   node - "$BASE" "$1" "$PAGES" <<'NODE'
 const [base, dir, pagesArg] = process.argv.slice(2);
 const pages = pagesArg.split(" ").filter(Boolean);
-const { chromium } = require("playwright");
+const { chromium } = require(process.env.DOPS_PLAYWRIGHT || "playwright");
 const slug = p => (p === "/" ? "index" : p.replace(/\W+/g, "_"));
 (async () => {
   const browser = await chromium.launch();

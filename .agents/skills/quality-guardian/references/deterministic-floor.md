@@ -25,6 +25,21 @@ key screen × 3 viewports. Warnings logged, not blocking.
 actionPrimaryText/actionPrimary, inkOnDark/surfaceDark (+ dark mirrors).
 4.5:1 normal text, 3:1 large (≥24px / ≥18.66px bold) and non-text UI.
 
+v7.2 adds the three text tiers the skins had declared in
+`$meta.contrastPairs` since v7.0 but this gate never measured: `textPrimary`
+and `textSecondary` on canvas at 4.5:1, and **`textTertiary` on canvasRaised
+at 3:1** — the tertiary tier was ruled UI chrome, not normal text (owner:
+Pavel, 2026-08-06). It measures 3.39:1 light / 3.17:1 dark, so it clears the
+chrome floor and would have failed the text floor; the gap between what the
+skin declared and what the checker measured had been hiding that for two
+versions.
+
+`--tokens <tokens.json>` reports any pair a skin declares that this gate does
+not measure, and the self-test fails when that report is non-empty: two copies
+of the same geometry drift, and an undeclared drift is a defect [A.10]. A new
+pair must be given a floor deliberately — inventing a threshold that makes a
+failure disappear would be worse than the drift.
+
 ## D4 — Base text size. Blocking. Script.
 Body/base text ≥16px at all viewports (`check-typography.py` line D4).
 
@@ -116,6 +131,17 @@ values restricted to `provisional_ai`/`autonomous_passed`; Gate 3 legality
 A.2 exemption (scaling over the base skin is legal when
 `status.base_skin_applied: true`); decision-log Gate-2 sections required
 only when K2B ran.
+
+### D19 companion — [A.26] "nothing silently". Blocking. Script.
+`tools/dops_announce.py --check`, run as part of the floor. Two conditions:
+`interaction_mode: autonomous` requires `meta.autonomous_granted_by` (the
+owner's explicit word for THIS run — being unresponsive is not a grant), and
+every machine-made gate decision (`autonomous_passed`, `provisional_ai`)
+requires an announcement recorded at the moment it was made, carrying a
+rollback command. A decision the owner learns about from the closing report
+is a violation even when the decision itself was legal. Origin: the
+kruto-landing run, where the pipeline broke no rule and the owner still lost
+control of it.
 
 ## D20 — Accessibility quick pass. Blocking (critical/serious). Script.
 axe-core (or equivalent) on key screens: zero critical/serious violations.

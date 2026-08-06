@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title data-slot="event_name">Northern Lights Festival</title>
+<link rel="stylesheet" href="../../../skins/base-site/tokens.css">
+<style>
+  body { margin: 0; font-family: var(--font-body); background: var(--canvas); color: var(--ink); line-height: var(--font-line-height-body); }
+  header, main, footer { max-width: 64rem; margin: 0 auto; padding: 0 var(--space-4); }
+  header { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); padding-top: var(--space-4); padding-bottom: var(--space-4); border-bottom: 1px solid var(--border-subtle); }
+  nav a { color: var(--ink-muted); text-decoration: none; margin-left: var(--space-4); padding: var(--space-2) 0; display: inline-block; min-height: 1.5rem; }
+  nav a:hover { color: var(--ink); }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  h1, h2, h3 { font-family: var(--font-display); line-height: var(--font-line-height-tight); }
+  h1 { font-size: var(--font-scale-step5); margin: var(--space-8) 0 var(--space-3); max-width: 16ch; }
+  .dateline { font-size: var(--font-scale-step2); color: var(--ink-muted); margin: 0 0 var(--space-2); }
+  .place { color: var(--ink-muted); max-width: var(--measure-body); }
+  .cta { display: inline-block; background: var(--action-primary); color: var(--action-primary-text); padding: var(--space-3) var(--space-6); border-radius: var(--radius-md); text-decoration: none; font-weight: var(--font-weight-semibold); margin-top: var(--space-5); min-height: 2.75rem; }
+  .cta:hover { background: var(--color-accent-700); }
+  .cta-secondary { display: inline-block; margin-top: var(--space-5); margin-left: var(--space-4); color: var(--ink); text-decoration: underline; padding: var(--space-3) 0; min-height: 2.75rem; }
+  section { margin-top: var(--space-12); }
+  h2 { font-size: var(--font-scale-step3); margin-bottom: var(--space-2); }
+  .section-note { color: var(--ink-muted); margin: 0 0 var(--space-5); max-width: var(--measure-body); }
+  .day { border-top: 1px solid var(--border-subtle); padding-top: var(--space-4); margin-top: var(--space-5); }
+  .day h3 { font-size: var(--font-scale-step1); margin: 0 0 var(--space-1); }
+  .day-date { color: var(--ink-muted); font-size: var(--font-scale-step-1); margin: 0 0 var(--space-3); }
+  .lineup { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: var(--space-2) var(--space-4); }
+  .lineup li { padding: var(--space-2) 0; }
+  .headliner { font-weight: var(--font-weight-semibold); }
+  .tickets { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: var(--space-4); }
+  .ticket { border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: var(--space-5); }
+  .ticket h3 { font-size: var(--font-scale-step1); margin: 0 0 var(--space-1); }
+  .price { font-size: var(--font-scale-step3); margin: 0 0 var(--space-2); }
+  .ticket-note { color: var(--ink-muted); font-size: var(--font-scale-step-1); margin: 0 0 var(--space-4); }
+  .sold-out { color: var(--semantic-error); font-size: var(--font-scale-step-1); display: flex; align-items: center; gap: var(--space-1); }
+  .faq dt { font-weight: var(--font-weight-semibold); margin-top: var(--space-4); }
+  .faq dd { margin: var(--space-1) 0 0; color: var(--ink-muted); max-width: var(--measure-body); }
+  address { font-style: normal; color: var(--ink-muted); }
+  footer { margin-top: var(--space-12); padding-top: var(--space-4); padding-bottom: var(--space-6); border-top: 1px solid var(--border-subtle); color: var(--ink-muted); font-size: var(--font-scale-step-1); }
+  @media (prefers-reduced-motion: no-preference) {
+    .cta { transition: background var(--motion-duration-fast) var(--motion-easing-out); }
+  }
+</style>
+</head>
+<body data-not-approved="not_approved_visual_design">
+<header data-priority="p2">
+  <strong data-slot="event_name">Northern Lights Festival</strong>
+  <nav aria-label="Sections">
+    <a href="#programme">Programme</a>
+    <a href="#tickets">Tickets</a>
+    <a href="#getting-there">Getting there</a>
+  </nav>
+</header>
+
+<main>
+  <section id="intro" data-priority="p1" data-section="hero">
+    <h1 data-slot="event_name">Northern Lights Festival</h1>
+    <p class="dateline"><span data-slot="event_dates">12–14 September 2026</span></p>
+    <p class="place"><span data-slot="event_place">Riverside Park, Petrozavodsk</span> — <span data-slot="event_scale">3 days, 40 acts, 2 stages</span></p>
+    <a class="cta" href="#tickets" data-slot="cta_label">Buy a ticket</a>
+    <a class="cta-secondary" href="#programme" data-slot="cta_secondary_label">See the programme</a>
+  </section>
+
+  <section id="programme" data-priority="p1" data-section="programme">
+    <h2>Programme</h2>
+    <p class="section-note" data-slot="programme_note">Stages run in parallel; the pass covers all of them.</p>
+
+    <div class="day">
+      <h3 data-slot="day_1_title">Friday — Opening</h3>
+      <p class="day-date" data-slot="day_1_date">12 September, from 18:00</p>
+      <ul class="lineup">
+        <li class="headliner" data-slot="day_1_act_1">Act one (headliner)</li>
+        <li data-slot="day_1_act_2">Act two</li>
+        <li data-slot="day_1_act_3">Act three</li>
+        <li data-slot="day_1_act_4">Act four</li>
+      </ul>
+    </div>
+
+    <div class="day">
+      <h3 data-slot="day_2_title">Saturday — Main day</h3>
+      <p class="day-date" data-slot="day_2_date">13 September, from 12:00</p>
+      <ul class="lineup">
+        <li class="headliner" data-slot="day_2_act_1">Act one (headliner)</li>
+        <li data-slot="day_2_act_2">Act two</li>
+        <li data-slot="day_2_act_3">Act three</li>
+        <li data-slot="day_2_act_4">Act four</li>
+      </ul>
+    </div>
+
+    <div class="day">
+      <h3 data-slot="day_3_title">Sunday — Closing</h3>
+      <p class="day-date" data-slot="day_3_date">14 September, from 12:00</p>
+      <ul class="lineup">
+        <li class="headliner" data-slot="day_3_act_1">Act one (headliner)</li>
+        <li data-slot="day_3_act_2">Act two</li>
+        <li data-slot="day_3_act_3">Act three</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="tickets" data-priority="p1" data-section="tickets">
+    <h2>Tickets</h2>
+    <p class="section-note" data-slot="tickets_note">Prices rise at each tier; the last tier sells at the gate.</p>
+    <div class="tickets">
+      <div class="ticket">
+        <h3 data-slot="ticket_1_name">One day</h3>
+        <p class="price" data-slot="ticket_1_price">1 800 ₽</p>
+        <p class="ticket-note" data-slot="ticket_1_note">Any single day, re-entry allowed.</p>
+        <a class="cta" href="#" data-slot="ticket_1_cta">Buy one day</a>
+      </div>
+      <div class="ticket">
+        <h3 data-slot="ticket_2_name">Full pass</h3>
+        <p class="price" data-slot="ticket_2_price">4 200 ₽</p>
+        <p class="ticket-note" data-slot="ticket_2_note">All three days, both stages.</p>
+        <a class="cta" href="#" data-slot="ticket_2_cta">Buy full pass</a>
+      </div>
+      <div class="ticket">
+        <h3 data-slot="ticket_3_name">Early bird</h3>
+        <p class="price" data-slot="ticket_3_price">3 000 ₽</p>
+        <p class="ticket-note" data-slot="ticket_3_note">Sold out on 1 August.</p>
+        <p class="sold-out" data-slot="ticket_3_state"><span aria-hidden="true">✕</span> Sold out</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="getting-there" data-priority="p2" data-section="getting-there">
+    <h2>Getting there</h2>
+    <address data-slot="venue_address">Riverside Park, main entrance, Petrozavodsk</address>
+    <dl class="faq">
+      <dt data-slot="faq_1_q">Is there parking?</dt>
+      <dd data-slot="faq_1_a">Two lots at the north entrance, 300 places, free.</dd>
+      <dt data-slot="faq_2_q">Can I bring children?</dt>
+      <dd data-slot="faq_2_a">Under 12 free with an adult; family zone next to stage two.</dd>
+      <dt data-slot="faq_3_q">What if it rains?</dt>
+      <dd data-slot="faq_3_a">Both stages are covered; the festival runs in any weather.</dd>
+    </dl>
+  </section>
+</main>
+
+<footer>
+  <p><span data-slot="organiser">Festival organiser</span> — <span data-slot="contact_email">hello@example.org</span></p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "schema": "dops-knowledge-pin/1",
+  "note": "Frozen snapshot of the numeric constraints consumed at runtime. The pipeline reads THIS, never a live wiki: reproducibility (a run must be repeatable months later) and trust boundary (an external repo is not an instruction source). Refresh with `packs/wiki-sync/scripts/wiki-sync.py --update --wiki-path <ux-wiki clone>` at version boundaries only — never mid-run.",
+  "sources": {
+    "ux_wiki": {
+      "path_in_source": "constraints/",
+      "commit": "705ad6e2e31ab6c84bae711156f97a294c2b8c3d",
+      "vendored_at": "2026-08-04",
+      "sha256": "ebd77f2468e9329c2fc471fec453fc6cf59fe8adc0e86ac344bd0569c6dea73d",
+      "files": 8
+    }
+  }
+}

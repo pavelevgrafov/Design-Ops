@@ -47,6 +47,21 @@ QUICK_FORBIDDEN = [
 LOG_REQUIRED = ["## Classification", "## Clarification", "## Gate 1",
                 "## Taste calibration", "## Direction seeds", "## Gate 2", "## Verdict"]
 
+def inherited_artifacts(c):
+    """Names under `artifacts:` that the contract declares as inherited from a
+    Verified Starter. Anything that does not say `origin: inherited` — because
+    the field is missing, empty, or reads `produced` — is not exempt: silence
+    must never buy an exemption."""
+    node = c.get("artifacts")
+    if not isinstance(node, dict):
+        return set()
+    out = set()
+    for name, spec in node.items():
+        if isinstance(spec, dict) and str(spec.get("origin") or "") == "inherited":
+            out.add(str(name))
+    return out
+
+
 def find(root, *candidates):
     for rel in candidates:
         p = os.path.join(root, rel)
@@ -229,9 +244,22 @@ def main():
     # --- 3. quick ceiling ----------------------------------------------------------
     mode = meta.get("mode")
     if mode == "quick":
+        # AC-23 exception (Kimi, 2026-08-05): the ceiling limits what a quick
+        # run PRODUCES, not what it inherits. A model carried in from a
+        # Verified Starter cost this run zero turns — it was produced and
+        # verified once, by the starter factory. This is the same doctrine as
+        # `verified` rules leaving the prompt for the checker: what has been
+        # verified is not re-produced. The exception is narrow on purpose —
+        # `origin` must say so; absent or `produced` is a violation as before,
+        # symmetrical to "a factory verdict is not the project's verdict".
+        inherited = inherited_artifacts(c)
         for rel in QUICK_FORBIDDEN:
-            if os.path.exists(os.path.join(root, rel)):
-                problems.append(f"quick-mode ceiling violated: forbidden artifact exists: {rel}")
+            if not os.path.exists(os.path.join(root, rel)):
+                continue
+            key = os.path.basename(rel.rstrip(os.sep))
+            if key in inherited or os.path.splitext(key)[0] in inherited:
+                continue
+            problems.append(f"quick-mode ceiling violated: forbidden artifact exists: {rel}")
         if len(visual.get("directions") or []) > 2:
             problems.append(f"quick mode: {len(visual['directions'])} directions (max 2)")
     elif mode not in ("standard", "full"):

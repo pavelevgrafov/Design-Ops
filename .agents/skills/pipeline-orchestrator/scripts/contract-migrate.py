@@ -47,6 +47,30 @@ V7_DEFAULTS = {
     ("visual", "design_review"): "",
     ("knowledge", "sources_pin"): {"ux_wiki": {"tag": "", "sha256": ""},
                                    "design_ops": {"tag": ""}},
+    # v7.2 — process control (У-2/У-3), overtaking (A.25), announcements (A.26).
+    # Defaults keep an existing contract behaving exactly as before: gates stay
+    # blocking, nothing is provisional, no depth target is claimed.
+    ("meta", "autonomous_granted_by"): "",
+    ("meta", "target_lod"): 200,
+    ("meta", "lod_overrides"): [],
+    ("meta", "run_plan"): [],
+    ("meta", "paused"): False,
+    ("meta", "pause_after"): "",
+    ("gates", "provisional_since"): "",
+    ("gates", "provisional_scope"): [],
+    ("gates", "provisional_plateau"): "",
+    ("status", "deliverable_blocked"): False,
+    ("status", "lod"): 0,
+    ("scope", "exclusions"): [],
+    # AC-23: the quick-mode ceiling limits PRODUCTION, not inheritance. An
+    # artifact that arrived from a Verified Starter cost this run zero turns,
+    # and forbidding it would mean starter_first must throw away the most
+    # valuable thing it carries. `origin` is what tells the two apart — absent
+    # or `produced` still violates the ceiling.
+    ("artifacts", "ux"): {"origin": "", "source_starter": ""},
+    ("process",): {"checkpoints_log": "artifacts/checkpoints.jsonl",
+                   "control_queue_log": "artifacts/control-queue.jsonl",
+                   "announcements_log": "artifacts/announcements.jsonl"},
 }
 
 HOPS = [("5.1", "6.0", V6_DEFAULTS), ("6.0", "7.0", V7_DEFAULTS)]

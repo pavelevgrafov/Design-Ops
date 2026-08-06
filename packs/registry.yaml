@@ -18,3 +18,4 @@ packs:
   copy-linter:           {version: "0.1.0", status: active}   # v7.0, D.36
   awwwards-reference:    {version: "0.1.0", status: active}   # v7.0, K2B calibration
   wiki-sync:             {version: "0.1.0", status: active}   # v7.1, knowledge provenance
+  direction-drafter:     {version: "0.1.0", status: active}   # v7.2, K2B external direction drafts (peripheral, A.27)

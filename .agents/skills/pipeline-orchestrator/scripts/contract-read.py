@@ -28,6 +28,7 @@ Exit codes: 0 = ok (empty stdout = key absent/empty); 1 = bad usage;
 4 = PyYAML missing (install: pip install pyyaml).
 """
 import json
+import os
 import sys
 
 try:
@@ -48,6 +49,31 @@ def _ids(items):
         if v is not None and str(v) != "":
             out.append(str(v))
     return out
+
+
+def _fold(log_path):
+    """Replay an append-only event log into current state, keyed by id."""
+    cur = {}
+    if not os.path.isfile(log_path):
+        return cur
+    with open(log_path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                e = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            eid, kind = e.get("id"), e.get("event")
+            if kind in ("publish", "issue"):
+                cur[eid] = dict(e, status="published" if kind == "publish" else "queued")
+            elif eid in cur:
+                cur[eid]["status"] = {"decide": "acted"}.get(kind, kind)
+                for k in ("decision", "reason"):
+                    if e.get(k) is not None:
+                        cur[eid][k] = e[k]
+    return cur
 
 
 def _dig(c, dotted):
@@ -99,6 +125,35 @@ def main():
         v = c.get(query)
         if v:
             print(json.dumps(v, ensure_ascii=False))
+    elif query in ("checkpoints", "checkpoint", "control_queue"):
+        # These live in append-only logs beside the contract (v7.2, У-2/У-3):
+        # they are events with a chronology, and rewriting the contract on
+        # every publish would destroy its comments. The contract still names
+        # the logs (`process:`), so this stays the single entry point [A.10].
+        base = os.path.dirname(os.path.dirname(os.path.abspath(path)))
+        proc = c.get("process") or {}
+        rel = {"checkpoints": proc.get("checkpoints_log") or "artifacts/checkpoints.jsonl",
+               "checkpoint": proc.get("checkpoints_log") or "artifacts/checkpoints.jsonl",
+               "control_queue": proc.get("control_queue_log") or "artifacts/control-queue.jsonl"}[query]
+        rows = _fold(os.path.join(base, rel))
+        if query == "checkpoint":
+            if len(sys.argv) < 4:
+                print("contract-read: checkpoint requires an id", file=sys.stderr)
+                return 1
+            row = rows.get(sys.argv[3])
+            if row:
+                print(json.dumps(row, ensure_ascii=False))
+        else:
+            wanted = sys.argv[3] if len(sys.argv) > 3 else None
+            out = [r for r in rows.values()
+                   if not wanted or r.get("status") == wanted]
+            print(json.dumps(out, ensure_ascii=False))
+    elif query in ("target_lod", "run_plan"):
+        v = (c.get("meta") or {}).get(query)
+        if isinstance(v, (dict, list)):
+            print(json.dumps(v, ensure_ascii=False))
+        elif v is not None:
+            print(v)
     elif query == "get":
         if len(sys.argv) < 4:
             print("contract-read: get requires a dotted path", file=sys.stderr)

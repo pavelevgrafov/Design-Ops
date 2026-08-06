@@ -2,7 +2,7 @@
   <img src="docs/brand-header.svg" alt="DesignOps — brand image" width="100%">
 </p>
 
-# Design Production Pipeline v7.0
+# Design Production Pipeline v7.2
 
 <img src="docs/banner.svg" alt="v6.0 pipeline: discovery → structure → human gate → automatic base skin → verified foundation; visual craft and deploy as options" width="100%">
 
@@ -99,6 +99,24 @@ First run: prompt P01 from `eval/example-prompts.md`, score with
 
 ## Changelog
 
+- **v7.2** — the machine contour: the deterministic floor collapses from ~25
+  script invocations into a single `tools/dops verify` (one command, one
+  JSON), because cost and wall-clock of an agent pipeline are linear in the
+  number of turns, not in the size of the rule base. Resident rules drop from
+  ~12.9k to ~1.1k tokens via an explicit taxonomy (`generative` /
+  `generative_and_verified` / `verified` / `process`): a rule belongs in the
+  prompt only if it changes what the model writes, and what a checker catches
+  is left to the checker. Adds `[E.3]` reuse by input hash with targeted
+  invalidation; invariants A.25 gate-overtaking, A.26 "nothing silently",
+  A.27 external-service boundary; checkpoints and a control queue (У-2/У-3)
+  so the owner can steer a run without stopping it; and the revision conveyor
+  П-1/П-2/П-3 — always-on pins, a four-lane sorting station, and a checker at
+  the door that refuses with alternatives before any work is spent. AC-23
+  gains its inheritance exemption: the quick-mode ceiling limits production,
+  not what a Verified Starter carries in. Includes the v7.1 work that never
+  got its own entry (wiki-sync with pinned sources, gate enforcement at the
+  stage boundary, `install.sh --update`). Contract schema stays 7.0 — no
+  migration is required.
 - **v7.0** — verified design intelligence: invariants A.12–A.24 and
   evidence vault E.22–E.38 (33 notes) from the formalized UI/UX rule
   base (ux-wiki); deterministic floor extended to D1–D38 with tiered

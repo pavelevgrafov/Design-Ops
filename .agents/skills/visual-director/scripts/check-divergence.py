@@ -66,6 +66,13 @@ def main():
         by_id[did] = d
 
         axes = d.get("axes") or {}
+        if not isinstance(axes, dict):
+            # A free-text axes blob cannot be compared axis by axis — that is a
+            # contract defect, and a check must report it, never crash [A.11].
+            problems.append(
+                f"direction {did}: `axes` must be a mapping of "
+                f"{{{', '.join(AXES)}}}, found {type(axes).__name__}")
+            axes = {}
         for a in AXES:
             if not norm(axes.get(a)):
                 problems.append(f"direction {did}: axis '{a}' empty")
@@ -108,6 +115,8 @@ def main():
             a_id, b_id = ids[i], ids[j]
             A, B = by_id[a_id], by_id[b_id]
             ax_a, ax_b = A.get("axes") or {}, B.get("axes") or {}
+            if not isinstance(ax_a, dict) or not isinstance(ax_b, dict):
+                continue          # already reported above as a shape defect
             truly_diff = [ax for ax in AXES if norm(ax_a.get(ax)) and norm(ax_b.get(ax))
                           and norm(ax_a.get(ax)) != norm(ax_b.get(ax))]
             claimed = set((A.get("differs_by") or {}).get(b_id) or [])

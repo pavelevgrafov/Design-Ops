@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title data-slot="publication_name">The Long Field — notes on infrastructure</title>
+<link rel="stylesheet" href="../../../skins/base-site/tokens.css">
+<style>
+  body { margin: 0; font-family: var(--font-body); background: var(--canvas); color: var(--ink); line-height: var(--font-line-height-body); }
+  header, main, footer { max-width: 48rem; margin: 0 auto; padding: 0 var(--space-4); }
+  header { padding-top: var(--space-6); padding-bottom: var(--space-5); border-bottom: 1px solid var(--border-subtle); }
+  .masthead { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-4); flex-wrap: wrap; }
+  nav a { color: var(--ink-muted); text-decoration: none; margin-left: var(--space-4); padding: var(--space-2) 0; display: inline-block; min-height: 1.5rem; }
+  nav a:hover { color: var(--ink); }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  h1, h2, h3 { font-family: var(--font-display); line-height: var(--font-line-height-tight); }
+  .masthead h1 { font-size: var(--font-scale-step2); margin: 0; }
+  .strapline { color: var(--ink-muted); margin: var(--space-2) 0 0; max-width: var(--measure-body); }
+  section { margin-top: var(--space-10); }
+  h2 { font-size: var(--font-scale-step1); margin-bottom: var(--space-4); color: var(--ink-muted); font-weight: var(--font-weight-medium); }
+  .lead { border-bottom: 1px solid var(--border-subtle); padding-bottom: var(--space-6); }
+  .lead h3 { font-size: var(--font-scale-step4); margin: 0 0 var(--space-3); max-width: 22ch; }
+  .lead .standfirst { font-size: var(--font-scale-step1); color: var(--ink-muted); max-width: var(--measure-body); margin: 0 0 var(--space-3); }
+  .posts { list-style: none; margin: 0; padding: 0; }
+  .post { border-bottom: 1px solid var(--border-subtle); padding: var(--space-5) 0; }
+  .post a { color: var(--ink); text-decoration: none; }
+  .post a:hover h3 { text-decoration: underline; }
+  .post h3 { font-size: var(--font-scale-step1); margin: 0 0 var(--space-2); max-width: 30ch; }
+  .post p { margin: 0 0 var(--space-2); color: var(--ink-muted); max-width: var(--measure-body); }
+  .byline { font-size: var(--font-scale-step-1); color: var(--ink-muted); display: flex; gap: var(--space-3); flex-wrap: wrap; }
+  .topic { display: inline-block; border: 1px solid var(--border-subtle); border-radius: var(--radius-pill); padding: var(--space-1) var(--space-3); font-size: var(--font-scale-step-1); color: var(--ink-muted); text-decoration: none; margin: 0 var(--space-2) var(--space-2) 0; min-height: 1.75rem; }
+  .topic:hover { color: var(--ink); border-color: var(--ink-muted); }
+  .empty-state { border: 1px dashed var(--border-subtle); border-radius: var(--radius-md); padding: var(--space-6); color: var(--ink-muted); max-width: var(--measure-body); }
+  .subscribe { border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: var(--space-6); }
+  .subscribe h2 { color: var(--ink); font-family: var(--font-display); font-weight: var(--font-weight-semibold); }
+  .subscribe p { color: var(--ink-muted); max-width: var(--measure-body); }
+  .subscribe-row { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-4); }
+  .subscribe input { flex: 1 1 14rem; font: inherit; padding: var(--space-3); border: 1px solid var(--input-border); border-radius: var(--radius-control); background: var(--canvas); color: var(--ink); min-height: 2.75rem; }
+  .subscribe input:focus-visible { outline: 2px solid var(--input-focus-ring); outline-offset: 1px; }
+  .subscribe button { font: inherit; font-weight: var(--font-weight-semibold); background: var(--button-primary-bg); color: var(--button-primary-text); border: 0; border-radius: var(--button-radius); padding: var(--space-3) var(--space-6); min-height: 2.75rem; cursor: pointer; }
+  .form-note { font-size: var(--font-scale-step-1); color: var(--ink-muted); margin: var(--space-3) 0 0; }
+  /* label stays in the accessibility tree, out of the visual layout */
+  .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+  footer { margin-top: var(--space-12); padding-top: var(--space-4); padding-bottom: var(--space-6); border-top: 1px solid var(--border-subtle); color: var(--ink-muted); font-size: var(--font-scale-step-1); }
+  @media (prefers-reduced-motion: no-preference) {
+    .topic, .subscribe button { transition: color var(--motion-duration-fast) var(--motion-easing-out), border-color var(--motion-duration-fast) var(--motion-easing-out); }
+  }
+</style>
+</head>
+<body data-not-approved="not_approved_visual_design">
+<header data-priority="p2">
+  <div class="masthead">
+    <h1 data-slot="publication_name">The Long Field</h1>
+    <nav aria-label="Sections">
+      <a href="#latest">Latest</a>
+      <a href="#topics">Topics</a>
+      <a href="#subscribe">Subscribe</a>
+    </nav>
+  </div>
+  <p class="strapline" data-slot="strapline">Field notes on the infrastructure nobody sees until it fails.</p>
+</header>
+
+<main>
+  <section id="lead" class="lead" data-priority="p1" data-section="lead">
+    <h2>This week</h2>
+    <article>
+      <h3 data-slot="lead_title">The water main that mapped a city</h3>
+      <p class="standfirst" data-slot="lead_standfirst">A 1962 pipe survey turned out to be the only complete record of where anything is buried. Then the archive flooded.</p>
+      <p class="byline"><span data-slot="lead_author">Marta Rein</span><span data-slot="lead_date">2 September 2026</span><span data-slot="lead_reading">11 min</span></p>
+    </article>
+  </section>
+
+  <section id="latest" data-priority="p1" data-section="latest">
+    <h2>Latest</h2>
+    <ul class="posts">
+      <li class="post">
+        <a href="#">
+          <h3 data-slot="post_1_title">Why the night shift finds the bugs</h3>
+          <p data-slot="post_1_excerpt">Four control rooms, one pattern: the errors that matter surface between 02:00 and 05:00, and nobody staffs for it.</p>
+          <p class="byline"><span data-slot="post_1_author">Jonas Feld</span><span data-slot="post_1_date">26 August 2026</span><span data-slot="post_1_reading">7 min</span></p>
+        </a>
+      </li>
+      <li class="post">
+        <a href="#">
+          <h3 data-slot="post_2_title">The spreadsheet that runs a port</h3>
+          <p data-slot="post_2_excerpt">Two people maintain it, 11 000 rows, no version control. Replacing it has failed twice — here is what the software missed.</p>
+          <p class="byline"><span data-slot="post_2_author">Marta Rein</span><span data-slot="post_2_date">19 August 2026</span><span data-slot="post_2_reading">9 min</span></p>
+        </a>
+      </li>
+      <li class="post">
+        <a href="#">
+          <h3 data-slot="post_3_title">Maintenance is a design decision</h3>
+          <p data-slot="post_3_excerpt">Every interface written for launch day gets maintained for a decade by someone who was not in the room.</p>
+          <p class="byline"><span data-slot="post_3_author">Ilse Broek</span><span data-slot="post_3_date">12 August 2026</span><span data-slot="post_3_reading">6 min</span></p>
+        </a>
+      </li>
+    </ul>
+    <p class="empty-state" data-slot="latest_empty" hidden>Nothing published yet. The first piece goes out with the next issue — subscribe below and it will find you.</p>
+  </section>
+
+  <section id="topics" data-priority="p2" data-section="topics">
+    <h2>Topics</h2>
+    <p>
+      <a class="topic" href="#" data-slot="topic_1">Infrastructure</a>
+      <a class="topic" href="#" data-slot="topic_2">Archives</a>
+      <a class="topic" href="#" data-slot="topic_3">Control rooms</a>
+      <a class="topic" href="#" data-slot="topic_4">Maintenance</a>
+    </p>
+  </section>
+
+  <section id="subscribe" class="subscribe" data-priority="p1" data-section="subscribe">
+    <h2 data-slot="subscribe_title">Get the next one by email</h2>
+    <p data-slot="subscribe_note">One piece every other week. No digest, no partners, unsubscribe in one click.</p>
+    <form class="subscribe-row" action="#" method="post">
+      <label for="subscribe-email" class="visually-hidden" data-slot="subscribe_label">Email address</label>
+      <input id="subscribe-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
+      <button type="submit" data-slot="subscribe_cta">Subscribe</button>
+    </form>
+    <p class="form-note" data-slot="subscribe_privacy">We store the address and nothing else.</p>
+  </section>
+</main>
+
+<footer>
+  <p><span data-slot="footer_note">The Long Field is written by three people and funded by readers.</span></p>
+</footer>
+</body>
+</html>

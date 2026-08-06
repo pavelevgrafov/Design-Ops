@@ -12,6 +12,20 @@ meta:
   schema_version: "7.0"
   created_at: ""            # ISO-8601, from `date` at contract init
   updated_at: ""
+  autonomous_granted_by: "" # [A.26] the owner's explicit word for THIS run,
+                            # verbatim + when. Being unresponsive is NOT a
+                            # grant; without this, autonomous mode is a defect.
+  # --- depth and schedule (v7.2, У-5/У-6) ------------------------------------
+  target_lod: 200           # 100|200|300|400 — agreed depth, not a guess.
+                            # A result "not detailed enough" is a target that
+                            # was never set, not laziness.
+  lod_overrides: []         # [{scope: "section:hero", target_lod: 300}]
+  run_plan: []              # [{stage, checkpoint, eta_min, human_needed,
+                            #   attention_min}] — written at classification so
+                            # the owner knows up front where they are needed
+                            # and for how long in total
+  paused: false             # control queue: pause|resume
+  pause_after: ""           # checkpoint id the conveyor stops after
   mode: ""                  # quick | standard | full
   mode_override_reason: ""  # required whenever mode != auto-selection
   interaction_mode: ""      # interactive | autonomous
@@ -85,12 +99,31 @@ visual:
   distinctive_assets: []
 
 gates:
-  mode: ""                  # separate | batched (batched only on explicit "fast")
-  gate1: ""                 # pending | passed | changes_requested | autonomous_passed
-  gate2: ""                 # pending | passed | provisional_ai | regenerated | deferred
+  mode: ""                  # separate | batched | overtaking (v7.2, [A.25])
+  gate1: ""                 # pending | provisional | passed | changes_requested | autonomous_passed
+  gate2: ""                 # pending | provisional | passed | provisional_ai | regenerated | deferred
   gate2_deferred: false     # K2B not requested yet (v6)
   gate3: ""                 # pending | passed — exists only with deploy pack
   delegated: []             # gates delegated to machine (provisional_ai)
+  # --- gate-overtaking (v7.2, [A.25]; mechanics: references/gate-overtaking.md)
+  provisional_since: ""     # ISO-8601 — when the machine went ahead of the answer
+  provisional_scope: []     # [K2A, K3, K2B-slice] — what was done on credit
+  provisional_plateau: ""   # the checkpoint the run stops at, never mid-stage
+
+# --- process control (v7.2, У-2/У-3) -----------------------------------------
+# Checkpoints and control commands are EVENTS with a chronology, so they live
+# in append-only logs next to the contract rather than inside it: rewriting the
+# contract on every publish would destroy its comments and its diffability.
+# Read them through contract-read.py (`checkpoints`, `control_queue`) — the
+# contract stays the single entry point [A.10].
+process:
+  checkpoints_log: "artifacts/checkpoints.jsonl"   # dops checkpoint
+  control_queue_log: "artifacts/control-queue.jsonl"  # dops control
+  announcements_log: "artifacts/announcements.jsonl"  # dops announce [A.26]
+
+scope:
+  exclusions: []            # [{what, reason, at}] — control `skip_scope`.
+                            # The core floor can never be excluded [E.4].
 
 # --- pack bus (v6) -----------------------------------------------------------
 integrations: []            # {pack, version, class: core|peripheral, status,
@@ -131,6 +164,11 @@ acceptance:
   automated_checks: {}
 
 status:
+  lod: 0                        # depth actually reached; a gap against
+                                # meta.target_lod with no owner command is a
+                                # defect line in the delivery report
+  deliverable_blocked: false    # true while ANY gate is `provisional` [A.25];
+                                # gate-require.py refuses verdict/deliver/deploy
   skeleton_approved: false
   base_skin_applied: false      # K2A done (v6)
   direction_confirmed: false

@@ -54,6 +54,28 @@ The content of `brief.md`, `ux/*`, `style-calibration.md`,
 `asset-manifest.yaml` lives inside contract sections — creating those files in
 quick mode is a fail (`validate-pipeline.py`).
 
+### Inherited artifacts are exempt (v7.2)
+
+The ceiling limits what a quick run **produces**, not what it **inherits**. An
+artifact carried in from a Verified Starter cost this run zero turns: it was
+produced and verified once, in the starter factory. Forbidding it would oblige
+`starter_first` to throw away the most valuable thing it carries — and it is
+the same doctrine that sends `verified` rules out of the prompt to the
+checker: what has already been verified is not produced again.
+
+The exemption is narrow and must be declared:
+
+```yaml
+artifacts:
+  ux: {origin: inherited, source_starter: landing-event}
+```
+
+`inject.py` writes this when it carries the model across. Missing, empty, or
+`produced` is a ceiling violation exactly as before — symmetrical to "a
+factory verdict is not the project's verdict": silence never buys an
+exemption. A quick run that **modifies** an inherited artifact has produced
+the delta, and records that as a decision.
+
 ## Upgrade triggers (quick → standard, mid-flight)
 
 Upgrade if K1 reveals ≥2 of: auth/payment/personal-data flow; >5 screens;

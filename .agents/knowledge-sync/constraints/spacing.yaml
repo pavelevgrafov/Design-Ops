@@ -1,0 +1,24 @@
+# constraints/spacing.yaml — единый источник истины для сетки и отступов.
+# Первичный текст: guidelines/spacing-grid.md
+version: 1
+updated: 2026-08-02
+grid:
+  base-px: {value: 8, level: MUST}
+  micro-step-px: {value: 4, level: SHOULD}  # только где 8 слишком грубо
+  icon-sizes-px: [16, 24, 32]
+ladder-px:  # внутреннее <= внешнего (гештальт-близость)
+  between-sections: [64, 96]
+  between-blocks: [32, 48]
+  between-elements: [16, 24]
+  inside-elements: [8, 16]
+  icon-to-text: [4, 8]
+rule: "padding <= margin"
+layout:
+  columns: 12
+  gutter-px: 24
+  container-max-px: [1140, 1280]
+  side-margins-desktop-px: 60  # при вьюпорте 1440
+notes:
+  - Line-height кратна 4 или 8 (16, 20, 24, 28, 32), даже если размер шрифта дробный.
+  - Отступы хранятся как токены (--space-N), не как магические числа.
+  - Рамки — последнее средство: если группа создаётся отступом, обводка избыточна.

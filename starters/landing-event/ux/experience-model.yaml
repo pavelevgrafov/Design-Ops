@@ -1,0 +1,65 @@
+# Shipped WITH the starter, not derived at run time. Without it a
+# starter_first run leaves D18 and D.38 `unavailable` for its whole life —
+# the structure arrives pre-verified, but the model that proves it does not.
+# The injector copies this into artifacts/ux/ alongside the skeleton.
+version: "5.1"
+
+primary_job:
+  statement: "When I hear about the event, I want to know when it is and get a ticket before it sells out."
+  actor: "someone who heard about the event from a friend or a poster"
+  success_signal: "a ticket bought, or the dates written down"
+
+audience:
+  roles: ["visitor"]
+  primary: "visitor"
+
+localization:
+  risk: false
+  reason: "single-language promo; dates and prices are the only formatted values"
+  content_variants: []
+
+screens:
+  - id: home
+    name: "Single page"
+    purpose: "state the dates, show the programme, sell a ticket"
+    route: "/"
+    p1_content: ["event name", "dates", "place", "buy CTA"]
+    blocks:
+      - {id: hero, kind: hero, priority: p1, copy_source: real}
+      - {id: programme, kind: list, priority: p1, copy_source: real}
+      - {id: tickets, kind: list, priority: p1, copy_source: real}
+      - {id: getting-there, kind: detail, priority: p2, copy_source: real}
+    states: [success, empty]
+    transitions:
+      - {to_screen: home, trigger: "anchor navigation between sections"}
+
+scenarios:
+  - id: buy-ticket
+    name: "Buy a ticket for the whole festival"
+    steps:
+      - {screen: home, action: "read the dateline", expect: "dates and place visible in the first viewport"}
+      - {screen: home, action: "follow the buy CTA", expect: "ticket tiers with prices"}
+      - {screen: home, action: "pick the full pass", expect: "the purchase flow opens"}
+    covers_screens: [home]
+  - id: check-lineup
+    name: "Check who plays on which day before deciding"
+    steps:
+      - {screen: home, action: "follow the programme link", expect: "days as separate blocks with their own dates"}
+      - {screen: home, action: "scan one day", expect: "headliner distinguishable from the rest"}
+    covers_screens: [home]
+  - id: sold-out
+    name: "The tier is gone"
+    steps:
+      - {screen: home, action: "look for the early-bird price", expect: "an explicit sold-out state — icon, text and colour, never colour alone"}
+    covers_screens: [home]
+
+information_pattern:
+  pattern: task-first
+  reason: "the visitor came to act (buy); the programme is the evidence that acting is worth it"
+  p1_rule: "dates and the buy action are above the fold; everything else argues for them"
+
+risks:
+  - description: "lineup density on a 390px viewport — a long day turns into a wall of names"
+    mitigation: "days are separate blocks with their own date; the lineup grid reflows to one column"
+  - description: "a sold-out tier read as a page defect rather than a state"
+    mitigation: "the tier stays in place with an explicit sold-out line [A.19]"

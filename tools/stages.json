@@ -1,0 +1,61 @@
+{
+  "schema": "dops-stages/1",
+  "note": "What a stage subagent needs — and nothing else. Context that grows monotonically across a run is paid on every turn that follows: by K3 the agent would otherwise still be carrying K0's brief, the skeleton, every token file and every screenshot. Each stage runs in a fresh context with the packet built from this spec, and returns its artifact plus a short summary. `dops handoff <stage>` is the packet.",
+  "budget_tokens": 4000,
+  "stages": {
+    "K0": {
+      "role": "discovery",
+      "job": "Turn the request into product + experience.primary_job. Lite (quick): three lines from the request, <=1 clarifying question, no competitor analysis. Full (standard/full): JTBD audience, >=3 neutralised competitor skeletons, positioning frames, content inventory.",
+      "contract_sections": ["meta", "product", "experience"],
+      "inputs": ["the user's request", "artifacts/brief.md (if present)"],
+      "outputs": ["contract: product, experience.primary_job", "artifacts/decision-log.md entry"],
+      "acceptance": "python3 tools/dops_handoff.py --check K0",
+      "do_not_read": ["visual/", "tokens", "quality reports", "pack manifests"]
+    },
+    "K1": {
+      "role": "structure",
+      "job": "Produce the information model and the NEUTRAL skeleton: real copy, grey graphite, data-priority, not_approved_visual_design marker. App profile fills domain_model, roles_permissions, user_flows, screen_modules, state_matrix, api_contract BEFORE screens. No taste questions, no visual decisions [A.3].",
+      "contract_sections": ["meta", "product", "experience", "content_model", "domain_model", "roles_permissions"],
+      "inputs": ["artifacts/ux/experience-model.yaml (if present)"],
+      "outputs": ["skeleton.html", "artifacts/ux/experience-model.yaml", "sitemap.mmd + sitemap.html"],
+      "acceptance": "bash .agents/skills/structure-builder/scripts/check-skeleton.sh",
+      "do_not_read": ["ban-list", "direction docs", "tokens", "knowledge notes on colour/type"]
+    },
+    "K2A": {
+      "role": "base skin",
+      "job": "Apply the profile's base skin (skins/base-site or skins/base-app): compile tokens, apply, zero taste questions, zero gate. The product becomes presentable and testable.",
+      "contract_sections": ["meta", "visual", "status"],
+      "inputs": ["skeleton.html", "skins/base-*/tokens.json"],
+      "outputs": ["artifacts/visual/tokens.css", "artifacts/visual/tokens.json", "status.base_skin_applied"],
+      "acceptance": "python3 tools/dops_verify.py --profile quick",
+      "do_not_read": ["divergence rules", "contact sheet protocol", "K0 research"]
+    },
+    "K2B": {
+      "role": "full visual work",
+      "job": "Calibration -> 2-3 constructed-divergence directions -> two-screen slice + blind contact sheet -> Gate 2 -> merge -> DTCG tokens -> scale. Never touches structure [A.7].",
+      "contract_sections": ["meta", "product", "experience", "visual", "gates"],
+      "inputs": ["skeleton.html", "artifacts/visual/tokens.json", "user references"],
+      "outputs": ["direction docs", "contact sheet", "artifacts/visual/tokens.*"],
+      "acceptance": "python3 .agents/skills/visual-director/scripts/check-divergence.py artifacts/design-contract.yaml",
+      "do_not_read": ["quality report", "pack manifests", "domain model"]
+    },
+    "K3": {
+      "role": "verification",
+      "job": "Run the floor as ONE command, read failures[], fix trivial mechanical issues, route substance back with exact values, write the quality report and the verdict. Never judge taste.",
+      "contract_sections": ["meta", "acceptance", "integrations", "gates", "status"],
+      "inputs": ["the built product", "artifacts/audit/floor.json"],
+      "outputs": ["artifacts/audit/quality-report.md", "contract status.verdict"],
+      "acceptance": "python3 tools/dops_verify.py --profile standard && python3 tools/dops_hash.py check",
+      "do_not_read": ["deterministic-floor.md registry", "direction docs", "K0 research", "raw screenshots beyond the shot manifest"]
+    },
+    "deliver": {
+      "role": "delivery report",
+      "job": "Plain-language summary: what was built, what the gates decided, what was verified, the measured cost against the estimate, what remains.",
+      "contract_sections": ["meta", "gates", "status", "cost", "acceptance"],
+      "inputs": ["artifacts/audit/floor.json", "artifacts/decision-log.md", "dops report"],
+      "outputs": ["the final message to the user"],
+      "acceptance": "python3 tools/dops_harvest.py --check && python3 tools/dops_trace.py cost",
+      "do_not_read": ["skeleton", "tokens", "direction docs"]
+    }
+  }
+}
