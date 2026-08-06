@@ -45,6 +45,8 @@ tools/dops pins classify         # [П-2] sort owner edits into 4 lanes before t
 tools/dops pins check            # [П-3] feasible? legal? new? — refuse with alternatives
 tools/dops panel emit            # [П-4] the owner's own knobs: bake the safe domain
 tools/dops panel apply delta.json # [П-4] the only door back into tokens.json
+tools/dops pins sweep            # [П-5] one intake pass: classify + check the new pins
+tools/dops pins apply --machine-only  # [П-5] execute what is machine-executable
 tools/dops stage start K1        # run instrumentation
 tools/dops stage end   K1
 tools/dops report                # per-stage wall-clock + instruction tokens
@@ -215,6 +217,46 @@ decision log.
 Not in v1, deliberately: font families (no `$meta.fontAlternates` in the skins
 yet), global spacing density (no semantic spacing aliases to move), and free
 input of any kind — ever.
+
+## Streaming intake
+
+The conveyor worked but it walked: Export dropped a file in `~/Downloads`,
+somebody moved it into the project, and the pins waited for the assistant to
+have a session. `dops pins sweep` is the whole intake pass in one command —
+take only the pins that are new, classify and check them in birth order, write
+the store, record the latencies, print one line:
+
+```
+sweep: 17 new → 13 checked, 0 clarify, 3 rejected, 1 duplicate (2 machine-executable)
+```
+
+One command rather than "classify, then check" from outside: two external
+calls mean two reads and two writes of the store and a split atomicity. The
+kruto lesson — a floor made of many invocations can be passed halfway —
+applies to intake too. Nothing new is a quiet `sweep: 0 new`; a watcher must
+not shout when it has nothing to say.
+
+Sweeping is idempotent, and a pin the owner answered comes round by itself:
+`dops pins answer` puts it back to `new`, so the next sweep re-classifies it
+with the new wording and keeps the old one in `supersedes`.
+
+`dops pins apply` executes the pins whose plan is **machine-executable**, one
+transaction per pin, through the same safety chain as the panel: a pointed
+patch, the compiler and D3 (or the copy-linter for text), a full rollback of
+that pin on any failure — its neighbours still land — and `apply_error` written
+into the pin. Two pins aimed at the same token are not both applied: the later
+one wins, the earlier becomes `superseded` with `superseded_by` and a sentence
+explaining why. Silently overwriting the owner's first instruction with their
+second is the failure this rule exists to prevent.
+
+**A plan is machine-executable only when every parameter was extracted in
+full** — a quoted `"old" → "new"` pair, or a named token and ramp step. Marking
+prose `machine: true` would fabricate executability, which is worse than an
+honest wait [A.6]. Measured share on the realistic 15-pin revision set:
+**0%** — owners do not write instructions that way. On a set seeded with two
+deliberately complete ones it is 12%. The number is a measurement, not a
+target, and it is the argument for keeping the assistant in the loop for lane
+A rather than the argument for a bigger extractor.
 
 ## Scan scope
 

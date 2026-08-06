@@ -617,7 +617,7 @@ STATUS_OF = {"pass": "checked", "clarify": "clarify", "rejected": "rejected",
              "duplicate": "duplicate"}
 
 
-def check(root, pin_id, build, as_json):
+def check(root, pin_id, build, as_json, only=None):
     path = os.path.join(root, PINS)
     if not os.path.isfile(path):
         print("pins: nothing classified yet — run `dops pins classify` first")
@@ -634,9 +634,17 @@ def check(root, pin_id, build, as_json):
     log_text = open(log_path, encoding="utf-8").read() if os.path.isfile(log_path) else ""
     allow_model = small_model_available()
 
+    # Duplicate detection is inherently cross-pin, so the walk covers the whole
+    # store in birth order even when only some pins are being (re)checked: a
+    # pin skipped here still registers its text, or checking pins one at a time
+    # would make every duplicate invisible.
+    wanted = set(only or ([pin_id] if pin_id else []))
     seen_hashes, checked = {}, 0
-    for pin in report.get("pins", []):
-        if pin_id and pin.get("id") != pin_id:
+    ordered = sorted(report.get("pins", []),
+                     key=lambda p: str(p.get("created_at") or ""))
+    for pin in ordered:
+        if wanted and pin.get("id") not in wanted:
+            q4_duplicate(pin, seen_hashes)
             continue
         pin["check"] = check_pin(pin, markup, norms, contract, log_text,
                                  seen_hashes, allow_model)
@@ -653,7 +661,7 @@ def check(root, pin_id, build, as_json):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(report, f, ensure_ascii=False, indent=2)
 
-    rows = [p for p in report["pins"] if not pin_id or p.get("id") == pin_id]
+    rows = [p for p in report["pins"] if not wanted or p.get("id") in wanted]
     if as_json:
         print(json.dumps({"checked": checked, "env": report["check_env"],
                           "pins": rows}, ensure_ascii=False, indent=2))
@@ -745,6 +753,19 @@ def metrics(root, as_json):
                 pass
     ab = [p for p in checked if p.get("lane") in ("A", "B")]
     ab_script = [p for p in ab if p["check"].get("checker") == "script"]
+    # [П-5] intake latency: born → checked. The watcher's target is ≤120s in an
+    # active revision; measured here rather than asserted anywhere.
+    intake = []
+    for p in checked:
+        born, done = p.get("created_at"), p["check"].get("checked_at")
+        if born and done:
+            try:
+                b = time.mktime(time.strptime(born[:19], "%Y-%m-%dT%H:%M:%S"))
+                d = time.mktime(time.strptime(done[:19], "%Y-%m-%dT%H:%M:%S"))
+                intake.append(max(0.0, d - b))
+            except ValueError:
+                pass
+    machine = [p for p in pins if (p.get("plan") or {}).get("machine")]
     out = {
         "pins_total": len(pins),
         "pins_checked": len(checked),
@@ -756,6 +777,13 @@ def metrics(root, as_json):
                                      round(100.0 * len(ab_script) / len(ab), 1) if ab else None,
         "alternatives_offered": sum(1 for p in checked if p["check"].get("alternatives")),
         "alternatives_accepted": sum(1 for p in checked if p.get("accepted_alternative")),
+        # П-5 — one metrics stream, not a second one
+        "intake_latency_seconds_median": round(sorted(intake)[len(intake) // 2], 1)
+                                         if intake else None,
+        "machine_plan_share": pct(pins, lambda p: (p.get("plan") or {}).get("machine")),
+        "auto_applied_share": pct(pins, lambda p: p.get("status") == "applied"),
+        "superseded_conflicts": sum(1 for p in pins if p.get("status") == "superseded"),
+        "apply_errors": sum(1 for p in pins if p.get("apply_error")),
     }
     if as_json:
         print(json.dumps(out, ensure_ascii=False, indent=2))

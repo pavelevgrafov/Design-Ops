@@ -24,6 +24,7 @@
 #   dops pins classify|list|stats         [П-2] sort owner edits into 4 lanes before the model
 #   dops pins check|answer|metrics        [П-3] the checker at the door: feasible? legal? new?
 #   dops panel emit|apply|metrics         [П-4] the owner's own knobs: safe domain in, delta out
+#   dops pins sweep|apply                 [П-5] streaming intake; execute what is machine-executable
 #   dops report                         stage timings + instruction tokens
 #   dops cost [--write]                 measured cost.actual for the contract
 #   dops guard [--diff|--staged|--since <ref>|<file>...]  pre-edit sentinel for verified rules (A.22, A.24)
@@ -52,7 +53,7 @@ PROGRESS="$(cd "$HERE/.." && pwd)/.agents/skills/pipeline-orchestrator/scripts/p
 usage() {
   # the whole usage block, not the first half of it: a help text that stops at
   # `dops status` hides the checkpoints, the control queue and the pins
-  sed -n '10,33p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '10,34p' "$0" | sed 's/^# \{0,1\}//'
 }
 
 cmd="${1:-}"
@@ -132,6 +133,7 @@ case "$cmd" in
     "$PY" "$HERE/dops_pins.py" --self-test || rc=1
     "$PY" "$HERE/dops_pins_check.py" --self-test || rc=1
     "$PY" "$HERE/dops_panel.py" --self-test || rc=1
+    "$PY" "$HERE/dops_pins_sweep.py" --self-test || rc=1
     "$PY" "$HERE/dops_verify.py" --audit-registry || rc=1
     exit $rc
     ;;
