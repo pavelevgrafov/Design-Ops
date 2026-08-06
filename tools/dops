@@ -26,6 +26,8 @@
 #   dops pins sweep|apply                 [П-5] streaming intake; execute what is machine-executable
 #   dops pins feed [--json]               [П-6] the edits feed: summary + a row per pin
 #   dops skin darkramp [--check]          [Т-1] regenerate the dark ramps from $meta.darkModel
+#   dops plan emit --route R [--with-k2b] [У-6] the decision schedule: what it costs, when you are needed
+#   dops plan show                        [У-6] the plan against the measured facts
 #   dops status [--json]                  pulse; --json adds plan, checkpoints, queue, pins
 #   dops report                         stage timings + instruction tokens
 #   dops cost [--write]                 measured cost.actual for the contract
@@ -55,7 +57,7 @@ PROGRESS="$(cd "$HERE/.." && pwd)/.agents/skills/pipeline-orchestrator/scripts/p
 usage() {
   # the whole usage block, not the first half of it: a help text that stops at
   # `dops status` hides the checkpoints, the control queue and the pins
-  sed -n '10,36p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '10,38p' "$0" | sed 's/^# \{0,1\}//'
 }
 
 cmd="${1:-}"
@@ -104,6 +106,9 @@ case "$cmd" in
   skin)
     exec "$PY" "$HERE/dops_skin.py" "$@"
     ;;
+  plan)
+    exec "$PY" "$HERE/dops_plan.py" "$@"
+    ;;
   stage)
     sub="${1:?usage: dops stage start|end|mark|checkpoint <name>}"; shift
     if [ "$sub" = "checkpoint" ]; then
@@ -122,7 +127,12 @@ case "$cmd" in
         exec "$PY" "$HERE/dops_feed.py" status "$@"
       fi
     done
-    exec "$PY" "$PROGRESS" status "$@"
+    "$PY" "$PROGRESS" status "$@"; rc=$?
+    # [У-6] one line of schedule under the pulse: where the run is against its
+    # own plan, and when the owner is next needed. Silent without a plan, and
+    # it never covers for a stale pulse — that line stays exactly as it was.
+    "$PY" "$HERE/dops_plan.py" line "$@" 2>/dev/null
+    exit $rc
     ;;
   report)
     exec "$PY" "$HERE/dops_trace.py" report "$@"
@@ -150,6 +160,7 @@ case "$cmd" in
     "$PY" "$HERE/dops_feed.py" --self-test || rc=1
     "$PY" "$HERE/dops_color.py" --self-test || rc=1
     "$PY" "$HERE/dops_skin.py" --self-test || rc=1
+    "$PY" "$HERE/dops_plan.py" --self-test || rc=1
     "$PY" "$HERE/dops_verify.py" --audit-registry || rc=1
     exit $rc
     ;;

@@ -49,6 +49,8 @@ tools/dops pins sweep            # [П-5] one intake pass: classify + check the 
 tools/dops pins apply --machine-only  # [П-5] execute what is machine-executable
 tools/dops pins feed --json      # [П-6] the whole revision picture in one call
 tools/dops status --json         # [П-6] pulse + plan + checkpoints + queue + pins
+tools/dops plan emit --route starter_first  # [У-6] the decision schedule
+tools/dops plan show             # [У-6] the plan against the measured facts
 tools/dops skin darkramp         # [Т-1] regenerate the dark tones from $meta.darkModel
 tools/dops skin darkramp --check # [Т-1] D.40: a hand-edited dark tone fails the build
 tools/dops stage start K1        # run instrumentation
@@ -223,6 +225,41 @@ decision log.
 Not in v1, deliberately: font families (no `$meta.fontAlternates` in the skins
 yet), global spacing density (no semantic spacing aliases to move), and free
 input of any kind — ever.
+
+## The decision schedule
+
+`meta.run_plan` was a contract field with no mechanism behind it (У-6), so the
+honest answer to the only two questions the owner actually has — *how long,
+and when will you need me?* — was a guess written in prose.
+
+`dops plan emit --route <r>` computes it instead. Two rules carry the weight:
+
+- **the plan is emitted, never authored.** Which checkpoints a route passes is
+  not declared in the route table at all: it already lives in
+  `checkpoint-registry.json` as a closed set, and a second copy of a closed
+  set is the drift [A.10] exists to prevent. `run-routes.json` adds only what
+  the registry does not know — what each checkpoint costs and how much of the
+  owner's attention it asks for.
+- **a measured number and an estimate never look alike.** Every step carries
+  `source`, always. It reads `estimate` until a stage has three closed
+  measurements in the project's own trace, `measured` after — with the sample
+  count beside it. Silently promoting a guess into a fact would make the plan
+  less trustworthy the more it is used.
+
+The plan is written into the contract as a pointed text patch, so the comments
+that carry the reasoning survive; emitting twice replaces the plan rather than
+stacking two. `dops status` gains one line under the pulse —
+
+```
+status: alive | stage K2A (stage finished) | pulse age 0.7 min | ...
+  K2A, 2.0/10 min; next time you are needed: k3-report (~3 min of your attention, in roughly 12 min)
+```
+
+— and the fact half of it comes from the trace at read time, never from a copy
+stored back in the contract: `dops stage end` is already the one writer of
+that measurement. The line is an addition to the pulse, never a replacement:
+a stale pulse still reads as a silent incident with a plan in place, and a
+self-test probe holds that.
 
 ## The semantic layer under guard
 
