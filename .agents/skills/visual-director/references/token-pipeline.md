@@ -73,9 +73,17 @@ aliases over the modular scale), `font.weight`, `font.tracking`,
 `elevation` (dark state overlays). New semantic groups: `textPrimary/
 Secondary/Tertiary` (three text tiers), `semanticError/Success/Warning/
 Info`, `shadow.*`, `radius.*`, `motion.*`, plus a full `semantic.dark`
-layer (solid pre-computed values from the overlay model — text 87/60/38%
-over #121212; sources: knowledge/dark-theme-rules, knowledge/text-hierarchy-tiers,
+layer (sources: knowledge/dark-theme-rules, knowledge/text-hierarchy-tiers,
 knowledge/motion-budgets, knowledge/modular-type-scale, knowledge/spacing-8pt-grid).
+
+Since v7.2 (Т-1) the dark layer is **declared, not authored**: the overlay
+model lives in `$meta.darkModel` (base surface, emphasis ladder, elevation
+ladder, accent transform), `dops skin darkramp` generates
+`primitive.color.darkInk / darkSurface / accentDark` from it, and
+`semantic.dark.color.*` references those tones. A tone edited by hand fails
+D.40 — the model and the values can no longer drift apart, which is what the
+prose version of this paragraph ("text 87/60/38% over #121212") could not
+prevent. Change taste in the model, never in a tone.
 
 4. **Component** (`component.*`, v7.0): per-element bindings
    (`button.primaryBg`, `card.radius`, `input.focusRing`). Component

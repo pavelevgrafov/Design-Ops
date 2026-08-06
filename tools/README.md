@@ -49,6 +49,8 @@ tools/dops pins sweep            # [П-5] one intake pass: classify + check the 
 tools/dops pins apply --machine-only  # [П-5] execute what is machine-executable
 tools/dops pins feed --json      # [П-6] the whole revision picture in one call
 tools/dops status --json         # [П-6] pulse + plan + checkpoints + queue + pins
+tools/dops skin darkramp         # [Т-1] regenerate the dark tones from $meta.darkModel
+tools/dops skin darkramp --check # [Т-1] D.40: a hand-edited dark tone fails the build
 tools/dops stage start K1        # run instrumentation
 tools/dops stage end   K1
 tools/dops report                # per-stage wall-clock + instruction tokens
@@ -203,10 +205,12 @@ never computed in the browser**:
 
 A knob exists only for a variable the artefact actually uses, and only where
 the skin declares alternatives. Both absences are printed with their reason.
-That is why the dark layer gets a theme toggle but almost no colour knobs: its
-values are authored as literals on purpose ("dark is a separate design, not an
-inversion"), so there is no declared ramp for the emitter to draw from — and
-inventing one would be the emitter making design decisions.
+When П-4 shipped, that left the dark layer with a theme toggle and one colour
+knob: its values were authored as literals, so there was no declared ramp for
+the emitter to draw from — and inventing one would be the emitter making
+design decisions. Т-1 declared the ramp instead of relaxing the rule, and the
+same emitter now builds twelve dark colour knobs per flagship skin without a
+line of new code in this file. That is the shape of the rule working.
 
 `dops panel apply token-delta.json` is the only door into `tokens.json`, and
 it is five gates deep: the delta's sha256 must match the current skin, every
@@ -219,6 +223,41 @@ decision log.
 Not in v1, deliberately: font families (no `$meta.fontAlternates` in the skins
 yet), global spacing density (no semantic spacing aliases to move), and free
 input of any kind — ever.
+
+## The declared dark ramp
+
+`dops skin darkramp` (Т-1) is the answer to a comment that could not be
+checked. The dark layer used to be sixteen hand-written hexes under the
+sentence *"text 87/60/38% over #121212, action lightened 40% + desaturated"* —
+a model stated in prose, so nothing stopped the values and the sentence from
+drifting apart, and П-4 could offer no dark knob at all.
+
+The sentence is now `$meta.darkModel`:
+
+```json
+"darkModel": {
+  "base": "#121212",
+  "inkEmphasis": [100, 87, 60, 38, 24, 16, 12, 8],
+  "accent": { "lighten": 0.40, "desaturate": 0.35 },
+  "elevation": { "raised": 5, "overlay": 8, "modal": 11 }
+}
+```
+
+From those four numbers the generator writes `primitive.color.darkInk`,
+`darkSurface` and `accentDark`, and `semantic.dark.color.*` references them
+instead of carrying literals. Two rules keep it honest:
+
+- **the model is the only place taste lives.** `--check` recomputes every tone
+  and fails on any difference, so a hand-edited hex is no longer invisible;
+  that check is D.40 in the floor and therefore in CI. A skin that declares no
+  model passes without a claim rather than pretending to have verified one.
+- **the mapping stays a design decision.** That `inkMuted` is the 60% tier and
+  not the 38% one is authored in the skin — the generator only refuses to let
+  it be a literal.
+
+Colour maths lives in one module (`dops_color.py`), which imports WCAG and hex
+parsing from `check-contrast.py` rather than restating them. A second copy of a
+formula is drift the moment one of them is corrected [A.10].
 
 ## Streaming intake
 

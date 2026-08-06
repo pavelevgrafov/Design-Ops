@@ -146,18 +146,22 @@ def ramp_steps(doc, ramp_path):
 
 
 def resolved_colors(doc, theme):
-    """Every semantic colour token resolved to a literal, for one theme."""
-    base = node_at(doc, "semantic.color") or {}
+    """Every semantic colour token resolved to a literal, for one theme.
+
+    Since Т-1 a dark value is a reference into a generated ramp, not a hex, so
+    reading `$value` straight out of `semantic.dark.color` yields the string
+    `{primitive.color.darkInk.87}` — which no contrast formula can measure, and
+    every dark tone would silently fall back to its light twin. The skin's own
+    walker resolves both layers."""
+    norms = pins_check.Norms(doc)
+    names = set(node_at(doc, "semantic.color") or {})
+    if theme == "dark":
+        names |= set(node_at(doc, "semantic.dark.color") or {})
     out = {}
-    for name in base:
-        val = pins_check.Norms(doc).resolve_color(name)
+    for name in names:
+        val = norms.resolve_color(name, theme)
         if isinstance(val, str):
             out[name] = val
-    if theme == "dark":
-        dark = node_at(doc, "semantic.dark.color") or {}
-        for name, spec in dark.items():
-            if isinstance(spec, dict) and isinstance(spec.get("$value"), str):
-                out[name] = spec["$value"]
     return out
 
 
@@ -207,9 +211,9 @@ def colour_knobs(doc, theme, used, thresholds):
         declared = raw_value(doc, path)
         ramp = ramp_of(declared)
         if ramp is None:
-            # No declared ramp to draw from. In the dark theme every colour is
-            # authored as a literal by design ("dark is a separate design, not
-            # an inversion"), so it has no alternatives the emitter may invent.
+            # No declared ramp to draw from, so no alternatives the emitter may
+            # invent. Before Т-1 that covered the whole dark layer; now it is
+            # the honest signal that a skin has not declared its dark model.
             skipped.append({"path": path, "why": "value is a literal — no declared "
                                                  "ramp of alternatives"})
             continue
@@ -834,20 +838,39 @@ def self_test():
         cfg, _ = _cfg(tmp, artifact=_artifact(tmp, ALL_VARS + ["--border-subtle"]))
         if any(k["label"] == "borderSubtle" for k in cfg["knobs"]):
             problems.append("borderSubtle got a knob without a floor to verify it")
-        # The dark layer is authored as literals on purpose ("dark is a separate
-        # design, not an inversion"), so its text colours have no declared ramp
-        # and get no knob. The few dark tokens that DO reference a ramp
-        # (focusRing -> accent) are a different case and may have one.
+        # Т-1 made the dark layer declared, so the same rule that gave the light
+        # theme its knobs now gives the dark theme its own — with no change to
+        # this emitter. A dark token that stayed knobless after Т-1 is a defect
+        # of the declaration, not a property of dark themes.
         dark = {k["label"]: k for k in cfg["knobs"]
                 if k["kind"] == "color" and k["theme"] == "dark"}
-        invented = [n for n in dark if n in ("ink", "canvas", "inkMuted",
-                                             "textPrimary", "textSecondary",
-                                             "textTertiary", "canvasRaised")]
-        if invented:
-            problems.append("dark knobs invented for literal-valued tokens: %r"
-                            % invented)
-        if "focusRing" not in dark:
-            problems.append("no dark knob for focusRing, which does declare a ramp")
+        for name in ("ink", "canvas", "inkMuted", "textPrimary",
+                     "textSecondary", "textTertiary", "focusRing"):
+            if name not in dark:
+                problems.append("no dark knob for %s — the skin declares a ramp "
+                                "behind it [Т-1]" % name)
+        # ...and every tone offered there is re-measured here, from the floor's
+        # own thresholds rather than from the emitter's verdict: if the two ever
+        # disagree, the panel is offering something the floor would reject.
+        doc = json.load(open(os.path.join(tmp, "skins", "base-site", "tokens.json"),
+                             encoding="utf-8"))
+        thresholds = gate_thresholds()
+        pairs = [(p["foreground"], p["background"])
+                 for p in doc["$meta"]["contrastPairs"]]
+        resolved = resolved_colors(doc, "dark")
+        for name, knob in dark.items():
+            for opt in knob["options"]:
+                trial = dict(resolved)
+                trial[name] = opt["literal"]
+                for fg, bg in pairs:
+                    if name not in (fg, bg):
+                        continue
+                    r = pins_check.contrast_ratio(trial.get(fg), trial.get(bg))
+                    need = thresholds.get((fg, bg), 4.5)
+                    if r is not None and r < need:
+                        problems.append(
+                            "dark knob %s offers %s: %s/%s falls to %.2f:1 "
+                            "(need %s:1)" % (name, opt["literal"], fg, bg, r, need))
         if not any(k["kind"] == "theme-toggle" for k in cfg["knobs"]):
             problems.append("the skin has a dark layer but no theme toggle")
 

@@ -235,6 +235,7 @@ report and never block. Browser-dependent tests report explicit
 | D.36 copy audit | no corporate slop (EN+RU list) | 2 | `packs/copy-linter` |
 | D.37 token architecture | primitive → semantic → component refs only | 1 | `packs/token-validator` (+ compile-time A.21) |
 | D.38 seven states | idle/loading/skeleton/populated/empty/error/success per async module | 1 | `scripts/check-seven-states.py` + `packs/state-generator` |
+| D.40 dark ramp drift | every dark tone recomputes from `$meta.darkModel`; no dark role left as a literal | 1 | `tools/dops_skin.py darkramp --check` (Т-1) — a skin with no model passes without a claim |
 
 Verification packs (v7.0, registered in `packs/registry.yaml`):
 ai-look-detector, contrast-checker, token-validator, state-generator

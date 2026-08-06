@@ -383,6 +383,76 @@ for SKIN in base-site base-app; do
 done
 [ "$CPDRIFT" -eq 0 ] && ok "D3: every declared contrast pair is gated, both skins, both themes"
 
+# --- [Т-1] the declared dark ramp ----------------------------------------
+# The dark theme used to live in a comment ("87/60/38% over #121212") next to
+# sixteen literals nobody could check against it. Now the sentence is
+# $meta.darkModel, the literals are generated from it, and D.40 fails on any
+# tone that stopped matching. Three claims are worth CI time here: both skins
+# still render dark exactly as before, the dark layer holds no literal, and a
+# hand-edited tone is caught.
+OUT=$(python3 "$ROOT/tools/dops_skin.py" darkramp --all --check 2>&1); RC=$?
+[ "$RC" -eq 0 ] && ok "Т-1: both flagship skins match their declared dark model" \
+  || bad "Т-1 dark ramp drift: $(printf '%s' "$OUT" | grep -v '^OK' | head -2)"
+
+T1WORK=$(mktemp -d 2>/dev/null || mktemp -d -t t1)
+T1DRIFT=0
+for SKIN in base-site base-app; do
+  python3 - "$ROOT/skins/$SKIN/tokens.json" "$T1WORK/$SKIN.json" <<'T1PY'
+import json, sys
+doc = json.load(open(sys.argv[1], encoding="utf-8"))
+doc["primitive"]["color"]["darkInk"]["87"]["$value"] = "#e0e0e1"
+json.dump(doc, open(sys.argv[2], "w", encoding="utf-8"))
+T1PY
+  OUT=$(python3 "$ROOT/tools/dops_skin.py" darkramp --tokens "$T1WORK/$SKIN.json" --check 2>&1); RC=$?
+  [ "$RC" -eq 1 ] && has "e0e0e1" "$OUT" || { bad "Т-1: $SKIN accepted a hand-edited dark tone (rc=$RC)"; T1DRIFT=1; }
+done
+[ "$T1DRIFT" -eq 0 ] && ok "D.40: one channel off in one dark tone fails the build, both skins"
+
+# Visual continuity, measured rather than asserted. Every ink and surface tone
+# must land byte-identical on what the skin rendered before Т-1 — the emphasis
+# percentages were chosen to make that true. The two accent tokens are the
+# declared exception (§4 of the spec: the model wins over a hand-picked
+# literal), so they are checked for having moved TO the model, not for having
+# stayed — a silent accent is as much a defect as a moved ink.
+OUT=$(python3 - "$ROOT" <<'T1PY'
+import json, os, sys
+root = sys.argv[1]
+sys.path.insert(0, os.path.join(root, "tools"))
+import dops_panel as panel
+BEFORE = {"ink": "#e0e0e0", "inkMuted": "#a0a0a0", "textTertiary": "#6c6c6c",
+          "canvas": "#121212", "canvasRaised": "#1e1e1e",
+          "borderSubtle": "#2e2e2e", "textPrimary": "#e0e0e0",
+          "textSecondary": "#a0a0a0", "inkOnDark": "#e0e0e0",
+          "surfaceDark": "#121212", "actionPrimaryText": "#121212"}
+bad, knobs = 0, {}
+for skin in ("base-site", "base-app"):
+    doc = json.load(open(os.path.join(root, "skins", skin, "tokens.json"), encoding="utf-8"))
+    res = panel.resolved_colors(doc, "dark")
+    for name, was in BEFORE.items():
+        if res.get(name, "").lower() != was:
+            print("MOVED %s %s: %s -> %s" % (skin, name, was, res.get(name)))
+            bad = 1
+    ramps = doc["primitive"]["color"]
+    for name, ramp, tone in (("actionPrimary", "accentDark", "500"),
+                             ("focusRing", "accentDark", "300")):
+        want = ramps[ramp][tone]["$value"].lower()
+        if res.get(name, "").lower() != want:
+            print("UNDECLARED %s %s: %s is not %s.%s" % (skin, name, res.get(name), ramp, tone))
+            bad = 1
+    cfg = panel.build_config(doc, skin, None, "x")
+    knobs[skin] = sum(1 for k in cfg["knobs"]
+                      if k["kind"] == "color" and k["theme"] == "dark")
+    if knobs[skin] < 4:
+        print("KNOBLESS %s: %d dark colour knob(s)" % (skin, knobs[skin]))
+        bad = 1
+print("KNOBS %s" % json.dumps(knobs))
+sys.exit(bad)
+T1PY
+); RC=$?
+[ "$RC" -eq 0 ] \
+  && ok "Т-1: ink and surface render unchanged, accents follow the model, dark knobs appear ($(printf '%s' "$OUT" | grep KNOBS))" \
+  || bad "Т-1: $(printf '%s' "$OUT" | grep -E 'MOVED|UNDECLARED|KNOBLESS' | head -2)"
+
 # --- D.27 focus visible ---------------------------------------------------
 python3 "$QG/check-focus-visible.py" "$FIX/v7/focus-ok.css" >/dev/null 2>&1 \
   && ok "D.27 focus-visible: styled focus passes" \
