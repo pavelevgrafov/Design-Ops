@@ -510,6 +510,28 @@
       "fix_hint": "A component token may reference semantic only — never back down the chain [A.21]."
     },
     {
+      "id": "D.40",
+      "title": "Dark ramp matches the declared model",
+      "group": "tier1",
+      "lane": "fs",
+      "blocking": true,
+      "covers": [
+        "D.40"
+      ],
+      "cmd": [
+        "{python}",
+        "{tools}/dops_skin.py",
+        "darkramp",
+        "--tokens",
+        "{tokens_json}",
+        "--check"
+      ],
+      "needs": [
+        "tokens_json"
+      ],
+      "fix_hint": "The dark tones are generated from $meta.darkModel. Change the model and re-run `dops skin darkramp`; a tone edited by hand is drift [A.10]. A skin that declares no model passes without a claim."
+    },
+    {
       "id": "D.38",
       "title": "Seven states per async module",
       "group": "tier1",

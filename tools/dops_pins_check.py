@@ -180,17 +180,27 @@ class Norms(object):
                     out.append((key, px))
         return sorted(out, key=lambda kv: kv[1])
 
-    def resolve_color(self, name):
-        """semantic.color.<name>, following {primitive....} references."""
-        node = self._node(("semantic", "color")).get(name)
-        val = node.get("$value") if isinstance(node, dict) else None
+    def deref(self, val):
+        """Follow `{a.b.c}` until a literal, wherever in the tree it starts.
+
+        Т-1 made the dark layer references too, so "resolve a colour" stopped
+        being something only `semantic.color` needs. One walker, used by every
+        caller — the alternative is each caller growing its own [A.10]."""
         seen = 0
         while isinstance(val, str) and val.startswith("{") and seen < 8:
-            ref = val.strip("{}").split(".")
-            node = self._node(tuple(ref))
+            node = self._node(tuple(val.strip("{}").split(".")))
             val = node.get("$value") if isinstance(node, dict) else None
             seen += 1
         return val if isinstance(val, str) else None
+
+    def resolve_color(self, name, theme="light"):
+        """semantic.color.<name> (or its dark override), as a literal."""
+        node = None
+        if theme == "dark":
+            node = self._node(("semantic", "dark", "color")).get(name)
+        if not isinstance(node, dict):
+            node = self._node(("semantic", "color")).get(name)
+        return self.deref(node.get("$value") if isinstance(node, dict) else None)
 
     def gray_ramp(self):
         ramp = []
