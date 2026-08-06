@@ -1,4 +1,4 @@
-# AGENTS.md — Design Production (v7.0)
+# AGENTS.md — Design Production (v7.2)
 
 ## What this repository does
 
@@ -156,6 +156,7 @@ never a sequence of them:
 | `dops checkpoint publish\|decide` | a run with one window (the final report); now every artifact is published with the actions the owner may take on it |
 | `dops control issue\|apply` | the owner could change the product but not steer the run: speed up, pause, roll back, cut scope, go deeper — applied at control points, never mid-script |
 | `dops pins classify` | every edit cost the same and met the big model; now pins are sorted into 4 lanes first — 67% measured never reach it |
+| `dops pins check` | a bad edit was discovered after it was built; now it is refused at the door, with alternatives — 100% of a measured 15-pin set decided by script, zero model calls |
 | `dops stage start\|end <name>` / `dops cost --write` | prose in `cost.actual`; the script measures, the model does not narrate |
 
 The prose registry in `quality-guardian/references/deterministic-floor.md`

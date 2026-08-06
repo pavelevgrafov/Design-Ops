@@ -25,6 +25,15 @@ key screen × 3 viewports. Warnings logged, not blocking.
 actionPrimaryText/actionPrimary, inkOnDark/surfaceDark (+ dark mirrors).
 4.5:1 normal text, 3:1 large (≥24px / ≥18.66px bold) and non-text UI.
 
+`--tokens <tokens.json>` reports pairs the skin declares in
+`$meta.contrastPairs` that this gate does not measure. The two lists are two
+copies of the same geometry and they have already drifted: both flagship skins
+declare `textTertiary/canvasRaised`, which measures 3.39:1 — fine for UI
+chrome, short of the normal-text floor. Whether each such pair is normal text
+(4.5:1) or chrome (3:1) is a design call, so the flag reports it instead of
+gating on it. An undecided declaration is drift [A.10]; a threshold invented
+by a checker to make a failure disappear would be worse.
+
 ## D4 — Base text size. Blocking. Script.
 Body/base text ≥16px at all viewports (`check-typography.py` line D4).
 

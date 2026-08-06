@@ -22,6 +22,7 @@
 #   dops checkpoint publish|decide|list   [У-2] publish an artifact the owner can act on
 #   dops control issue|apply|list         [У-3] commands to the process, applied at control points
 #   dops pins classify|list|stats         [П-2] sort owner edits into 4 lanes before the model
+#   dops pins check|answer|metrics        [П-3] the checker at the door: feasible? legal? new?
 #   dops report                         stage timings + instruction tokens
 #   dops cost [--write]                 measured cost.actual for the contract
 #   dops guard [--diff|--staged|--since <ref>|<file>...]  pre-edit sentinel for verified rules (A.22, A.24)
@@ -48,7 +49,9 @@ fi
 PROGRESS="$(cd "$HERE/.." && pwd)/.agents/skills/pipeline-orchestrator/scripts/progress.py"
 
 usage() {
-  sed -n '3,20p' "$0" | sed 's/^# \{0,1\}//'
+  # the whole usage block, not the first half of it: a help text that stops at
+  # `dops status` hides the checkpoints, the control queue and the pins
+  sed -n '10,32p' "$0" | sed 's/^# \{0,1\}//'
 }
 
 cmd="${1:-}"
@@ -123,6 +126,7 @@ case "$cmd" in
     "$PY" "$HERE/dops_checkpoint.py" --self-test || rc=1
     "$PY" "$HERE/dops_control.py" --self-test || rc=1
     "$PY" "$HERE/dops_pins.py" --self-test || rc=1
+    "$PY" "$HERE/dops_pins_check.py" --self-test || rc=1
     "$PY" "$HERE/dops_verify.py" --audit-registry || rc=1
     exit $rc
     ;;

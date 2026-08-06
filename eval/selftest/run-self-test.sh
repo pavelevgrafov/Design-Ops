@@ -621,6 +621,45 @@ if [ -x "$DOPS" ]; then
   else
     bad "dops pins self-test (rc=$RC): $OUT"
   fi
+  # [П-3] the checker at the door: refusals must carry alternatives, dead
+  # selectors must ask, and lanes A/B must cost zero model calls.
+  OUT=$(cd "$ROOT" && python3 tools/dops_pins_check.py --self-test 2>&1); RC=$?
+  if [ "$RC" -eq 0 ]; then
+    ok "dops pins check: 10 probes (alternatives, questions, duplicates, script-only)"
+  else
+    bad "dops pins check self-test (rc=$RC): $OUT"
+  fi
+  # A refusal without an alternative is a wall. The validator must say so.
+  PINWORK=$(mktemp -d 2>/dev/null || mktemp -d -t pin)
+  printf '%s' '[{"target_selector":"#a","x":1,"y":2,"text":"t","at":"2026-08-06T09:00:00","check":{"verdict":"rejected","checked_at":"2026-08-06T09:01:00","checker":"script","reason":"r","alternatives":[]}}]' > "$PINWORK/wall.json"
+  OUT=$(python3 "$PO/annotations-log.py" "$PINWORK/wall.json" 2>&1); RC=$?
+  [ "$RC" -eq 1 ] && ok "П-3: a refusal without alternatives is rejected by the validator" \
+    || bad "П-3 accepted a refusal with no way out (rc=$RC): $OUT"
+  printf '%s' '[{"target_selector":"#a","x":1,"y":2,"text":"t","at":"2026-08-06T09:00:00","check":{"verdict":"rejected","checked_at":"2026-08-06T09:01:00","checker":"script","reason":"contrast 1.5:1","alternatives":["use #6e6a64"]}}]' > "$PINWORK/ok.json"
+  OUT=$(python3 "$PO/annotations-log.py" "$PINWORK/ok.json" 2>&1); RC=$?
+  [ "$RC" -eq 0 ] && ok "П-3: a negotiated refusal validates and reaches the decision log" \
+    || bad "П-3 rejected a well-formed refusal (rc=$RC): $OUT"
+
+  # [AC-23] the quick ceiling limits production, not inheritance.
+  ACWORK=$(mktemp -d 2>/dev/null || mktemp -d -t ac23)
+  mkdir -p "$ACWORK/artifacts/ux"
+  printf 'meta: {mode: quick, schema_version: "7.0"}\n' > "$ACWORK/artifacts/design-contract.yaml"
+  printf 'artifacts:\n  ux: {origin: inherited, source_starter: "landing-event"}\n' >> "$ACWORK/artifacts/design-contract.yaml"
+  OUT=$(python3 "$QG/validate-pipeline.py" "$ACWORK" 2>&1)
+  if has "ceiling violated" "$OUT"; then
+    bad "AC-23: an inherited starter model was counted as production"
+  else
+    ok "AC-23: an inherited experience model does not break the quick ceiling"
+  fi
+  printf 'meta: {mode: quick, schema_version: "7.0"}\n' > "$ACWORK/artifacts/design-contract.yaml"
+  printf 'artifacts:\n  ux: {origin: produced, source_starter: ""}\n' >> "$ACWORK/artifacts/design-contract.yaml"
+  OUT=$(python3 "$QG/validate-pipeline.py" "$ACWORK" 2>&1)
+  if has "ceiling violated" "$OUT"; then
+    ok "AC-23: a model produced inside a quick run still violates the ceiling"
+  else
+    bad "AC-23: silence bought an exemption — produced/absent origin let through"
+  fi
+
   # the always-on pin script must keep the v6 field names, or the existing
   # annotations validator stops reading its own artifacts
   GA="$ROOT/.agents/skills/pipeline-orchestrator/assets/gate-annotate.js"

@@ -9,7 +9,7 @@ Usage: python3 check-contrast.py [tokens.css] [--dark]
 Exit 0 = all pairs pass, 1 = failures printed.
 Stdlib only.
 """
-import argparse, re, sys
+import argparse, json, re, sys
 
 def parse_vars(css_text, scope_pat):
     m = re.search(scope_pat, css_text, re.S)
@@ -64,10 +64,34 @@ PAIRS = [
     ("--ink-on-dark", "--surface-dark", "text on dark", 4.5),
 ]
 
+
+def kebab(name):
+    return "--" + re.sub(r"([a-z0-9])([A-Z])", r"\1-\2", name).lower()
+
+
+def declared_pairs(tokens_json):
+    """`$meta.contrastPairs` is where the skin DECLARES its geometry (move 8).
+    This list and PAIRS above are two copies of the same idea, and two copies
+    drift — silently, which [A.10] calls a defect. Reporting the difference is
+    not the same as gating on it: which floor a newly-surfaced pair must meet
+    (4.5 normal text vs 3.0 large text and UI chrome) is a design decision,
+    and this script is not the place to make it. Report, then decide."""
+    try:
+        with open(tokens_json, encoding="utf-8") as f:
+            doc = json.load(f)
+    except (OSError, ValueError):
+        return None
+    return [(p.get("foreground"), p.get("background"))
+            for p in doc.get("$meta", {}).get("contrastPairs", [])
+            if p.get("foreground") and p.get("background")]
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("css", nargs="?", default="tokens.css")
     ap.add_argument("--dark", action="store_true", help="also check [data-theme=dark] scope")
+    ap.add_argument("--tokens", default=None,
+                    help="tokens.json — report pairs the skin declares in "
+                         "$meta.contrastPairs but this check never measures")
     args = ap.parse_args()
 
     try:
@@ -101,6 +125,34 @@ def main():
             print(f"[{scope_name}] {label}: {fg_name} on {bg_name} = {r:.2f}:1 (need {minimum}:1) — {status}")
             if r < minimum:
                 problems.append(f"[{scope_name}] {label} {r:.2f}:1 < {minimum}:1 ({fg_name} on {bg_name})")
+
+    if args.tokens:
+        declared = declared_pairs(args.tokens)
+        if declared is None:
+            print(f"note: could not read {args.tokens} — declared-pair report skipped")
+        else:
+            gated = {(fg, bg) for fg, bg, _l, _m in PAIRS}
+            light = scopes[0][1]
+            extra = 0
+            for fg, bg in declared:
+                if (kebab(fg), kebab(bg)) in gated:
+                    continue
+                fv, bv = light.get(kebab(fg)), light.get(kebab(bg))
+                if not fv or not bv:
+                    continue
+                frgb, brgb = to_rgb(fv), to_rgb(bv)
+                if frgb is None or brgb is None:
+                    continue
+                r = ratio(frgb, brgb)
+                extra += 1
+                verdict = "meets 4.5:1" if r >= 4.5 else (
+                    "large text / UI chrome only" if r >= 3.0 else "below 3:1")
+                print(f"declared-not-gated: {fg} on {bg} = {r:.2f}:1 — {verdict}")
+            if extra:
+                print(f"note: {extra} pair(s) declared in $meta.contrastPairs are "
+                      f"not part of this check's gate. Decide per pair whether it "
+                      f"is normal text (4.5:1) or UI chrome (3:1), then add it to "
+                      f"PAIRS — an undecided declaration is drift [A.10].")
 
     if checked == 0:
         print("FAIL: no contrast pairs could be checked (tokens missing?)")

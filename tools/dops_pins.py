@@ -28,6 +28,7 @@ Usage:
   dops pins classify [--root DIR] [--in annotations.json] [--json]
   dops pins list [--root DIR] [--lane A|B|C|D]
   dops pins stats [--root DIR]
+  dops pins check|answer|metrics ...   [П-3] the checker at the door
   dops pins --self-test
 
 Exit: 0 ok, 1 nothing classified / ambiguous pins need the owner, 2 usage.
@@ -170,6 +171,10 @@ def classify(root, in_path, as_json):
             "plan": plan,
             "why": why,
             "status": "triaged",
+            # carried, not dropped: П-3 measures revision latency from the
+            # moment the owner wrote the pin, and a lane report that forgets
+            # when the pin was born cannot answer "how long did this take you"
+            "created_at": p.get("created_at") or p.get("at") or "",
             "duplicate_of": p.get("duplicate_of"),
         })
 
@@ -280,6 +285,13 @@ def self_test():
 
 
 def main():
+    # П-3 lives in its own module: the sorting station and the checker are
+    # separate moves, and one file that did both would hide which of them a
+    # pin actually failed.
+    if len(sys.argv) > 1 and sys.argv[1] in ("check", "answer", "metrics"):
+        import dops_pins_check
+        return dops_pins_check.main()
+
     ap = argparse.ArgumentParser(add_help=True)
     ap.add_argument("command", nargs="?", choices=["classify", "list", "stats"])
     ap.add_argument("--root", default=".")

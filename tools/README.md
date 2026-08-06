@@ -42,6 +42,7 @@ tools/dops status                # current pulse; stale pulse = silent incident
 tools/dops checkpoint publish --id sitemap --artifact ... [--provisional]   # [У-2]
 tools/dops control issue --command speed_up      # [У-3] steer the run, not the product
 tools/dops pins classify         # [П-2] sort owner edits into 4 lanes before the model
+tools/dops pins check            # [П-3] feasible? legal? new? — refuse with alternatives
 tools/dops stage start K1        # run instrumentation
 tools/dops stage end   K1
 tools/dops report                # per-stage wall-clock + instruction tokens
@@ -138,6 +139,43 @@ The classifier is a word list, not a model: it has to be cheaper than the work
 it routes. Structure rules are checked before token rules, so "add a page
 about prices" is not mistaken for a colour edit. On a realistic 15-pin set,
 67% of edits never reach the big model.
+
+## The checker at the door
+
+`dops pins check` runs between sorting and execution, on each pin, asking four
+questions in a fixed order — cheap before expensive:
+
+1. **feasible** — does the selector still resolve in the current build?
+2. **norms** — is the value inside the declared ranges (type scale, 8pt
+   ladder, `$meta.contrastPairs` at 4.5:1)? does it ask for a tier-1 banned
+   pattern?
+3. **conflict** — does it contradict `scope.exclusions` or the decision log?
+4. **duplicate** — has the owner already said this?
+
+The ranges are read from the skin's `tokens.json` and the WCAG maths is
+imported from `check-contrast.py`; a second copy of either in the checker
+would be exactly the drift [A.10] forbids.
+
+Two rules make a refusal usable. **A refusal always carries alternatives** —
+"contrast falls to 1.54:1; use #6e6a64 (5.14:1), or darken the background, or
+carry the emphasis with weight" — and `annotations-log.py` fails a `rejected`
+verdict that arrives without a reason and at least one way out. And **a
+duplicate is questioned, never silently merged**: the owner wrote it twice for
+a reason.
+
+Cost: on the same 15-pin set, **15 of 15 pins were decided by script alone,
+zero model calls**; 4 became instant negotiations instead of work that would
+have been built and then thrown away. A small model may be consulted for two
+things only — an unresolvable target, and a semantic conflict with the
+decision log — through `$DOPS_SMALL_MODEL` (a command reading one JSON object
+on stdin, printing one JSON verdict on stdout). With no such command the
+script lane still runs and those pins go to the owner marked
+`checker_unavailable`: honest degradation [A.6], not a fabricated pass.
+
+`dops pins answer --pin ID --text "..."` puts the owner's reply back into the
+pin, keeps the old wording in `supersedes`, and sends it round for
+re-classification. `dops pins metrics` counts revision latency, refusal share
+and the script-only share.
 
 ## Scan scope
 

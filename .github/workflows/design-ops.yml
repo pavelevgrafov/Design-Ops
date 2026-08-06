@@ -67,16 +67,16 @@ jobs:
           yaml.safe_dump(vals, open("/tmp/e2e/values.yaml", "w"),
                          allow_unicode=True, sort_keys=False)
           PY
+          # The contract goes first so the injector can stamp the model's
+          # origin into it. AC-23 is now decided: the quick-mode ceiling limits
+          # what a run PRODUCES, not what a Verified Starter carries in — so
+          # this rehearsal stays in quick mode, which is the real starter_first
+          # case, and exercises the exemption end to end.
+          cp starters/landing-event/contract.yaml /tmp/e2e/artifacts/design-contract.yaml
           python3 starters/inject.py starters/landing-event /tmp/e2e/values.yaml \
-            --out /tmp/e2e/site --ux-out /tmp/e2e/artifacts/ux
-          # The mode belongs to the RUN, not to the starter: we are exercising
-          # the standard profile, and the project carries a UX model inherited
-          # from the starter. (Open doctrine question for the design side:
-          # does an INHERITED model count against the quick-mode ceiling AC-23?
-          # Producing one in quick mode is over-work; receiving one verified is
-          # the entire point of starter_first.)
-          sed 's/mode: quick/mode: standard/' starters/landing-event/contract.yaml \
-            > /tmp/e2e/artifacts/design-contract.yaml
+            --out /tmp/e2e/site --ux-out /tmp/e2e/artifacts/ux \
+            --contract /tmp/e2e/artifacts/design-contract.yaml
+          grep -q "origin: inherited" /tmp/e2e/artifacts/design-contract.yaml
           cp skins/base-site/tokens.json skins/base-site/tokens.css /tmp/e2e/artifacts/visual/
           cp skins/base-site/tokens.css /tmp/e2e/site/tokens.css
           sed -i 's|\.\./\.\./\.\./skins/base-site/tokens.css|tokens.css|' /tmp/e2e/site/index.html

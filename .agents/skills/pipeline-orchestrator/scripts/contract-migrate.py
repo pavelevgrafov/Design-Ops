@@ -62,6 +62,12 @@ V7_DEFAULTS = {
     ("status", "deliverable_blocked"): False,
     ("status", "lod"): 0,
     ("scope", "exclusions"): [],
+    # AC-23: the quick-mode ceiling limits PRODUCTION, not inheritance. An
+    # artifact that arrived from a Verified Starter cost this run zero turns,
+    # and forbidding it would mean starter_first must throw away the most
+    # valuable thing it carries. `origin` is what tells the two apart — absent
+    # or `produced` still violates the ceiling.
+    ("artifacts", "ux"): {"origin": "", "source_starter": ""},
     ("process",): {"checkpoints_log": "artifacts/checkpoints.jsonl",
                    "control_queue_log": "artifacts/control-queue.jsonl",
                    "announcements_log": "artifacts/announcements.jsonl"},
