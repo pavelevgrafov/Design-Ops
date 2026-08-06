@@ -93,3 +93,12 @@ prevent. Change taste in the model, never in a tone.
 
 Layer discipline is machine-enforced at compile time (A.21); see also the
 `token-validator` pack (D.37) for project-side verification.
+
+Since v7.2 (С-1) the discipline reaches the artefact as well: **markup uses the
+alias the skin declares, not the token behind it.** `semantic.radius.card`
+exists, so `var(--radius-card)` — not `var(--radius-md)`; `primitive.font.size.md`
+exists, so `var(--font-size-md)` — not `var(--font-scale-step1)`. D.39 builds
+that map from the skin's own declarations, so a primitive with no alias over it
+(`--space-*`, `--font-weight-*`) is never flagged: the check is silent exactly
+where the layer was never designed. D.41 keeps the compiled theme from
+outliving its source.

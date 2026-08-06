@@ -94,14 +94,68 @@ def uncamel(css_var):
     return parts[0] + "".join(p[:1].upper() + p[1:] for p in parts[1:])
 
 
+def _compile_tokens():
+    """compile-tokens.py owns the token -> CSS variable map. Importing it beats
+    mirroring it: this file used to carry its own copy for the semantic layer,
+    which was right until С-1 needed the primitive and aliased ones too."""
+    path = os.path.join(PKG_ROOT, ".agents", "skills", "visual-director",
+                        "scripts", "compile-tokens.py")
+    if not os.path.isfile(path):
+        return None
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("dops_compile_tokens", path)
+    mod = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(mod)
+    except Exception:
+        return None
+    return mod
+
+
+_CT = _compile_tokens()
+
+
 def css_var_for(path):
-    """Mirror of compile-tokens.css_name_for for the semantic layer."""
+    """Token path -> the CSS variable the compiler emits for it."""
+    if _CT is not None and hasattr(_CT, "var_name"):
+        return _CT.var_name(path)
     parts = path.split(".")
     if parts[0] == "semantic":
         parts = parts[1:]
     if parts and parts[0] == "color":
         parts = parts[1:]
     return "--" + "-".join(kebab(p) for p in parts)
+
+
+def tokens_referencing(doc, prefix):
+    """[(alias css var, the token it points at)] for every single-reference
+    token under `prefix`.
+
+    A knob has to know which variables it actually moves. After С-1 an artefact
+    writes `--font-size-md`, not `--font-scale-step1` — and the compiler
+    resolves the alias to a literal, so overriding only the step would leave a
+    knob that turns nothing. Worse than absent: the owner concludes the panel
+    is broken and stops trusting all of it."""
+    out = []
+
+    def walk(node, path):
+        if not isinstance(node, dict):
+            return
+        if "$value" in node:
+            val = node["$value"]
+            if isinstance(val, str):
+                m = re.fullmatch(r"\{(%s[A-Za-z0-9_.-]+)\}" % re.escape(prefix),
+                                 val.strip())
+                if m:
+                    out.append((css_var_for(".".join(path)), m.group(1)))
+            return
+        for key, child in node.items():
+            if key.startswith("$") or key == "comment":
+                continue
+            walk(child, path + [key])
+
+    walk(doc, [])
+    return out
 
 
 def kebab(s):
@@ -279,20 +333,32 @@ def candidate_passes(name, literal, resolved, pairs, thresholds):
 def scale_knob(doc, used):
     node = node_at(doc, "primitive.font.scale") or {}
     base = pins_check.to_px(node.get("step0", {}).get("$value")) or 16.0
+    # The steps themselves, plus every alias declared over them: after С-1 an
+    # artefact writes `--font-size-md`, not `--font-scale-step1`, and a knob
+    # that only looked for the raw name went blind on exactly the artefacts
+    # that follow the rule.
+    aliases = [(var, target.split(".")[-1])
+               for var, target in tokens_referencing(doc, "primitive.font.scale.")]
     vars_moved = ["--font-scale-%s" % kebab(s) for s in SCALE_STEPS]
+    vars_moved += [v for v, _step in aliases if v not in vars_moved]
     if used is not None and not any(v in used for v in vars_moved):
         return None, {"path": "primitive.font.scale",
-                      "why": "no --font-scale-* variable is used by the artefact"}
+                      "why": "neither the scale steps nor their aliases are used "
+                             "by the artefact"}
     current = node.get("ratio", {}).get("$value")
     options = []
     for ratio in SCALE_RATIOS:
         steps = {}
         for i, step in enumerate(SCALE_STEPS, start=-1):
             steps[step] = "%grem" % round(base * (ratio ** i) / 16.0, 3)
+        css = {"--font-scale-%s" % kebab(k): v for k, v in steps.items()}
+        # the compiler resolves an alias to a literal, so the alias needs the
+        # new value written into it too — not just the step it points at
+        for var, step in aliases:
+            if step in steps:
+                css[var] = steps[step]
         options.append({"value": {"ratio": ratio, "steps": steps},
-                        "label": "%s×" % ratio,
-                        "css": {"--font-scale-%s" % kebab(k): v
-                                for k, v in steps.items()}})
+                        "label": "%s×" % ratio, "css": css})
     return {
         "id": "type-scale", "label": "Типографическая шкала",
         "path": "primitive.font.scale", "css_var": vars_moved[0],

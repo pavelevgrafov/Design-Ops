@@ -62,7 +62,7 @@ requirement.
 - **[A.18]** Semantic HTML before ARIA; one h1; heading hierarchy continuous.  _(also checked: D.28)_
 - **[A.19]** Never colour alone: status = colour + icon + text.
 - **[A.20]** Mobile-first; components adapt, not pages; a breakpoint goes where the content breaks, not where a device is.
-- **[A.21]** Tokens flow primitive -> semantic -> component, never back down the chain.  _(also checked: D.37)_
+- **[A.21]** Tokens flow primitive -> semantic -> component, never back down the chain — and markup uses the alias the skin declares, not the token behind it.  _(also checked: D.37, D.39)_
 
 ## 3. Ban-list (defaults that read as "AI made this")
 
@@ -81,7 +81,7 @@ Each needs a written, direction-level justification to be used at all.
 
 ## 4. Enforced by the machine — do not re-read
 
-`dops verify` runs 23 checks covering D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D14, D15, D16, D17, D18, D19, D20, D21, D22, D23, D24, D.25, D.26, D.27, D.28, D.29, D.30, D.34, D.35, D.36, D.37, D.38. Invariants A.22, A.24 are fully machine-enforced — they are deliberately absent above.
+`dops verify` runs 29 checks covering D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11, D12, D13, D14, D15, D16, D17, D18, D19, D20, D21, D22, D23, D24, D.25, D.26, D.27, D.28, D.29, D.30, D.34, D.35, D.36, D.37, D.38, D.39, D.40, D.41. Invariants A.22, A.24 are fully machine-enforced — they are deliberately absent above.
 
 Fix routing: read `failures[]` from `artifacts/audit/floor.json`; each entry
 carries the failing output and a fix hint. The prose registry

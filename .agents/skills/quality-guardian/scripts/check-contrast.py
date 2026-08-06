@@ -69,6 +69,10 @@ PAIRS = [
     ("--text-primary", "--canvas", "text tier 1", 4.5),
     ("--text-secondary", "--canvas", "text tier 2", 4.5),
     ("--text-tertiary", "--canvas-raised", "text tier 3 (UI chrome)", 3.0),
+    # Eighth pair, declared in С-1 (Kimi's suggestion on the Т-1 review): focus
+    # visibility is non-text UI (SC 1.4.11), so 3:1 — the same class of gap as
+    # the tertiary tier, caught before it could hide anything rather than after.
+    ("--focus-ring", "--canvas", "focus ring (non-text)", 3.0),
 ]
 
 

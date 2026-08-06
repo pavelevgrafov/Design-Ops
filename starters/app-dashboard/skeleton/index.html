@@ -9,24 +9,24 @@
   body { margin: 0; font-family: var(--font-body); background: var(--canvas); color: var(--ink); line-height: 1.5; }
   .shell { display: grid; grid-template-columns: 14rem 1fr; min-height: 100vh; }
   aside { border-right: 1px solid var(--border-subtle); padding: var(--space-4); background: var(--canvas-raised); }
-  aside nav a { display: block; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); color: var(--ink-muted); text-decoration: none; margin-bottom: var(--space-1); }
+  aside nav a { display: block; padding: var(--space-2) var(--space-3); border-radius: var(--radius-card); color: var(--ink-muted); text-decoration: none; margin-bottom: var(--space-1); }
   aside nav a[aria-current] { color: var(--ink); background: var(--canvas); font-weight: 600; }
   main { padding: var(--space-6); }
-  h1 { font-size: var(--font-scale-step3); margin: 0 0 var(--space-6); }
+  h1 { font-size: var(--font-size-xl); margin: 0 0 var(--space-6); }
   .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: var(--space-4); margin-bottom: var(--space-6); }
-  .kpi { background: var(--canvas-raised); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: var(--space-4); }
-  .kpi b { display: block; font-size: var(--font-scale-step2); margin-top: var(--space-1); }
-  .kpi span { color: var(--ink-muted); font-size: var(--font-scale-step-1); }
+  .kpi { background: var(--canvas-raised); border: 1px solid var(--border-subtle); border-radius: var(--radius-card); padding: var(--space-4); }
+  .kpi b { display: block; font-size: var(--font-size-lg); margin-top: var(--space-1); }
+  .kpi span { color: var(--ink-muted); font-size: var(--font-size-xs); }
   table { width: 100%; border-collapse: collapse; background: var(--canvas-raised); }
   th, td { text-align: left; padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--border-subtle); }
-  .status { font-size: var(--font-scale-step-1); padding: 2px var(--space-2); border-radius: var(--radius-sm); background: var(--canvas); border: 1px solid var(--border-subtle); }
+  .status { font-size: var(--font-size-xs); padding: 2px var(--space-2); border-radius: var(--radius-control); background: var(--canvas); border: 1px solid var(--border-subtle); }
   form { margin-top: var(--space-6); max-width: 26rem; }
-  label { display: block; margin-top: var(--space-3); font-size: var(--font-scale-step-1); color: var(--ink-muted); }
-  input, select { width: 100%; padding: var(--space-2) var(--space-3); margin-top: var(--space-1); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font: inherit; background: var(--canvas-raised); color: var(--ink); }
+  label { display: block; margin-top: var(--space-3); font-size: var(--font-size-xs); color: var(--ink-muted); }
+  input, select { width: 100%; padding: var(--space-2) var(--space-3); margin-top: var(--space-1); border: 1px solid var(--border-subtle); border-radius: var(--radius-control); font: inherit; background: var(--canvas-raised); color: var(--ink); }
   input:focus-visible, select:focus-visible, button:focus-visible, aside nav a:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-  .error-text { color: #9c2b2b; font-size: var(--font-scale-step-1); margin-top: var(--space-1); }
-  button { margin-top: var(--space-4); background: var(--action-primary); color: var(--action-primary-text); border: 0; padding: var(--space-2) var(--space-6); border-radius: var(--radius-md); font: inherit; font-weight: 600; }
-  [data-state] { display: none; margin-top: var(--space-6); padding: var(--space-4); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--canvas-raised); }
+  .error-text { color: #9c2b2b; font-size: var(--font-size-xs); margin-top: var(--space-1); }
+  button { margin-top: var(--space-4); background: var(--action-primary); color: var(--action-primary-text); border: 0; padding: var(--space-2) var(--space-6); border-radius: var(--radius-card); font: inherit; font-weight: 600; }
+  [data-state] { display: none; margin-top: var(--space-6); padding: var(--space-4); border: 1px solid var(--border-subtle); border-radius: var(--radius-card); background: var(--canvas-raised); }
   [data-state].visible { display: block; }
 </style>
 </head>
@@ -57,7 +57,7 @@
       </tbody>
     </table>
     <form data-priority="p1" novalidate>
-      <h2 style="font-size: var(--font-scale-step1)">New order</h2>
+      <h2 style="font-size: var(--font-size-md)">New order</h2>
       <label>Customer <input required name="customer" aria-describedby="err-customer"></label>
       <span class="error-text" id="err-customer" hidden>Customer name is required.</span>
       <label>Total, zł <input required name="total" inputmode="decimal"></label>
