@@ -43,6 +43,8 @@ tools/dops checkpoint publish --id sitemap --artifact ... [--provisional]   # [�
 tools/dops control issue --command speed_up      # [У-3] steer the run, not the product
 tools/dops pins classify         # [П-2] sort owner edits into 4 lanes before the model
 tools/dops pins check            # [П-3] feasible? legal? new? — refuse with alternatives
+tools/dops panel emit            # [П-4] the owner's own knobs: bake the safe domain
+tools/dops panel apply delta.json # [П-4] the only door back into tokens.json
 tools/dops stage start K1        # run instrumentation
 tools/dops stage end   K1
 tools/dops report                # per-stage wall-clock + instruction tokens
@@ -176,6 +178,43 @@ script lane still runs and those pins go to the owner marked
 pin, keeps the old wording in `supersedes`, and sends it round for
 re-classification. `dops pins metrics` counts revision latency, refusal share
 and the script-only share.
+
+## The self-service panel
+
+`dops panel emit --skin <S> --artifact <page.html>` writes `panel-config.js`
+next to the artefact; with `assets/token-panel.js` embedded after it, the
+owner turns the parameters themselves — palette, type scale, line length,
+dark theme — and the page changes in the same second. No assistant, no model,
+no dev server. "Doing it" becomes "saw it and kept it".
+
+The load-bearing decision is that **the safe domain is baked at emit time,
+never computed in the browser**:
+
+- the WCAG formula lives in `check-contrast.py` and is imported, not retyped;
+  the thresholds come from D3's own table, including the tertiary tier at 3:1;
+- artefacts open from `file://`, where fetching the skin is blocked, so the
+  domain arrives as a `<script>`;
+- an unsafe value is not warned about, it is **unrepresentable** — it never
+  appears among the options, even if the JS has a bug.
+
+A knob exists only for a variable the artefact actually uses, and only where
+the skin declares alternatives. Both absences are printed with their reason.
+That is why the dark layer gets a theme toggle but almost no colour knobs: its
+values are authored as literals on purpose ("dark is a separate design, not an
+inversion"), so there is no declared ramp for the emitter to draw from — and
+inventing one would be the emitter making design decisions.
+
+`dops panel apply token-delta.json` is the only door into `tokens.json`, and
+it is five gates deep: the delta's sha256 must match the current skin, every
+path must be a knob and every value one of that knob's options, the patch is
+pointed text (the file's `comment` entries carry reasoning that a dump would
+erase), the compiler and D3 re-run afterwards, and **any failure restores the
+file in full**. Success records the new input hash [E.3] and one line in the
+decision log.
+
+Not in v1, deliberately: font families (no `$meta.fontAlternates` in the skins
+yet), global spacing density (no semantic spacing aliases to move), and free
+input of any kind — ever.
 
 ## Scan scope
 

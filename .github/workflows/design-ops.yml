@@ -9,9 +9,12 @@ name: Design-Ops Heavy Floor
 # So: the self-test is the toolkit's acceptance, and the end-to-end job
 # materialises a real project from a starter and runs the floor against THAT.
 
+# Feature branches are checked through their pull request, which is what the
+# branch protection on main actually requires; listing them here as well only
+# doubled every run. `push` stays for main itself.
 on:
   push:
-    branches: [main, speedup-waves-1-2-3]
+    branches: [main]
   pull_request:
     branches: [main]
   schedule:
@@ -85,6 +88,18 @@ jobs:
           cp skins/base-site/tokens.json skins/base-site/tokens.css /tmp/e2e/artifacts/visual/
           cp skins/base-site/tokens.css /tmp/e2e/site/tokens.css
           sed -i 's|\.\./\.\./\.\./skins/base-site/tokens.css|tokens.css|' /tmp/e2e/site/index.html
+      - name: Self-service panel on the real build
+        run: |
+          set -eux
+          python3 tools/dops_panel.py emit --skin base-site \
+            --artifact /tmp/e2e/site/index.html
+          # a config with no knobs would mean the emitter found nothing the
+          # artefact uses — silently useless, so assert it produced some
+          python3 -c "import json,re,sys; \
+            s=open('/tmp/e2e/site/panel-config.js',encoding='utf-8').read(); \
+            cfg=json.loads(s[s.index('{'):s.rstrip().rstrip(';').rindex('}')+1]); \
+            print('knobs:', len(cfg['knobs'])); sys.exit(0 if cfg['knobs'] else 1)"
+
       - name: Serve the build
         run: |
           cd /tmp/e2e/site && nohup python3 -m http.server 8901 >/dev/null 2>&1 &

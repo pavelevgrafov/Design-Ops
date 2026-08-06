@@ -534,6 +534,10 @@ fi
 printf '%s\n' "== self-test: browser smoke [TZ-2.2/2.3/3.1/3.2] =="
 
 if node -e "require.resolve('playwright')" >/dev/null 2>&1; then
+  # resolved once, passed explicitly: a runner written into a temp directory
+  # cannot resolve `playwright` from there — the defect that kept the whole
+  # browser lane from ever running
+  PW_PATH=$(node -e "console.log(require.resolve('playwright'))")
   PORT=$(( (RANDOM % 2000) + 8000 ))
   WORK=$(mktemp -d 2>/dev/null || mktemp -d -t selftest)
   (cd "$FIX/site" && python3 -m http.server "$PORT" >/dev/null 2>&1) &
@@ -615,6 +619,79 @@ if node -e "require.resolve('playwright')" >/dev/null 2>&1; then
     ok "D22: approve promotes the baseline, test green again"
   else
     bad "D22 approve path (rc=$RC): $OUT"
+  fi
+
+  # [П-4] the panel is a browser asset, so its two claims are checked in a
+  # browser: a knob actually moves the variable, and a page without a config
+  # is left completely alone. Three assertions, not a laboratory.
+  PANWORK=$(mktemp -d 2>/dev/null || mktemp -d -t pan)
+  mkdir -p "$PANWORK/site"
+  cp "$ROOT/skins/base-site/tokens.css" "$PANWORK/site/tokens.css"
+  cat > "$PANWORK/site/index.html" <<'PANHTML'
+<!doctype html><html><head><link rel="stylesheet" href="tokens.css">
+<style>body{background:var(--canvas);color:var(--ink);max-width:var(--measure-body)}</style>
+</head><body><h1>panel smoke</h1>
+<script src="./panel-config.js"></script>
+<script src="./token-panel.js"></script>
+</body></html>
+PANHTML
+  cp "$ROOT/.agents/skills/pipeline-orchestrator/assets/token-panel.js" "$PANWORK/site/"
+  python3 "$ROOT/tools/dops_panel.py" emit --skin base-site \
+    --artifact "$PANWORK/site/index.html" > /dev/null 2>&1
+  cat > "$PANWORK/smoke.cjs" <<'PANJS'
+const { chromium } = require(process.env.DOPS_PLAYWRIGHT);
+(async () => {
+  const dir = process.argv[2];
+  const b = await chromium.launch();
+  const p = await b.newPage();
+  const errs = [];
+  p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
+  await p.goto('file://' + dir + '/site/index.html');
+  const before = await p.evaluate(() =>
+    getComputedStyle(document.documentElement).getPropertyValue('--ink').trim());
+  const hasButton = await p.locator('#dops-panel-open').count();
+  await p.locator('#dops-panel-open').click();
+  const knob = await p.locator('[data-knob="color-ink-light"]').count();
+  // the FIRST option: the options are the ramp in order, so the last one is
+  // usually the current value, and picking the current value is correctly a
+  // no-op — that would test nothing
+  await p.locator('[data-knob="color-ink-light"]').nth(0).click();
+  const after = await p.evaluate(() =>
+    getComputedStyle(document.documentElement).getPropertyValue('--ink').trim());
+  await p.locator('[data-knob="theme"]').nth(1).click();
+  const theme = await p.evaluate(() =>
+    document.documentElement.getAttribute('data-theme'));
+  // reset must return to the compiled CSS with no reload
+  await p.locator('[data-act="reset"]').click();
+  const reset = await p.evaluate(() =>
+    getComputedStyle(document.documentElement).getPropertyValue('--ink').trim());
+  // a page with no config must get no button and no errors
+  await p.goto('file://' + dir + '/bare/index.html');
+  const bare = await p.locator('#dops-panel-open').count();
+  console.log(JSON.stringify({ hasButton, before, after, theme, reset, bare,
+                               errs: errs.length, knob }));
+  await b.close();
+})().catch(e => { console.error(String(e)); process.exit(1); });
+PANJS
+  mkdir -p "$PANWORK/bare"
+  cp "$ROOT/skins/base-site/tokens.css" "$PANWORK/bare/tokens.css"
+  cp "$ROOT/.agents/skills/pipeline-orchestrator/assets/token-panel.js" "$PANWORK/bare/"
+  printf '%s\n' '<!doctype html><html><head><link rel="stylesheet" href="tokens.css"></head><body><h1>bare</h1><script src="./token-panel.js"></script></body></html>' > "$PANWORK/bare/index.html"
+  OUT=$(DOPS_PLAYWRIGHT="$PW_PATH" node "$PANWORK/smoke.cjs" "$PANWORK" 2>&1); RC=$?
+  if [ "$RC" -ne 0 ]; then
+    bad "П-4 panel smoke crashed: $(printf '%s' "$OUT" | tail -1)"
+  else
+    python3 - "$OUT" <<'PANPY' && ok "П-4 panel: knob moves the variable, theme toggles, reset restores" || bad "П-4 panel smoke: $OUT"
+import json, sys
+d = json.loads(sys.argv[1])
+assert d["hasButton"] == 1, "no panel button on a page that has a config"
+assert d["knob"] >= 1, "no colour knob rendered"
+assert d["before"] and d["after"] and d["before"] != d["after"], "the knob moved nothing"
+assert d["theme"] == "dark", "the theme toggle did not set data-theme"
+assert d["reset"] == d["before"], "reset did not return to the compiled CSS"
+assert d["bare"] == 0, "a page without a config still grew a panel button"
+assert d["errs"] == 0, "the panel logged console errors"
+PANPY
   fi
 
   kill "$SRV" 2>/dev/null

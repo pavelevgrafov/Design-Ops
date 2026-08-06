@@ -292,6 +292,27 @@ flow" both ran the full cycle, and the big model met both. Now:
   estimate).
 - Duplicate pins are marked, never dropped: the owner wrote it twice for a
   reason.
+- **`tools/dops pins check` stands between sorting and doing.** Four questions
+  in a fixed order: does the selector still resolve, is the value inside the
+  declared ranges, does it contradict `scope.exclusions` or the decision log,
+  has the owner already said this. A refusal always carries alternatives —
+  `annotations-log.py` fails a `rejected` verdict that arrives without a
+  reason and a way out, because a wall is not a negotiation. Measured on the
+  same 15-pin set: **every pin decided by script, zero model calls.**
+
+- **The owner turns the parameters themselves.** `assets/token-panel.js` plus
+  a `panel-config.js` emitted by `tools/dops panel emit --skin <S> --artifact
+  <page.html>`: palette, type scale, line length, dark theme — the change is
+  visible in the same second, with no assistant in the loop. Embed it only
+  where compiled tokens exist; **no compiled tokens, no panel tag** (the JS
+  never guesses — without a config it renders nothing).
+  The safe domain is computed by the emitter, not in the browser: an unsafe
+  value is not warned about, it is absent from the list. `dops panel apply
+  token-delta.json` is the only door back into `tokens.json` — it refuses a
+  stale delta, refuses anything outside the emitted options, re-runs the
+  compiler and D3, and rolls the file back in full on any failure.
+  The panel covers **parameters** (lane A). Everything compositional stays
+  with the pins, always.
 
 - **Scope the change before doing it:** `tools/dops hash plan <changed-input>`
   prints exactly what must be recomputed, in derivation order, and what may
