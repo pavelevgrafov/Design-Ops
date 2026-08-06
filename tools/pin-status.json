@@ -1,0 +1,14 @@
+{
+  "comment": "The pin status taxonomy, declared once (П-6). Python reads this file; gate-annotate.js keeps its own literal because it must run from file:// with zero dependencies. The two are held together by a self-test that fails when they diverge — deliberate duplication with a matching test, never a third silent copy.",
+  "statuses": {
+    "new":        { "mark": "⚪", "waiting": false, "meaning": "written by the owner, not yet sorted" },
+    "triaged":    { "mark": "🔵", "waiting": false, "meaning": "sorted into a lane" },
+    "checked":    { "mark": "🔵", "waiting": false, "meaning": "passed the checker, waiting to be done" },
+    "clarify":    { "mark": "❓", "waiting": true,  "meaning": "the checker needs one word from the owner" },
+    "duplicate":  { "mark": "❓", "waiting": true,  "meaning": "said before — merge, or keep both?" },
+    "rejected":   { "mark": "🔴", "waiting": false, "meaning": "refused, with alternatives offered" },
+    "executing":  { "mark": "🟡", "waiting": false, "meaning": "being applied" },
+    "applied":    { "mark": "🟢", "waiting": false, "meaning": "done" },
+    "superseded": { "mark": "◌", "waiting": false, "meaning": "withdrawn by a later word from the owner" }
+  }
+}
