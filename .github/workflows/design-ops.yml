@@ -85,7 +85,11 @@ jobs:
             --out /tmp/e2e/site --ux-out /tmp/e2e/artifacts/ux \
             --contract /tmp/e2e/artifacts/design-contract.yaml
           grep -q "origin: inherited" /tmp/e2e/artifacts/design-contract.yaml
-          cp skins/base-site/tokens.json skins/base-site/tokens.css /tmp/e2e/artifacts/visual/
+          # all three files a real K2A leaves behind, not two of them:
+          # a materialisation thinner than the real thing makes the floor
+          # measure a project that never exists (D.41 caught this)
+          cp skins/base-site/tokens.json skins/base-site/tokens.css \
+             skins/base-site/tokens.theme.css /tmp/e2e/artifacts/visual/
           cp skins/base-site/tokens.css /tmp/e2e/site/tokens.css
           sed -i 's|\.\./\.\./\.\./skins/base-site/tokens.css|tokens.css|' /tmp/e2e/site/index.html
       - name: Self-service panel on the real build

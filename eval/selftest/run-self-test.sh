@@ -442,6 +442,19 @@ for SKIN in base-site base-app; do
 done
 [ "$D41BAD" -eq 0 ] && ok "D.41: both skins ship a fresh theme, and one edited line fails the build"
 
+# The Tailwind bridge is optional; the CSS is not. A project that never emits
+# a bridge must pass, and a project missing the CSS itself must not — the
+# post-merge run on main failed on exactly this over-reach, because the CI
+# materialisation copied two of the three files a real K2A leaves behind.
+D41OPT=$(mktemp -d 2>/dev/null || mktemp -d -t d41o)
+cp "$ROOT/skins/base-site/tokens.json" "$ROOT/skins/base-site/tokens.css" "$D41OPT/"
+python3 "$VD/compile-tokens.py" "$D41OPT/tokens.json" --out-css "$D41OPT/tokens.css"   --out-tailwind "$D41OPT/tokens.theme.css" --verify >/dev/null 2>&1   && rm -f "$D41OPT/tokens.css"   && ! python3 "$VD/compile-tokens.py" "$D41OPT/tokens.json" --out-css "$D41OPT/tokens.css"        --out-tailwind "$D41OPT/tokens.theme.css" --verify >/dev/null 2>&1   && ok "D.41: a project with no Tailwind bridge passes, a project with no CSS does not"   || bad "D.41 treats the optional bridge and the required CSS alike"
+
+# ...and --verify refuses to guess its own paths, which is how a reviewer got a
+# false 'missing' on the day D.41 shipped.
+python3 "$VD/compile-tokens.py" "$ROOT/skins/base-site/tokens.json" --verify >/dev/null 2>&1
+[ "$?" -eq 2 ] && ok "D.41: --verify against default paths is refused, not answered"   || bad "D.41 --verify still compares against whatever is in the working directory"
+
 # --- [Т-1] the declared dark ramp ----------------------------------------
 # The dark theme used to live in a comment ("87/60/38% over #121212") next to
 # sixteen literals nobody could check against it. Now the sentence is

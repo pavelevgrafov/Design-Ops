@@ -149,13 +149,27 @@ def first_difference(have, want):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("tokens", nargs="?", default="tokens.json")
-    ap.add_argument("--out-css", default="tokens.css")
-    ap.add_argument("--out-tailwind", default="tokens.theme.css")
+    ap.add_argument("--out-css", default=None)
+    ap.add_argument("--out-tailwind", default=None)
     ap.add_argument("--check-only", action="store_true")
     ap.add_argument("--verify", action="store_true",
                     help="D.41: fail if the files on disk differ from what "
                          "this run would write")
     args = ap.parse_args()
+
+    # --verify against the DEFAULT paths compares the tokens with whatever
+    # happens to sit in the working directory, and reports "missing" when
+    # nothing does. That reads exactly like real staleness and is not — it cost
+    # a reviewer a diff hunt on the day D.41 shipped. The floor always passes
+    # explicit paths, so requiring them costs nothing and removes the false
+    # alarm entirely.
+    if args.verify and not (args.out_css and args.out_tailwind):
+        print("FAIL: --verify needs explicit --out-css and --out-tailwind. "
+              "Comparing against the defaults would measure the working "
+              "directory, not the theme that belongs to these tokens.")
+        return 2
+    args.out_css = args.out_css or "tokens.css"
+    args.out_tailwind = args.out_tailwind or "tokens.theme.css"
 
     problems = []
     try:
@@ -235,23 +249,37 @@ def main():
         return 1
 
     if args.verify:
-        stale = []
-        for path, want in ((args.out_css, css), (args.out_tailwind, tw)):
+        # The CSS is what the floor reads and what the browser renders, so its
+        # absence IS staleness. The Tailwind bridge is optional: a project that
+        # does not use Tailwind never emits one, and demanding it would fail
+        # every such project for a file it has no use for. Absent is reported,
+        # never silently treated as fresh [A.6]; present is always compared.
+        stale, notes = [], []
+        checked = 0
+        for path, want, required in ((args.out_css, css, True),
+                                     (args.out_tailwind, tw, False)):
             try:
                 with open(path, encoding="utf-8") as f:
                     have = f.read()
             except FileNotFoundError:
-                stale.append(f"{path}: missing — the theme was never compiled")
+                if required:
+                    stale.append(f"{path}: missing — the theme was never compiled")
+                else:
+                    notes.append(f"{path}: absent — no Tailwind bridge in this "
+                                 f"project, nothing to go stale")
                 continue
+            checked += 1
             if have != want:
                 stale.append(f"{path}: {first_difference(have, want)}")
+        for n in notes:
+            print(f"note: {n}")
         for s in stale:
             print(f"FAIL: {s}")
         if stale:
             print(f"\n{len(stale)} compiled file(s) no longer match {args.tokens} "
                   f"[D.41]. Re-run compile-tokens.py; never hand-edit the output.")
             return 1
-        print(f"OK: compiled theme matches {args.tokens} [D.41]")
+        print(f"OK: {checked} compiled file(s) match {args.tokens} [D.41]")
         return 0
 
     if args.check_only:
