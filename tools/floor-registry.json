@@ -510,6 +510,52 @@
       "fix_hint": "A component token may reference semantic only — never back down the chain [A.21]."
     },
     {
+      "id": "D.39",
+      "title": "Semantic layer: no artefact steps around a declared alias",
+      "group": "core",
+      "lane": "fs",
+      "blocking": true,
+      "covers": [
+        "D.39"
+      ],
+      "cmd": [
+        "{python}",
+        "{skills}/quality-guardian/scripts/check-semantic-layer.py",
+        "{src}",
+        "--tokens",
+        "{tokens_json}"
+      ],
+      "needs": [
+        "tokens_json"
+      ],
+      "fix_hint": "Use the alias the skin declares (semantic first). The rename resolves to the same value, so nothing moves — but the panel and every machine edit stop being blind. No alias declared means no finding: declare one if a primitive really is the right level."
+    },
+    {
+      "id": "D.41",
+      "title": "Compiled theme matches its tokens.json",
+      "group": "core",
+      "lane": "fs",
+      "blocking": true,
+      "covers": [
+        "D.41"
+      ],
+      "cmd": [
+        "{python}",
+        "{skills}/visual-director/scripts/compile-tokens.py",
+        "{tokens_json}",
+        "--out-css",
+        "{tokens_css}",
+        "--out-tailwind",
+        "{tokens_theme_css}",
+        "--verify"
+      ],
+      "needs": [
+        "tokens_json",
+        "tokens_css"
+      ],
+      "fix_hint": "Re-run compile-tokens.py; never hand-edit its output. A build artefact that outlived its source keeps claiming what the declaration no longer says [A.10]."
+    },
+    {
       "id": "D.40",
       "title": "Dark ramp matches the declared model",
       "group": "tier1",

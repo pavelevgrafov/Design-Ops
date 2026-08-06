@@ -224,6 +224,38 @@ Not in v1, deliberately: font families (no `$meta.fontAlternates` in the skins
 yet), global spacing density (no semantic spacing aliases to move), and free
 input of any kind — ever.
 
+## The semantic layer under guard
+
+`check-semantic-layer.py` (D.39, С-1) closes a defect П-4 found by failing:
+the panel could offer no radius knob on the reference landing, because the
+markup wrote `var(--radius-md)` — the primitive — while the knob moves
+`semantic.radius.card`. An artefact that steps around the declared layers
+makes every mechanism underneath it blind.
+
+The rule is read from the skin, never from a list of banned names:
+
+> a token whose `$value` is a single `{reference}` declares an alias — "prefer
+> me over the thing I point at". The thing it points at is therefore a raw
+> variable, and an artefact using it has an alternative to be offered.
+
+That phrasing carries П-4's honest absence in its shape. The reference landing
+writes `var(--space-4)` 36 times and D.39 says nothing, because no skin
+declares a spacing alias: the silence is the skin admitting the layer was
+never designed, not an exemption. Declare the alias and the check starts
+guarding it with no change to the code.
+
+Two boundaries are drawn by construction rather than by a list. Compiled
+themes are skipped by their generated-by marker, not by filename — primitives
+are legal in the emitter's own output, and a hand-written file that happens to
+be called `tokens.css` is still audited. And component aliases do **not** make
+semantic variables raw: `button.primaryBg -> semantic.color.actionPrimary`
+says the button binds to that role, not that nobody else may use it.
+
+`compile-tokens.py --verify` (D.41) is the companion: the compiled theme must
+match what its `tokens.json` compiles to. This is the fourth build artefact
+found outliving its source in one week — the same family as a drifted contrast
+pair.
+
 ## The declared dark ramp
 
 `dops skin darkramp` (Т-1) is the answer to a comment that could not be

@@ -13,33 +13,33 @@
   nav a:hover { color: var(--ink); }
   a:focus-visible, button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
   h1, h2, h3 { font-family: var(--font-display); line-height: var(--font-line-height-tight); }
-  h1 { font-size: var(--font-scale-step5); margin: var(--space-8) 0 var(--space-3); max-width: 16ch; }
-  .dateline { font-size: var(--font-scale-step2); color: var(--ink-muted); margin: 0 0 var(--space-2); }
+  h1 { font-size: var(--font-size-3xl); margin: var(--space-8) 0 var(--space-3); max-width: 16ch; }
+  .dateline { font-size: var(--font-size-lg); color: var(--ink-muted); margin: 0 0 var(--space-2); }
   .place { color: var(--ink-muted); max-width: var(--measure-body); }
-  .cta { display: inline-block; background: var(--action-primary); color: var(--action-primary-text); padding: var(--space-3) var(--space-6); border-radius: var(--radius-md); text-decoration: none; font-weight: var(--font-weight-semibold); margin-top: var(--space-5); min-height: 2.75rem; }
+  .cta { display: inline-block; background: var(--action-primary); color: var(--action-primary-text); padding: var(--space-3) var(--space-6); border-radius: var(--radius-card); text-decoration: none; font-weight: var(--font-weight-semibold); margin-top: var(--space-5); min-height: 2.75rem; }
   .cta:hover { background: var(--color-accent-700); }
   .cta-secondary { display: inline-block; margin-top: var(--space-5); margin-left: var(--space-4); color: var(--ink); text-decoration: underline; padding: var(--space-3) 0; min-height: 2.75rem; }
   section { margin-top: var(--space-12); }
-  h2 { font-size: var(--font-scale-step3); margin-bottom: var(--space-2); }
+  h2 { font-size: var(--font-size-xl); margin-bottom: var(--space-2); }
   .section-note { color: var(--ink-muted); margin: 0 0 var(--space-5); max-width: var(--measure-body); }
   .day { border-top: 1px solid var(--border-subtle); padding-top: var(--space-4); margin-top: var(--space-5); }
-  .day h3 { font-size: var(--font-scale-step1); margin: 0 0 var(--space-1); }
-  .day-date { color: var(--ink-muted); font-size: var(--font-scale-step-1); margin: 0 0 var(--space-3); }
+  .day h3 { font-size: var(--font-size-md); margin: 0 0 var(--space-1); }
+  .day-date { color: var(--ink-muted); font-size: var(--font-size-xs); margin: 0 0 var(--space-3); }
   .lineup { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: var(--space-2) var(--space-4); }
   .lineup li { padding: var(--space-2) 0; }
   .headliner { font-weight: var(--font-weight-semibold); }
   .tickets { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: var(--space-4); }
-  .ticket { border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: var(--space-5); }
-  .ticket h3 { font-size: var(--font-scale-step1); margin: 0 0 var(--space-1); }
-  .price { font-size: var(--font-scale-step3); margin: 0 0 var(--space-2); }
-  .ticket-note { color: var(--ink-muted); font-size: var(--font-scale-step-1); margin: 0 0 var(--space-4); }
-  .sold-out { color: var(--semantic-error); font-size: var(--font-scale-step-1); display: flex; align-items: center; gap: var(--space-1); }
+  .ticket { border: 1px solid var(--border-subtle); border-radius: var(--radius-card); padding: var(--space-5); }
+  .ticket h3 { font-size: var(--font-size-md); margin: 0 0 var(--space-1); }
+  .price { font-size: var(--font-size-xl); margin: 0 0 var(--space-2); }
+  .ticket-note { color: var(--ink-muted); font-size: var(--font-size-xs); margin: 0 0 var(--space-4); }
+  .sold-out { color: var(--semantic-error); font-size: var(--font-size-xs); display: flex; align-items: center; gap: var(--space-1); }
   .faq dt { font-weight: var(--font-weight-semibold); margin-top: var(--space-4); }
   .faq dd { margin: var(--space-1) 0 0; color: var(--ink-muted); max-width: var(--measure-body); }
   address { font-style: normal; color: var(--ink-muted); }
-  footer { margin-top: var(--space-12); padding-top: var(--space-4); padding-bottom: var(--space-6); border-top: 1px solid var(--border-subtle); color: var(--ink-muted); font-size: var(--font-scale-step-1); }
+  footer { margin-top: var(--space-12); padding-top: var(--space-4); padding-bottom: var(--space-6); border-top: 1px solid var(--border-subtle); color: var(--ink-muted); font-size: var(--font-size-xs); }
   @media (prefers-reduced-motion: no-preference) {
-    .cta { transition: background var(--motion-duration-fast) var(--motion-easing-out); }
+    .cta { transition: background var(--motion-fast) var(--motion-ease-standard); }
   }
 </style>
 </head>

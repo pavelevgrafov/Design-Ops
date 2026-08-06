@@ -143,6 +143,10 @@ def build_context(args, facts, caps):
     ctx["tokens_json"] = first_existing(root, [
         "artifacts/visual/tokens.json", "assets/tokens.json",
         "tokens.json"]) or ""
+    # D.41 compares both emitted files; the tailwind bridge sits beside the CSS
+    ctx["tokens_theme_css"] = (
+        os.path.join(os.path.dirname(ctx["tokens_css"]), "tokens.theme.css")
+        if ctx["tokens_css"] else "")
     ctx["experience_model"] = first_existing(root, [
         "artifacts/ux/experience-model.yaml"]) or ""
     ctx["src"] = root

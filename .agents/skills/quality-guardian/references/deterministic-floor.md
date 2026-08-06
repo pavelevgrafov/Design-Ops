@@ -213,7 +213,7 @@ Never silently convert unavailable to pass.
 | D23 | — (new in v6.0) | — (new in v6.0) |
 | D24 | — (new in v6.0) | — (new in v6.0) |
 
-## v7.0 extension (D.25–D.38, tiered)
+## v7.0 extension (D.25–D.41, tiered)
 
 Tier 1 failures block the verdict; Tier 2 are warnings in the quality
 report and never block. Browser-dependent tests report explicit
@@ -235,6 +235,8 @@ report and never block. Browser-dependent tests report explicit
 | D.36 copy audit | no corporate slop (EN+RU list) | 2 | `packs/copy-linter` |
 | D.37 token architecture | primitive → semantic → component refs only | 1 | `packs/token-validator` (+ compile-time A.21) |
 | D.38 seven states | idle/loading/skeleton/populated/empty/error/success per async module | 1 | `scripts/check-seven-states.py` + `packs/state-generator` |
+| D.39 semantic layer | an artefact must not use a token an alias is declared over; no alias, no finding | 1 | `scripts/check-semantic-layer.py` (С-1) — map built from the skin, never a ban-list |
+| D.41 stale compiled theme | `tokens.css` / `tokens.theme.css` must match what `tokens.json` compiles to | 1 | `compile-tokens.py --verify` (С-1) |
 | D.40 dark ramp drift | every dark tone recomputes from `$meta.darkModel`; no dark role left as a literal | 1 | `tools/dops_skin.py darkramp --check` (Т-1) — a skin with no model passes without a claim |
 
 Verification packs (v7.0, registered in `packs/registry.yaml`):

@@ -383,6 +383,65 @@ for SKIN in base-site base-app; do
 done
 [ "$CPDRIFT" -eq 0 ] && ok "D3: every declared contrast pair is gated, both skins, both themes"
 
+# --- [С-1] D.39: no artefact steps around a declared alias ---------------
+# Found by П-4: the panel could offer no radius knob on the reference landing,
+# because the markup wrote var(--radius-md) while the knob moves
+# semantic.radius.card. The rule is read from the skin, so silence where no
+# alias exists (--space-*) is the skin admitting the layer was never designed,
+# not an exemption.
+OUT=$(python3 "$QG/check-semantic-layer.py" --self-test 2>&1); RC=$?
+[ "$RC" -eq 0 ] && ok "D.39: alias map from declarations, semantic offered first, honest absence" \
+  || bad "D.39 self-test: $(printf '%s' "$OUT" | grep FAIL | head -1)"
+
+OUT=$(python3 "$QG/check-semantic-layer.py" "$ROOT/starters" \
+      --tokens "$ROOT/skins/base-site/tokens.json" 2>&1); RC=$?
+[ "$RC" -eq 0 ] && ok "D.39: all six shipped starters speak through the declared aliases" \
+  || bad "D.39: a starter bypasses the semantic layer: $(printf '%s' "$OUT" | grep FAIL | head -1)"
+
+# The acceptance of the move, and the reason it is not bureaucracy: after the
+# rebinding the panel must find the radius knob it could not find before.
+S1WORK=$(mktemp -d 2>/dev/null || mktemp -d -t s1)
+cp "$ROOT/starters/landing-event/skeleton/index.html" "$S1WORK/index.html"
+cp "$ROOT/skins/base-site/tokens.css" "$S1WORK/tokens.css"
+OUT=$(python3 "$ROOT/tools/dops_panel.py" emit --skin base-site \
+      --artifact "$S1WORK/index.html" --out "$S1WORK/panel-config.js" 2>&1)
+has "semantic-radius-card" "$OUT" && has "type-scale" "$OUT" \
+  && ok "С-1: the panel finds the radius knob and keeps the scale knob on a rebound starter" \
+  || bad "С-1: rebinding did not restore the panel's sight: $(printf '%s' "$OUT" | head -3)"
+
+# A scale knob that moves only the raw steps would turn nothing on an artefact
+# that speaks aliases — the compiler resolves an alias to a literal, so the
+# knob has to write both.
+python3 - "$S1WORK/panel-config.js" <<'S1PY' && ok "С-1: the scale knob writes the aliases, not only the raw steps" \
+  || bad "С-1: the scale knob would turn nothing on an aliased artefact"
+import json, sys
+s = open(sys.argv[1], encoding="utf-8").read()
+cfg = json.loads(s[s.index("{"):s.rstrip().rstrip(";").rindex("}") + 1])
+knob = next(k for k in cfg["knobs"] if k["id"] == "type-scale")
+css = knob["options"][0]["css"]
+sys.exit(0 if "--font-size-md" in css and "--font-scale-step1" in css else 1)
+S1PY
+
+# --- [С-1] D.41: a compiled theme must not outlive its source -------------
+# Fourth case of the same family in one week (drifted pairs, the unrun kruto
+# check, the stale skin CSS): a build artefact that keeps claiming what the
+# declaration no longer says.
+D41WORK=$(mktemp -d 2>/dev/null || mktemp -d -t d41)
+D41BAD=0
+for SKIN in base-site base-app; do
+  cp "$ROOT/skins/$SKIN/tokens.json" "$D41WORK/tokens.json"
+  cp "$ROOT/skins/$SKIN/tokens.css" "$D41WORK/tokens.css"
+  cp "$ROOT/skins/$SKIN/tokens.theme.css" "$D41WORK/tokens.theme.css"
+  python3 "$VD/compile-tokens.py" "$D41WORK/tokens.json" --out-css "$D41WORK/tokens.css" \
+    --out-tailwind "$D41WORK/tokens.theme.css" --verify >/dev/null 2>&1 \
+    || { bad "D.41: $SKIN ships a compiled theme that does not match its tokens.json"; D41BAD=1; }
+  printf '  --tampered: 1px;\n' >> "$D41WORK/tokens.css"
+  python3 "$VD/compile-tokens.py" "$D41WORK/tokens.json" --out-css "$D41WORK/tokens.css" \
+    --out-tailwind "$D41WORK/tokens.theme.css" --verify >/dev/null 2>&1 \
+    && { bad "D.41: $SKIN accepted a hand-edited compiled theme"; D41BAD=1; }
+done
+[ "$D41BAD" -eq 0 ] && ok "D.41: both skins ship a fresh theme, and one edited line fails the build"
+
 # --- [Т-1] the declared dark ramp ----------------------------------------
 # The dark theme used to live in a comment ("87/60/38% over #121212") next to
 # sixteen literals nobody could check against it. Now the sentence is
