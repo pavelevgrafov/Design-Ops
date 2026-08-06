@@ -157,6 +157,7 @@ never a sequence of them:
 | `dops control issue\|apply` | the owner could change the product but not steer the run: speed up, pause, roll back, cut scope, go deeper — applied at control points, never mid-script |
 | `dops pins classify` | every edit cost the same and met the big model; now pins are sorted into 4 lanes first — 67% measured never reach it |
 | `dops pins check` | a bad edit was discovered after it was built; now it is refused at the door, with alternatives — 100% of a measured 15-pin set decided by script, zero model calls |
+| `dops panel emit\|apply` | a parameter change needed the assistant; now the owner turns it and sees it in the same second. The safe domain is baked from the skin, so an unsafe value is unrepresentable rather than warned about; `apply` is the only door back into tokens.json |
 | `dops stage start\|end <name>` / `dops cost --write` | prose in `cost.actual`; the script measures, the model does not narrate |
 
 The prose registry in `quality-guardian/references/deterministic-floor.md`

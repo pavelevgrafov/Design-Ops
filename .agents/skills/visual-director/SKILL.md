@@ -119,6 +119,15 @@ For each direction (full rules: `references/divergence-rules.md`):
   variant, anonymized "Variant 1/2/3", randomized order recorded in
   `visual.gate2_randomization`, `gate-annotate.js` embedded for pin comments.
   Hand to the orchestrator (protocol: `references/gate2-protocol.md`).
+- **Self-service panel on every build that has compiled tokens.** After
+  `compile-tokens.py`, run `dops panel emit --skin <skin> --artifact <page>`
+  and embed both tags after the stylesheet:
+  `<script src="./panel-config.js"></script>` then
+  `<script src=".../assets/token-panel.js"></script>`. No compiled tokens →
+  emit nothing and embed nothing: the panel has no premise without them, and
+  a knob that turns nothing teaches the owner the whole panel is dead.
+  Re-emit whenever the skin changes — `dops panel apply` refuses a delta
+  collected against an older skin, by sha256.
 
 ### Phase 2 — merge, tokens, assets, scale (after Gate 2)
 
