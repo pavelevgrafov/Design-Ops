@@ -62,6 +62,13 @@ PAIRS = [
     ("--ink-muted", "--canvas", "muted text", 4.5),
     ("--action-primary-text", "--action-primary", "button text", 4.5),
     ("--ink-on-dark", "--surface-dark", "text on dark", 4.5),
+    # Declared in $meta.contrastPairs since v7.0 but never gated until v7.2 —
+    # the two lists had drifted. Thresholds decided 2026-08-06 (owner: Pavel):
+    # the text tiers are normal text; the tertiary tier is UI chrome, so it
+    # answers to the 3:1 floor, not 4.5:1.
+    ("--text-primary", "--canvas", "text tier 1", 4.5),
+    ("--text-secondary", "--canvas", "text tier 2", 4.5),
+    ("--text-tertiary", "--canvas-raised", "text tier 3 (UI chrome)", 3.0),
 ]
 
 

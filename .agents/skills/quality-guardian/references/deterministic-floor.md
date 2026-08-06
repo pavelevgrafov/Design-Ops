@@ -25,14 +25,20 @@ key screen × 3 viewports. Warnings logged, not blocking.
 actionPrimaryText/actionPrimary, inkOnDark/surfaceDark (+ dark mirrors).
 4.5:1 normal text, 3:1 large (≥24px / ≥18.66px bold) and non-text UI.
 
-`--tokens <tokens.json>` reports pairs the skin declares in
-`$meta.contrastPairs` that this gate does not measure. The two lists are two
-copies of the same geometry and they have already drifted: both flagship skins
-declare `textTertiary/canvasRaised`, which measures 3.39:1 — fine for UI
-chrome, short of the normal-text floor. Whether each such pair is normal text
-(4.5:1) or chrome (3:1) is a design call, so the flag reports it instead of
-gating on it. An undecided declaration is drift [A.10]; a threshold invented
-by a checker to make a failure disappear would be worse.
+v7.2 adds the three text tiers the skins had declared in
+`$meta.contrastPairs` since v7.0 but this gate never measured: `textPrimary`
+and `textSecondary` on canvas at 4.5:1, and **`textTertiary` on canvasRaised
+at 3:1** — the tertiary tier was ruled UI chrome, not normal text (owner:
+Pavel, 2026-08-06). It measures 3.39:1 light / 3.17:1 dark, so it clears the
+chrome floor and would have failed the text floor; the gap between what the
+skin declared and what the checker measured had been hiding that for two
+versions.
+
+`--tokens <tokens.json>` reports any pair a skin declares that this gate does
+not measure, and the self-test fails when that report is non-empty: two copies
+of the same geometry drift, and an undeclared drift is a defect [A.10]. A new
+pair must be given a floor deliberately — inventing a threshold that makes a
+failure disappear would be worse than the drift.
 
 ## D4 — Base text size. Blocking. Script.
 Body/base text ≥16px at all viewports (`check-typography.py` line D4).

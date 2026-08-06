@@ -366,6 +366,23 @@ OUT=$(python3 "$ROOT/packs/contrast-checker/scripts/check-all-pairs.py" --self-t
 [ "$RC" -eq 0 ] && ok "D.25 contrast-checker: both skins, both themes green" \
   || bad "D.25 contrast-checker self-test: $(printf '%s' "$OUT" | tail -1)"
 
+# --- D3 vs $meta.contrastPairs: one geometry, not two ---------------------
+# The skin DECLARES its pairs and check-contrast.py GATES them. Two copies of
+# the same list drift, and this one had: three declared pairs went unmeasured
+# for two versions, hiding a 3.39:1 tertiary tier. Now a declaration without a
+# floor fails the build [A.10].
+CPWORK=$(mktemp -d 2>/dev/null || mktemp -d -t cp)
+CPDRIFT=0
+for SKIN in base-site base-app; do
+  python3 "$VD/compile-tokens.py" "$ROOT/skins/$SKIN/tokens.json" \
+    --out-css "$CPWORK/$SKIN.css" --out-tailwind "$CPWORK/$SKIN.t.css" >/dev/null 2>&1
+  OUT=$(python3 "$QG/check-contrast.py" "$CPWORK/$SKIN.css" \
+        --tokens "$ROOT/skins/$SKIN/tokens.json" 2>&1); RC=$?
+  [ "$RC" -eq 0 ] || { bad "D3: $SKIN fails its own declared pairs: $(printf '%s' "$OUT" | grep FAIL | head -1)"; CPDRIFT=1; }
+  has "declared-not-gated" "$OUT" && { bad "D3: $SKIN declares a contrast pair the gate does not measure"; CPDRIFT=1; }
+done
+[ "$CPDRIFT" -eq 0 ] && ok "D3: every declared contrast pair is gated, both skins, both themes"
+
 # --- D.27 focus visible ---------------------------------------------------
 python3 "$QG/check-focus-visible.py" "$FIX/v7/focus-ok.css" >/dev/null 2>&1 \
   && ok "D.27 focus-visible: styled focus passes" \
