@@ -26,6 +26,10 @@
  *   status: new | triaged | checked | clarify | rejected | duplicate |
  *           executing | applied
  *
+ * The pin counter is a door, not a label: clicking it (or pressing `l`) opens
+ * the list of every pin — waiting ones first — and clicking a row scrolls to
+ * that pin and opens it. Understanding ten pins used to mean opening ten pins.
+ *
  * П-3 closes the loop: "Import" reads back the checked pins.json, so the
  * checker's answer appears ON the element the owner was looking at — a
  * refusal explained in a chat somewhere else is a refusal the owner has to
@@ -49,13 +53,17 @@
   /* The status ribbon (П-3 §1.3). A pin's own colour outranks its lane
    * colour: what the owner needs to see first is whether this one is waiting
    * on THEM. */
+  /* Kept in step with tools/pin-status.json by a self-test: this file has to
+   * run from file:// with zero dependencies, so it cannot import the
+   * taxonomy — the duplication is deliberate and the test is what holds it. */
   var STATUS_MARK = {
     'new': '⚪', triaged: '🔵', checked: '🔵', clarify: '❓',
-    rejected: '🔴', duplicate: '❓', executing: '🟡', applied: '🟢'
+    rejected: '🔴', duplicate: '❓', executing: '🟡', applied: '🟢',
+    superseded: '◌'
   };
   var STATUS_COLOR = {
     clarify: '#b45309', duplicate: '#b45309', rejected: '#b91c1c',
-    executing: '#a16207', applied: '#15803d'
+    executing: '#a16207', applied: '#15803d', superseded: '#9ca3af'
   };
   var NEEDS_OWNER = { clarify: 1, duplicate: 1 };
 
@@ -166,9 +174,84 @@
       document.body.appendChild(pin);
     });
     var waiting = list.filter(function (a) { return NEEDS_OWNER[a.status]; }).length;
-    document.getElementById('ga-count').textContent =
+    var count = document.getElementById('ga-count');
+    count.textContent =
       (list.length ? list.length + ' pin' + (list.length > 1 ? 's' : '') : 'no pins') +
       (waiting ? ' · ' + waiting + ' need you' : '');
+    count.style.cursor = list.length ? 'pointer' : 'default';
+    count.title = list.length ? 'Open the list (l)' : '';
+    if (feedOpen) renderFeed();
+  }
+
+  /* ---- the feed (П-6) -------------------------------------------------- */
+  /* Understanding ten pins used to mean opening ten pins one at a time. The
+   * counter becomes a door: every pin on one list, the ones waiting on the
+   * owner first, and every row clickable to the pin it is about. A status line
+   * that cannot be acted on is an illusion of control. */
+  var feedOpen = false;
+  var feed = document.createElement('div');
+  feed.id = 'ga-feed';
+  feed.style.cssText = 'position:fixed;right:12px;bottom:52px;z-index:99999;' +
+    'width:340px;max-height:60vh;overflow:auto;background:#fff;color:#111;' +
+    'border:1px solid #999;border-radius:8px;padding:8px 10px;display:none;' +
+    'box-shadow:0 6px 24px rgba(0,0,0,.18);font:13px system-ui,sans-serif;';
+  document.body.appendChild(feed);
+
+  function ageOf(a) {
+    var born = Date.parse(a.created_at || a.at || '');
+    if (!born) return '';
+    var min = Math.max(0, Math.round((Date.now() - born) / 60000));
+    return min < 60 ? min + 'м' : Math.round(min / 60) + 'ч';
+  }
+
+  function renderFeed() {
+    var list = load();
+    var rows = list.slice().sort(function (x, y) {
+      var wx = NEEDS_OWNER[x.status] ? 0 : 1, wy = NEEDS_OWNER[y.status] ? 0 : 1;
+      if (wx !== wy) return wx - wy;
+      return String(y.created_at || '').localeCompare(String(x.created_at || ''));
+    });
+    if (!rows.length) { feed.innerHTML = '<div style="color:#777">Пинов нет</div>'; return; }
+    var waiting = rows.filter(function (a) { return NEEDS_OWNER[a.status]; }).length;
+    var html = '<div style="display:flex;justify-content:space-between;' +
+      'align-items:center;margin-bottom:6px"><strong>' + rows.length + ' pin' +
+      (rows.length > 1 ? 's' : '') + (waiting ? ' · ' + waiting + ' ждут вас' : '') +
+      '</strong><button data-feed="close" style="border:0;background:none;' +
+      'cursor:pointer;font-size:16px">×</button></div>';
+    rows.forEach(function (a, i) {
+      var idx = list.indexOf(a);
+      html += '<div data-feed-row="' + idx + '" style="display:flex;gap:6px;' +
+        'padding:4px 2px;cursor:pointer;border-radius:4px;' +
+        (NEEDS_OWNER[a.status] ? 'background:#fff7ed;' : '') +
+        (i ? 'border-top:1px solid #f0efed;' : '') + '">' +
+        '<span>' + (STATUS_MARK[a.status] || '•') + '</span>' +
+        '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;' +
+        'white-space:nowrap">' + esc(String(a.text || '').slice(0, 60)) + '</span>' +
+        '<span style="color:#888;font-size:11px">' + ageOf(a) + '</span></div>';
+    });
+    feed.innerHTML = html;
+    feed.querySelectorAll('[data-feed-row]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        var a = load()[parseInt(el.getAttribute('data-feed-row'), 10)];
+        if (!a) return;
+        window.scrollTo({ top: Math.max(0, (a.y || 0) - 120), behavior: 'smooth' });
+        openPin(a, load());
+      });
+    });
+    var close = feed.querySelector('[data-feed="close"]');
+    if (close) close.addEventListener('click', function () { setFeed(false); });
+  }
+
+  function setFeed(on) {
+    feedOpen = on;
+    feed.style.display = on ? 'block' : 'none';
+    if (on) renderFeed();
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
   }
 
   function setArmed(on) {
@@ -180,10 +263,14 @@
   document.getElementById('ga-arm').addEventListener('click', function () {
     setArmed(!armed);
   });
+  document.getElementById('ga-count').addEventListener('click', function () {
+    if (load().length) setFeed(!feedOpen);
+  });
   document.addEventListener('keydown', function (e) {
     if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
     if (e.key === 'a') setArmed(!armed);
-    if (e.key === 'Escape') setArmed(false);
+    if (e.key === 'l') setFeed(!feedOpen);
+    if (e.key === 'Escape') { setArmed(false); setFeed(false); }
   });
 
   document.addEventListener('click', function (e) {

@@ -17,7 +17,6 @@
 #   dops hash record|check|plan <in>    [E.3] reuse and targeted invalidation by input hash
 #   dops stage start|end|mark <name>    run instrumentation: history + pulse in one call
 #   dops stage checkpoint "<name>"      publish an intermediate artifact (причал)
-#   dops status                         current pulse; stale pulse = silent incident
 #   dops announce --gate G --decision D --rollback "..."   [A.26] declare a machine decision
 #   dops checkpoint publish|decide|list   [У-2] publish an artifact the owner can act on
 #   dops control issue|apply|list         [У-3] commands to the process, applied at control points
@@ -25,6 +24,8 @@
 #   dops pins check|answer|metrics        [П-3] the checker at the door: feasible? legal? new?
 #   dops panel emit|apply|metrics         [П-4] the owner's own knobs: safe domain in, delta out
 #   dops pins sweep|apply                 [П-5] streaming intake; execute what is machine-executable
+#   dops pins feed [--json]               [П-6] the edits feed: summary + a row per pin
+#   dops status [--json]                  pulse; --json adds plan, checkpoints, queue, pins
 #   dops report                         stage timings + instruction tokens
 #   dops cost [--write]                 measured cost.actual for the contract
 #   dops guard [--diff|--staged|--since <ref>|<file>...]  pre-edit sentinel for verified rules (A.22, A.24)
@@ -53,7 +54,7 @@ PROGRESS="$(cd "$HERE/.." && pwd)/.agents/skills/pipeline-orchestrator/scripts/p
 usage() {
   # the whole usage block, not the first half of it: a help text that stops at
   # `dops status` hides the checkpoints, the control queue and the pins
-  sed -n '10,34p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '10,35p' "$0" | sed 's/^# \{0,1\}//'
 }
 
 cmd="${1:-}"
@@ -109,6 +110,14 @@ case "$cmd" in
     exec "$PY" "$HERE/dops_trace.py" "$sub" "$@"
     ;;
   status)
+    # --json is the machine snapshot (П-6): pulse plus the run plan, the
+    # checkpoints, the control queue and the pin summary, with every section
+    # always present. Without it, the same one-line pulse as before.
+    for a in "$@"; do
+      if [ "$a" = "--json" ]; then
+        exec "$PY" "$HERE/dops_feed.py" status "$@"
+      fi
+    done
     exec "$PY" "$PROGRESS" status "$@"
     ;;
   report)
@@ -134,6 +143,7 @@ case "$cmd" in
     "$PY" "$HERE/dops_pins_check.py" --self-test || rc=1
     "$PY" "$HERE/dops_panel.py" --self-test || rc=1
     "$PY" "$HERE/dops_pins_sweep.py" --self-test || rc=1
+    "$PY" "$HERE/dops_feed.py" --self-test || rc=1
     "$PY" "$HERE/dops_verify.py" --audit-registry || rc=1
     exit $rc
     ;;

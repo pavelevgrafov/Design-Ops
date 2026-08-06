@@ -694,6 +694,65 @@ assert d["errs"] == 0, "the panel logged console errors"
 PANPY
   fi
 
+  # [П-6] the feed inside the artefact: the counter is a door, waiting pins
+  # come first, and a row opens the pin it is about.
+  FEEDWORK=$(mktemp -d 2>/dev/null || mktemp -d -t feed)
+  cp "$ROOT/.agents/skills/pipeline-orchestrator/assets/gate-annotate.js" "$FEEDWORK/"
+  # charset declared: without it the browser decodes the markers as latin-1
+  # and the status ribbon turns to mojibake — the same defect D.28 catches in
+  # a real artefact
+  printf '%s\n' '<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>feed</title></head><body><main id="hero"><h1>feed</h1></main><script src="./gate-annotate.js"></script></body></html>' > "$FEEDWORK/index.html"
+  cat > "$FEEDWORK/feed.cjs" <<'FEEDJS'
+const { chromium } = require(process.env.DOPS_PLAYWRIGHT);
+(async () => {
+  const dir = process.argv[2];
+  const b = await chromium.launch();
+  const p = await b.newPage();
+  const errs = [];
+  p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
+  p.on('dialog', async d => { await d.dismiss(); });
+  await p.addInitScript(() => {
+    const now = new Date().toISOString();
+    localStorage.setItem('dops-pins:' + location.pathname, JSON.stringify([
+      { id: 'a-0001', selector: '#hero', x: 10, y: 20, text: 'применённый пин',
+        status: 'applied', lane: 'A', created_at: now, at: now },
+      { id: 'a-0002', selector: '#hero', x: 10, y: 40, text: 'ждёт ответа',
+        status: 'clarify', lane: 'A', created_at: now, at: now,
+        check: { verdict: 'clarify', question: 'какой элемент?' } },
+      { id: 'a-0003', selector: '#hero', x: 10, y: 60, text: 'снят поздним словом',
+        status: 'superseded', lane: 'A', created_at: now, at: now,
+        superseded_by: 'a-0002' }
+    ]));
+  });
+  await p.goto('file://' + dir + '/index.html');
+  const closed = await p.locator('#ga-feed').isVisible();
+  await p.locator('#ga-count').click();
+  const rows = await p.locator('[data-feed-row]').count();
+  const first = await p.locator('[data-feed-row]').first().innerText();
+  const marks = await p.locator('#ga-feed').innerText();
+  await p.keyboard.press('Escape');
+  const afterEsc = await p.locator('#ga-feed').isVisible();
+  console.log(JSON.stringify({ closed, rows, first, afterEsc, errs: errs.length,
+                               hasSuperseded: marks.indexOf('\u25cc') >= 0 }));
+  await b.close();
+})().catch(e => { console.error(String(e)); process.exit(1); });
+FEEDJS
+  OUT=$(DOPS_PLAYWRIGHT="$PW_PATH" node "$FEEDWORK/feed.cjs" "$FEEDWORK" 2>&1); RC=$?
+  if [ "$RC" -ne 0 ]; then
+    bad "П-6 feed smoke crashed: $(printf '%s' "$OUT" | tail -1)"
+  else
+    python3 - "$OUT" <<'FEEDPY' && ok "П-6 feed: counter opens the list, waiting first, superseded marked" || bad "П-6 feed smoke: $OUT"
+import json, sys
+d = json.loads(sys.argv[1])
+assert d["closed"] is False, "the feed was open before anyone asked for it"
+assert d["rows"] == 3, "the feed shows %s rows for 3 pins" % d["rows"]
+assert "ждёт ответа" in d["first"], "a waiting pin is not first: %r" % d["first"]
+assert d["hasSuperseded"], "the superseded marker is missing from the feed"
+assert d["afterEsc"] is False, "Esc did not close the feed"
+assert d["errs"] == 0, "the feed logged console errors"
+FEEDPY
+  fi
+
   kill "$SRV" 2>/dev/null
 else
   skip "browser smoke: playwright not resolvable by node (install per INSTALL.md; fs-level checks above already ran)"

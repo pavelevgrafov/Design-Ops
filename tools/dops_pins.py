@@ -30,6 +30,7 @@ Usage:
   dops pins stats [--root DIR]
   dops pins check|answer|metrics ...   [П-3] the checker at the door
   dops pins sweep|apply ...            [П-5] streaming intake and machine execution
+  dops pins feed [--json]              [П-6] the whole revision picture in one call
   dops pins --self-test
 
 Exit: 0 ok, 1 nothing classified / ambiguous pins need the owner, 2 usage.
@@ -372,6 +373,10 @@ def main():
     if len(sys.argv) > 1 and sys.argv[1] in ("sweep", "apply"):
         import dops_pins_sweep
         return dops_pins_sweep.main()
+    if len(sys.argv) > 1 and sys.argv[1] == "feed":
+        import dops_feed
+        sys.argv[1] = "pins"
+        return dops_feed.main()
 
     ap = argparse.ArgumentParser(add_help=True)
     ap.add_argument("command", nargs="?", choices=["classify", "list", "stats"])

@@ -47,6 +47,8 @@ tools/dops panel emit            # [П-4] the owner's own knobs: bake the safe d
 tools/dops panel apply delta.json # [П-4] the only door back into tokens.json
 tools/dops pins sweep            # [П-5] one intake pass: classify + check the new pins
 tools/dops pins apply --machine-only  # [П-5] execute what is machine-executable
+tools/dops pins feed --json      # [П-6] the whole revision picture in one call
+tools/dops status --json         # [П-6] pulse + plan + checkpoints + queue + pins
 tools/dops stage start K1        # run instrumentation
 tools/dops stage end   K1
 tools/dops report                # per-stage wall-clock + instruction tokens
@@ -257,6 +259,41 @@ honest wait [A.6]. Measured share on the realistic 15-pin revision set:
 deliberately complete ones it is 12%. The number is a measurement, not a
 target, and it is the argument for keeping the assistant in the loop for lane
 A rather than the argument for a bigger extractor.
+
+## The status feeds
+
+The statuses existed; the aggregation did not. To understand ten pins the
+owner had to open ten pins, and to understand the run they had to ask in chat
+— and a status re-request is an interruption, which is the thing this wave
+removes.
+
+`dops pins feed --json` is the whole revision picture in one call: a summary
+(waiting on owner, applied, rejected, superseded, in flight, apply errors,
+median latency born→classified→checked→applied) and one row per pin carrying
+its marker, its age, its last event and, when it is waiting, the question it
+is waiting on. `dops status --json` is the run: pulse, run plan, checkpoints,
+control queue, pin summary, and `pulse_freshness` — the share of the run
+during which the pulse was alive (81.1% on the reference run).
+
+Two promises hold the feeds together:
+
+- **A section with no data is empty, never missing.** A widget that has to
+  guess whether a key exists starts inventing meanings for its absence.
+- **A stale pulse says so.** `fresh: false` is reported, never hidden: data
+  from yesterday without a marker is worse than no widget at all.
+
+Medians skip pins that lack a timestamp instead of counting them as zero — an
+invented 0-second latency would make the run look better than it was. Nothing
+is folded twice: the checkpoint log is folded by `dops_checkpoint`, which owns
+that closed taxonomy, and the pin statuses are declared once in
+`tools/pin-status.json`. `gate-annotate.js` keeps its own copy of that
+taxonomy because it must run from `file://` with zero dependencies — the
+duplication is deliberate and a self-test fails the moment the two diverge.
+
+Inside the artefact the pin counter became a door: click it (or press `l`) and
+every pin is one list, the ones waiting on the owner first, each row clickable
+straight to its pin. A status line that cannot be acted on is an illusion of
+control.
 
 ## Scan scope
 

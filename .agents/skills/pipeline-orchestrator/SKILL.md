@@ -310,6 +310,16 @@ flow" both ran the full cycle, and the big model met both. Now:
   machine-executable** — so this is an accelerator for the explicit cases, not
   a replacement for the assistant on lane A.
 
+- **Two feeds instead of a status question.** `tools/dops pins feed --json`
+  gives the whole revision picture in one call (summary + a row per pin with
+  its marker, age, last event and the question it waits on);
+  `tools/dops status --json` gives the run — pulse, plan, checkpoints, control
+  queue, pin summary, `pulse_freshness`. Every section is always present, and
+  a stale pulse reports `fresh: false` rather than hiding: data from yesterday
+  without a marker is worse than no panel. Inside the artefact the pin counter
+  opens the same list (key `l`), waiting pins first, each row clickable to its
+  pin — **a status line without an action is an illusion of control.**
+
 - **The owner turns the parameters themselves.** `assets/token-panel.js` plus
   a `panel-config.js` emitted by `tools/dops panel emit --skin <S> --artifact
   <page.html>`: palette, type scale, line length, dark theme — the change is

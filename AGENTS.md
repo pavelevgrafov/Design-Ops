@@ -158,6 +158,7 @@ never a sequence of them:
 | `dops pins classify` | every edit cost the same and met the big model; now pins are sorted into 4 lanes first — 67% measured never reach it |
 | `dops pins check` | a bad edit was discovered after it was built; now it is refused at the door, with alternatives — 100% of a measured 15-pin set decided by script, zero model calls |
 | `dops pins sweep\|apply` | a pin waited for the assistant to have a session; now intake is one idempotent pass and the explicit instructions execute themselves, each in its own transaction |
+| `dops pins feed --json` / `dops status --json` | understanding ten pins meant opening ten pins, and understanding the run meant asking in chat; now both are one call each, with every section always present and a stale pulse marked, not hidden |
 | `dops panel emit\|apply` | a parameter change needed the assistant; now the owner turns it and sees it in the same second. The safe domain is baked from the skin, so an unsafe value is unrepresentable rather than warned about; `apply` is the only door back into tokens.json |
 | `dops stage start\|end <name>` / `dops cost --write` | prose in `cost.actual`; the script measures, the model does not narrate |
 
