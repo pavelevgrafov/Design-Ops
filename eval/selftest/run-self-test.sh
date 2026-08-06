@@ -723,6 +723,15 @@ if [ -x "$DOPS" ]; then
   else
     bad "dops pins check self-test (rc=$RC): $OUT"
   fi
+  # [П-5] streaming intake: idempotent, machine plans only where extractable,
+  # the owner's last instruction wins visibly, failures roll back alone.
+  OUT=$(cd "$ROOT" && python3 tools/dops_pins_sweep.py --self-test 2>&1); RC=$?
+  if [ "$RC" -eq 0 ]; then
+    ok "dops pins sweep/apply: 9 probes (intake, machine plans, conflicts, rollback)"
+  else
+    bad "dops pins sweep self-test (rc=$RC): $OUT"
+  fi
+
   # A refusal without an alternative is a wall. The validator must say so.
   PINWORK=$(mktemp -d 2>/dev/null || mktemp -d -t pin)
   printf '%s' '[{"target_selector":"#a","x":1,"y":2,"text":"t","at":"2026-08-06T09:00:00","check":{"verdict":"rejected","checked_at":"2026-08-06T09:01:00","checker":"script","reason":"r","alternatives":[]}}]' > "$PINWORK/wall.json"

@@ -300,6 +300,16 @@ flow" both ran the full cycle, and the big model met both. Now:
   reason and a way out, because a wall is not a negotiation. Measured on the
   same 15-pin set: **every pin decided by script, zero model calls.**
 
+- **Intake is a stream, not a batch.** `tools/dops pins sweep` is one pass —
+  only the new pins, classified and checked in birth order, latencies
+  recorded, one summary line. `dops pins apply [--machine-only]` executes the
+  pins whose plan carries fully extracted parameters, one transaction each,
+  rolling back alone on failure; two pins on the same target do not both land
+  (the later wins, the earlier is `superseded` with the reason). Measured on
+  the realistic revision set, **0% of pins as owners actually write them are
+  machine-executable** — so this is an accelerator for the explicit cases, not
+  a replacement for the assistant on lane A.
+
 - **The owner turns the parameters themselves.** `assets/token-panel.js` plus
   a `panel-config.js` emitted by `tools/dops panel emit --skin <S> --artifact
   <page.html>`: palette, type scale, line length, dark theme — the change is

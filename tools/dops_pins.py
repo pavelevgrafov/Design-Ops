@@ -29,6 +29,7 @@ Usage:
   dops pins list [--root DIR] [--lane A|B|C|D]
   dops pins stats [--root DIR]
   dops pins check|answer|metrics ...   [П-3] the checker at the door
+  dops pins sweep|apply ...            [П-5] streaming intake and machine execution
   dops pins --self-test
 
 Exit: 0 ok, 1 nothing classified / ambiguous pins need the owner, 2 usage.
@@ -38,6 +39,7 @@ import json
 import os
 import re
 import sys
+import time
 
 DEFAULT_IN = os.path.join("artifacts", "annotations.json")
 OUT = os.path.join("artifacts", "pins.json")
@@ -105,6 +107,57 @@ RULES = [
 # words carry no signal at all.
 KIND_FALLBACK = {"copy": "A", "visual": "D", "structure": "C", "question": "D"}
 
+# --- machine plans (П-5) ---------------------------------------------------
+# A plan is machine-executable ONLY when every parameter was extracted from the
+# pin in full. Everything else stays prose and waits for the assistant.
+# Marking a prose plan `machine: true` would be fabricating executability —
+# worse than an honest "waiting" [A.6] — so the extractors below are narrow on
+# purpose and the share of machine plans is a measurement, not a target.
+QUOTES = r"[\"'«»“”„]"
+REPLACE_RULES = [
+    # «старая строка» → «новая строка» / "A" -> "B"
+    re.compile(r"%s(?P<find>[^\"'«»“”„]{2,120})%s\s*(?:→|->|=>)\s*%s(?P<repl>[^\"'«»“”„]{1,120})%s"
+               % (QUOTES, QUOTES, QUOTES, QUOTES)),
+    # замени «A» на «B» / replace "A" with "B"
+    re.compile(r"(?:замен(?:и|ить)|испра(?:вь|вить)|replace)\b[^\"'«»“”„]*"
+               r"%s(?P<find>[^\"'«»“”„]{2,120})%s[^\"'«»“”„]*(?:на|with|to)\s*"
+               r"%s(?P<repl>[^\"'«»“”„]{1,120})%s" % (QUOTES, QUOTES, QUOTES, QUOTES),
+               re.I),
+]
+# A token edit is only extractable when the pin names BOTH the semantic token
+# and the ramp step, e.g. "ink -> gray.700". Guessing which token the words
+# "main text" mean is exactly the cheap-wrong-lane mistake П-2 exists to avoid.
+TOKEN_RULE = re.compile(
+    r"\b(?P<token>[a-z][A-Za-z]{2,24})\b\s*(?:→|->|=>|:|на)\s*"
+    r"\{?\s*(?:primitive\.color\.)?(?P<ramp>[a-z]+)\.(?P<step>[0-9]{2,3})\s*\}?")
+
+
+def machine_plan(pin, lane, text):
+    """Return (action, params) when the pin carries a complete, unambiguous
+    instruction — otherwise (None, None) and the plan stays prose.
+
+    Structure (lane C) is never overridden: "add a page and replace 'A' with
+    'B'" is still a structural request, and a quoted pair inside it does not
+    make it a copy edit. Everything else yields to an explicit instruction —
+    `ink -> gray.700` is not a matter of taste, whatever the word list makes
+    of the sentence around it."""
+    if lane == "C":
+        return None, None
+    selector = pin.get("selector") or pin.get("target_selector") or ""
+    for rule in REPLACE_RULES:
+        m = rule.search(text)
+        if m:
+            find, repl = m.group("find").strip(), m.group("repl").strip()
+            if find and repl and find != repl:
+                return "set_text", {"selector": selector, "find": find,
+                                    "replace": repl}
+    m = TOKEN_RULE.search(text)
+    if m:
+        return "set_token", {"path": "semantic.color.%s" % m.group("token"),
+                             "to": "{primitive.color.%s.%s}"
+                                   % (m.group("ramp"), m.group("step"))}
+    return None, None
+
 
 def classify_one(pin):
     text = " ".join(str(pin.get("text") or "").lower().split())
@@ -159,24 +212,7 @@ def classify(root, in_path, as_json):
 
     rows = []
     for p in pins:
-        lane, plan, why = classify_one(p)
-        rows.append({
-            "id": p.get("id") or "",
-            "selector": p.get("selector") or p.get("target_selector") or "",
-            "viewport": p.get("viewport"),
-            "kind": p.get("kind") or "",
-            "text": p.get("text") or "",
-            "lane": lane,
-            "lane_meaning": LANES[lane],
-            "plan": plan,
-            "why": why,
-            "status": "triaged",
-            # carried, not dropped: П-3 measures revision latency from the
-            # moment the owner wrote the pin, and a lane report that forgets
-            # when the pin was born cannot answer "how long did this take you"
-            "created_at": p.get("created_at") or p.get("at") or "",
-            "duplicate_of": p.get("duplicate_of"),
-        })
+        rows.append(row_for(p))
 
     out_path = os.path.join(root, OUT)
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
@@ -202,6 +238,44 @@ def classify(root, in_path, as_json):
     return 0
 
 
+def row_for(p):
+    """One classified pin row. Shared with the intake sweep (П-5), so a pin
+    entering through the watcher is shaped exactly like one classified by
+    hand — two shapes would drift within a day."""
+    lane, plan_text, why = classify_one(p)
+    action, params = machine_plan(p, lane, str(p.get("text") or ""))
+    if action and lane != "A":
+        # A fully specified instruction IS lane A by definition. The word list
+        # never saw `ink -> gray.700` and called it taste; an extracted plan
+        # outranks a dictionary that has no rule for the sentence.
+        lane, why = "A", "machine plan extracted (%s), overrides %s" % (action, lane)
+        plan_text = LANES["A"]
+    return {
+            "id": p.get("id") or "",
+            "selector": p.get("selector") or p.get("target_selector") or "",
+            "viewport": p.get("viewport"),
+            "kind": p.get("kind") or "",
+            "text": p.get("text") or "",
+        "id": p.get("id") or "",
+        "selector": p.get("selector") or p.get("target_selector") or "",
+        "viewport": p.get("viewport"),
+        "kind": p.get("kind") or "",
+        "text": p.get("text") or "",
+        "lane": lane,
+        "lane_meaning": LANES[lane],
+        "plan": {"text": plan_text, "machine": bool(action),
+                 "action": action, "params": params or {}},
+        "why": why,
+        "status": "triaged",
+        "classified_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        # carried, not dropped: П-3 measures revision latency from the
+        # moment the owner wrote the pin, and a lane report that forgets
+        # when the pin was born cannot answer "how long did this take you"
+        "created_at": p.get("created_at") or p.get("at") or "",
+        "duplicate_of": p.get("duplicate_of"),
+    }
+
+
 def tally(rows):
     out = {}
     for r in rows:
@@ -217,7 +291,11 @@ def show(rows, lane=None):
         print("  %-7s %s  %-28s %s%s"
               % (r["lane"], r["id"] or "—", (r["selector"] or "")[:28],
                  r["text"][:52], dup))
-        print("          → %s" % r["plan"])
+        plan = r["plan"]
+        text = plan.get("text") if isinstance(plan, dict) else plan
+        mark = "  [machine: %s]" % plan["action"] if isinstance(plan, dict) \
+            and plan.get("machine") else ""
+        print("          → %s%s" % (text, mark))
 
 
 def read_report(root):
@@ -291,6 +369,9 @@ def main():
     if len(sys.argv) > 1 and sys.argv[1] in ("check", "answer", "metrics"):
         import dops_pins_check
         return dops_pins_check.main()
+    if len(sys.argv) > 1 and sys.argv[1] in ("sweep", "apply"):
+        import dops_pins_sweep
+        return dops_pins_sweep.main()
 
     ap = argparse.ArgumentParser(add_help=True)
     ap.add_argument("command", nargs="?", choices=["classify", "list", "stats"])
