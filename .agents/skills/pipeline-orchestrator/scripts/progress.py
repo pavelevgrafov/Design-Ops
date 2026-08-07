@@ -28,6 +28,15 @@ import argparse, datetime, json, os, sys
 PROGRESS = os.path.join("artifacts", "progress.json")
 
 
+def set_root(root):
+    """Every other tool in the contour takes `--root`; this one silently used
+    the working directory, so `dops status --root DIR` reported on whatever
+    directory the shell happened to be in. Found while wiring У-6's schedule
+    line into that same output."""
+    global PROGRESS
+    PROGRESS = os.path.join(root, "artifacts", "progress.json")
+
+
 def now():
     return datetime.datetime.now()
 
@@ -141,7 +150,9 @@ def main():
     ap.add_argument("--max-age-min", type=float, default=3)
     ap.add_argument("--name"); ap.add_argument("--status", default="published")
     ap.add_argument("--self-test", action="store_true")
+    ap.add_argument("--root", default=".")
     a = ap.parse_args()
+    set_root(a.root)
     if a.self_test:
         sys.exit(self_test())
     sys.exit({"beat": cmd_beat, "status": cmd_status,

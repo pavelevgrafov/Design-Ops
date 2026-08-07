@@ -1,0 +1,18 @@
+{
+  "schema": "dops-run-routes/1",
+  "note": "What a route COSTS, and where it asks for the owner. Which checkpoints a route passes is NOT declared here — that already lives in checkpoint-registry.json `route_sets`, and a second copy of a closed set is the drift [A.10] exists to prevent. This file adds only what the checkpoint registry does not know: how long each checkpoint takes and how much of the owner's attention it asks for.",
+  "source": "Most/tasks/2026-08-06-kimi-u5-u6-lod-runplan-spec.md (Kimi, design) §1.1",
+  "owner_line": "ваше участие ~%d мин",
+  "owner_line_note": "Handed to the owner verbatim by the orchestrator, so it is written in the owner's language and lives in data rather than in code — the same reason the panel's knob labels do.",
+  "estimate_note": "Every number below is an ESTIMATE and says so in the emitted plan (`source: estimate`). Once a stage has 3 or more measured runs in the project's trace, `dops plan emit` replaces it with the median and flips `source` to `measured`. There is no silent substitution: the field is always present, so a plan never claims to be measured when it is guessed.",
+  "checkpoints": {
+    "brief-card":  {"eta_min": 3,  "human_needed": false},
+    "sitemap":     {"eta_min": 8,  "human_needed": true,  "attention_min": 4},
+    "skeleton":    {"eta_min": 10, "human_needed": false},
+    "base-skin":   {"eta_min": 10, "human_needed": false},
+    "directions":  {"eta_min": 15, "human_needed": true,  "attention_min": 6},
+    "merge":       {"eta_min": 6,  "human_needed": true,  "attention_min": 2},
+    "tokens":      {"eta_min": 5,  "human_needed": false},
+    "k3-report":   {"eta_min": 12, "human_needed": true,  "attention_min": 3}
+  }
+}

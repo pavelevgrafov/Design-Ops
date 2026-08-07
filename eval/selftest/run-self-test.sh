@@ -383,6 +383,53 @@ for SKIN in base-site base-app; do
 done
 [ "$CPDRIFT" -eq 0 ] && ok "D3: every declared contrast pair is gated, both skins, both themes"
 
+# --- [У-6] the decision schedule ------------------------------------------
+# `meta.run_plan` was a contract field with no mechanism behind it, so the
+# honest answer to "how long, and when do you need me?" was a guess in prose.
+# Three claims are worth CI time: the plan lands in a commented contract
+# without damaging it, it reaches the feed П-6 renders, and the pulse gains a
+# schedule line WITHOUT the stale-pulse incident being softened by it.
+U6WORK=$(mktemp -d 2>/dev/null || mktemp -d -t u6)
+mkdir -p "$U6WORK/artifacts"
+cp "$ROOT/starters/landing-event/contract.yaml" "$U6WORK/artifacts/design-contract.yaml"
+OUT=$(python3 "$ROOT/tools/dops_plan.py" emit --route starter_first --root "$U6WORK" 2>&1); RC=$?
+[ "$RC" -eq 0 ] && has "ваше участие ~3 мин" "$OUT" \
+  && ok "У-6: a plan is emitted and the owner's line is the sum of the attention, not of the etas" \
+  || bad "У-6 plan emit (rc=$RC): $(printf '%s' "$OUT" | tail -1)"
+
+OUT=$(python3 "$ROOT/tools/dops_plan.py" emit --route made_up --root "$U6WORK" 2>&1); RC=$?
+[ "$RC" -eq 1 ] && has "closed set" "$OUT" \
+  && ok "У-6: a route outside the closed registry is refused, not improvised" \
+  || bad "У-6 accepted an unknown route (rc=$RC)"
+
+python3 "$ROOT/tools/dops_trace.py" start K2A --root "$U6WORK" >/dev/null 2>&1
+python3 "$ROOT/tools/dops_trace.py" end K2A --root "$U6WORK" >/dev/null 2>&1
+OUT=$(python3 "$ROOT/tools/dops_feed.py" status --json --root "$U6WORK" 2>/dev/null)
+python3 - "$OUT" <<'U6PY' && ok "У-6: the emitted plan reaches the status feed with its source and its facts" \
+  || bad "У-6: the plan did not survive the trip through the contract into the feed"
+import json, sys
+snap = json.loads(sys.argv[1])
+plan = snap["run_plan"]
+assert len(plan) == 3, "expected three steps, got %d" % len(plan)
+assert all("source" in s for s in plan), "a step lost its source"
+assert any(s["human_needed"] and s.get("attention_min") for s in plan), "no attention"
+assert all(s["source"] == "estimate" for s in plan), "an estimate passed as measured"
+U6PY
+
+# The pulse line is an addition to the pulse, never a replacement for it: a
+# silent incident must still read as a silent incident with a plan in place.
+python3 - "$U6WORK" <<'U6PY'
+import json, os, sys
+p = os.path.join(sys.argv[1], "artifacts", "progress.json")
+d = json.load(open(p, encoding="utf-8"))
+d["stage"], d["updated_at"] = "K2A", "2020-01-01T00:00:00"
+json.dump(d, open(p, "w", encoding="utf-8"))
+U6PY
+OUT=$(python3 "$ROOT/tools/dops_feed.py" status --root "$U6WORK" 2>&1)
+has "SILENT INCIDENT" "$OUT" && has "k3-report" "$OUT" \
+  && ok "У-6: the schedule line joins a stale pulse without softening it" \
+  || bad "У-6: the schedule masked or lost the silent incident: $(printf '%s' "$OUT" | head -2)"
+
 # --- [С-1] D.39: no artefact steps around a declared alias ---------------
 # Found by П-4: the panel could offer no radius knob on the reference landing,
 # because the markup wrote var(--radius-md) while the knob moves

@@ -28,6 +28,7 @@ import datetime
 import json
 import os
 import subprocess
+import shutil
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -337,17 +338,32 @@ def status_feed(root, as_json, max_age_min, ref=None):
     }
 
     plan_raw = contract_query(root, "run_plan")
+    # У-6: the plan is what was promised, the trace is what happened. Joining
+    # them here rather than storing `fact_min` in the contract keeps one writer
+    # per fact [A.10] — `dops stage end` already records the measurement, and a
+    # copy in the contract would be the number that goes stale.
+    facts = {}
+    try:
+        import dops_plan
+        facts = {stage: got[0] for stage, got in dops_plan.measured_minutes(root).items()}
+    except Exception:
+        facts = {}
     run_plan = []
     if isinstance(plan_raw, list):
         for step in plan_raw:
             if isinstance(step, dict):
-                run_plan.append({
-                    "stage": step.get("stage") or "",
+                stage = step.get("stage") or ""
+                row = {
+                    "stage": stage,
                     "checkpoint": step.get("checkpoint") or "",
                     "eta_min": step.get("eta_min") or 0,
+                    "source": step.get("source") or "estimate",
                     "human_needed": bool(step.get("human_needed")),
-                    "fact_min": step.get("fact_min") or 0,
-                })
+                    "fact_min": round(facts[stage], 1) if stage in facts else 0,
+                }
+                if row["human_needed"]:
+                    row["attention_min"] = step.get("attention_min") or 0
+                run_plan.append(row)
 
     store = read_json(os.path.join(root, PINS)) or {"pins": []}
     rows = [pin_row(p, ref) for p in store.get("pins", [])]
@@ -378,7 +394,12 @@ def status_feed(root, as_json, max_age_min, ref=None):
              pulse["stage"] or "?", pulse["substep"] or "—",
              "?" if age is None else age, len(checkpoints),
              pins_summary["waiting_on_owner"]))
+    line = schedule_line(run_plan, pulse.get("stage"))
+    if line:
+        print("  %s" % line)
     return 0 if pulse["fresh"] else 1
+
+
 
 
 # --------------------------------------------------------------------------
@@ -386,6 +407,15 @@ def status_feed(root, as_json, max_age_min, ref=None):
 # --------------------------------------------------------------------------
 GA = os.path.join(PKG_ROOT, ".agents", "skills", "pipeline-orchestrator",
                   "assets", "gate-annotate.js")
+
+def schedule_line(run_plan, current_stage):
+    """Delegated to dops_plan, which owns the schedule [A.10]."""
+    try:
+        import dops_plan
+    except ImportError:
+        return ""
+    return dops_plan.plan_line(run_plan, current_stage)
+
 
 SUMMARY_KEYS = {"total", "waiting_on_owner", "applied", "rejected", "superseded",
                 "in_flight", "needs_choice", "apply_errors", "median_latency_s",
@@ -523,6 +553,49 @@ def self_test():
         snap = _capture(status_feed, tmp, True, DEFAULT_MAX_AGE_MIN, ref)
         if snap["pulse"]["fresh"]:
             problems.append("a 60-minute-old pulse was called fresh")
+
+    # 3b. the same snapshot on a FILLED plan (У-6): an empty section proves the
+    # key exists, not that the join works. Here the contract carries a real
+    # run_plan and the trace a real measurement, and the two must meet.
+    with tempfile.TemporaryDirectory() as tmp:
+        project(tmp, pins=[], progress={"stage": "K2A", "substep": "skin",
+                                        "updated_at": ref.isoformat(timespec="seconds"),
+                                        "tokens_used": 100})
+        sys.path.insert(0, HERE)
+        import dops_plan
+        import dops_trace
+        shutil.copy(os.path.join(PKG_ROOT, "starters", "landing-event", "contract.yaml"),
+                    os.path.join(tmp, "artifacts", "design-contract.yaml"))
+        dops_plan.quiet(dops_plan.emit, tmp, "starter_first", False, False, False)
+        trace = os.path.join(tmp, "artifacts", "trace.jsonl")
+        for i in range(2):
+            dops_trace.append(tmp, {"stage": "K2A", "kind": "start"})
+            dops_trace.append(tmp, {"stage": "K2A", "kind": "end", "status": "ok"})
+            rows = open(trace, encoding="utf-8").read().splitlines()
+            last = json.loads(rows[-1])
+            last["at"] += 60 * (i + 3)          # 3 and 4 minutes: median 3.5
+            rows[-1] = json.dumps(last, ensure_ascii=False)
+            open(trace, "w", encoding="utf-8").write("\n".join(rows) + "\n")
+        filled = _capture(status_feed, tmp, True, DEFAULT_MAX_AGE_MIN, ref)
+        if set(filled) != SNAPSHOT_KEYS:
+            problems.append("a filled plan changed the snapshot's sections")
+        plan = filled["run_plan"]
+        if len(plan) != 3:
+            problems.append("the emitted plan did not reach the feed: %d step(s)" % len(plan))
+        else:
+            if set(plan[0]) < {"stage", "checkpoint", "eta_min", "source",
+                               "human_needed", "fact_min"}:
+                problems.append("a plan row lost a contract field: %r" % (plan[0],))
+            if not any(s["human_needed"] and "attention_min" in s for s in plan):
+                problems.append("no step carried the owner's attention into the feed")
+            k2a = next(s for s in plan if s["stage"] == "K2A")
+            if k2a["fact_min"] == 0:
+                problems.append("the measured stage came back with no fact_min — "
+                                "the plan and the trace were not joined")
+        line = schedule_line(plan, "K2A")
+        if "K2A" not in line or "next time you are needed" not in line:
+            problems.append("the pulse line does not say where the run is and "
+                            "when the owner is next needed: %r" % line)
         if snap["pulse"]["age_min"] != 60.0:
             problems.append("pulse age miscomputed: %r" % snap["pulse"]["age_min"])
         if len(snap["checkpoints"]) != 1 or snap["checkpoints"][0]["status"] != "acted":
