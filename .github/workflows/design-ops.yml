@@ -59,67 +59,17 @@ jobs:
           python3 -m pip install --quiet pyyaml
           npm install -D playwright axe-core
           npx playwright install --with-deps chromium
-      - name: Environment capabilities
-        run: bash tools/dops doctor
-      - name: Materialise a project from a starter
-        run: |
-          set -eux
-          mkdir -p /tmp/e2e/artifacts/ux /tmp/e2e/artifacts/visual
-          python3 - <<'PY'
-          import os, re, yaml
-          # fill every slot with its own name: content is irrelevant here,
-          # coverage is what the injector asserts
-          cmap = yaml.safe_load(open("starters/landing-event/copy-map.yaml"))
-          vals = {k: "CI %s" % k.replace("_", " ") for k in cmap}
-          os.makedirs("/tmp/e2e", exist_ok=True)
-          yaml.safe_dump(vals, open("/tmp/e2e/values.yaml", "w"),
-                         allow_unicode=True, sort_keys=False)
-          PY
-          # The contract goes first so the injector can stamp the model's
-          # origin into it. AC-23 is now decided: the quick-mode ceiling limits
-          # what a run PRODUCES, not what a Verified Starter carries in — so
-          # this rehearsal stays in quick mode, which is the real starter_first
-          # case, and exercises the exemption end to end.
-          cp starters/landing-event/contract.yaml /tmp/e2e/artifacts/design-contract.yaml
-          python3 starters/inject.py starters/landing-event /tmp/e2e/values.yaml \
-            --out /tmp/e2e/site --ux-out /tmp/e2e/artifacts/ux \
-            --contract /tmp/e2e/artifacts/design-contract.yaml
-          grep -q "origin: inherited" /tmp/e2e/artifacts/design-contract.yaml
-          # all three files a real K2A leaves behind, not two of them:
-          # a materialisation thinner than the real thing makes the floor
-          # measure a project that never exists (D.41 caught this)
-          cp skins/base-site/tokens.json skins/base-site/tokens.css \
-             skins/base-site/tokens.theme.css /tmp/e2e/artifacts/visual/
-          cp skins/base-site/tokens.css /tmp/e2e/site/tokens.css
-          sed -i 's|\.\./\.\./\.\./skins/base-site/tokens.css|tokens.css|' /tmp/e2e/site/index.html
-      - name: Self-service panel on the real build
-        run: |
-          set -eux
-          python3 tools/dops_panel.py emit --skin base-site \
-            --artifact /tmp/e2e/site/index.html
-          # a config with no knobs would mean the emitter found nothing the
-          # artefact uses — silently useless, so assert it produced some
-          python3 -c "import json,re,sys; \
-            s=open('/tmp/e2e/site/panel-config.js',encoding='utf-8').read(); \
-            cfg=json.loads(s[s.index('{'):s.rstrip().rstrip(';').rindex('}')+1]); \
-            print('knobs:', len(cfg['knobs'])); sys.exit(0 if cfg['knobs'] else 1)"
-
-      - name: Serve the build
-        run: |
-          cd /tmp/e2e/site && nohup python3 -m http.server 8901 >/dev/null 2>&1 &
-          for _ in $(seq 1 20); do curl -sf http://localhost:8901/ >/dev/null && break; sleep 0.5; done
-      - name: Record the visual-regression baseline
-        run: |
-          DOPS_PLAYWRIGHT="$(node -e "console.log(require.resolve('playwright'))")" \
-          sh .agents/skills/quality-guardian/scripts/visual-regression.sh \
-             reference http://localhost:8901 /tmp/e2e/artifacts/audit/shots "/"
-      - name: Standard floor (fs + browser)
-        run: |
-          python3 tools/dops_verify.py --root /tmp/e2e --profile standard \
-            --url http://localhost:8901 --routes / --out /tmp/floor.json
-      - name: Shot budget for diagnostics
-        if: always()
-        run: python3 tools/dops_shots.py --root /tmp/e2e --budget 6 || true
+      # The rehearsal itself is NOT written here. It lives in
+      # eval/e2e/rehearse.sh, which this job and the implementer both run, so
+      # "it passes locally" and "it passes in CI" cannot mean two different
+      # things. They did once: a hand-retyped local copy carried three token
+      # files where this job carried two, and the difference hid a D.41 defect
+      # until it turned main red (bridge protocol, amendment 07 §2).
+      #
+      # Adding a rehearsal step back into this file is a defect, not a
+      # shortcut — eval/selftest/run-self-test.sh fails the build for it.
+      - name: End-to-end rehearsal
+        run: bash eval/e2e/rehearse.sh --root /tmp/e2e --out /tmp/floor.json --keep
       - name: Upload floor report
         if: always()
         uses: actions/upload-artifact@v4
