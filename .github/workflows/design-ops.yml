@@ -23,13 +23,13 @@ on:
 
 jobs:
   selftest:
-    # The name is now narrower than the job — it runs the browser probes too.
-    # It stays because branch protection requires this exact string, and a
-    # required check that stops reporting under its old name blocks every PR.
-    # Renaming means editing the workflow and the protection rule together,
-    # which is a repository setting and therefore Pavel's call, not a rename
-    # smuggled into an unrelated move.
-    name: Self-test (fs-level)
+    # Was "Self-test (fs-level)" until the browser probes started running here
+    # too, at which point the name described half the job. Renaming it is two
+    # changes that must happen together — this file and the branch-protection
+    # rule, which requires the check name as a literal string. Change one and
+    # every pull request waits forever for a check that will never report
+    # under the name the rule is watching for.
+    name: Self-test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
