@@ -33,7 +33,18 @@ MODE="${5:-standard}"
 mkdir -p "$OUT"
 
 # --- availability gate: honest degradation [A.6] -------------------------------
-if ! node -e "require.resolve('playwright')" 2>/dev/null && ! npx --no-install playwright --version >/dev/null 2>&1; then
+# DOPS_PLAYWRIGHT is consulted FIRST. `dops verify` resolves playwright once —
+# from the project or from the vendored toolkit — precisely so that browser
+# checks work from a project root that has no node_modules of its own, and it
+# hands the absolute path to every browser check. This gate used to ignore
+# that answer and re-resolve from the current directory, which is the project
+# root; on every real project that lookup fails, and six blocking checks
+# (D2, D12, D13, D15, D20, D21) reported `unavailable` while playwright was
+# sitting right there. A gate that throws away the answer it was given is the
+# kruto defect in miniature: the check exists, and it is not the one that runs.
+if [ -z "${DOPS_PLAYWRIGHT:-}" ] \
+   && ! node -e "require.resolve('playwright')" 2>/dev/null \
+   && ! npx --no-install playwright --version >/dev/null 2>&1; then
   echo "unavailable: playwright not installed (npm i -D playwright && npx playwright install chromium)"
   # HTTP-only fallback (degradation matrix): curl status per route
   if command -v curl >/dev/null 2>&1; then

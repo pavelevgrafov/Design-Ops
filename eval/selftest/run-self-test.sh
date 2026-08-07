@@ -383,6 +383,36 @@ for SKIN in base-site base-app; do
 done
 [ "$CPDRIFT" -eq 0 ] && ok "D3: every declared contrast pair is gated, both skins, both themes"
 
+# --- the browser lane's availability gate honours the path it was handed ---
+# `dops verify` resolves playwright once — from the project or from the
+# vendored toolkit — and hands the absolute path to every browser check,
+# precisely so they work from a project root with no node_modules. The gate in
+# run-ui-checks.sh used to ignore that and re-resolve from the current
+# directory, so on every real project six blocking checks (D2, D12, D13, D15,
+# D20, D21) reported `unavailable` with playwright sitting right there. Found
+# by comparing a CI log against a local run of the shared rehearsal.
+GATEWORK=$(mktemp -d 2>/dev/null || mktemp -d -t gate)
+mkdir -p "$GATEWORK/bin"
+printf '#!/bin/sh\nexit 1\n' > "$GATEWORK/bin/node"
+printf '#!/bin/sh\nexit 1\n' > "$GATEWORK/bin/npx"
+chmod +x "$GATEWORK/bin/node" "$GATEWORK/bin/npx"
+# `bash`, not `sh`: that is how the floor registry invokes this check, and the
+# script's shebang says the same. Probing it through dash made the first CI run
+# of this probe pass for the wrong reason — the script died on a bash-ism
+# before it could print anything. Test it the way it is really run.
+OUT=$(cd "$GATEWORK" && PATH="$GATEWORK/bin:$PATH" DOPS_PLAYWRIGHT="/some/resolved/playwright" \
+      bash "$QG/run-ui-checks.sh" http://localhost:1 / "$GATEWORK/out" 2>&1)
+has "playwright not installed" "$OUT" \
+  && bad "the browser lane bailed out although the caller had resolved playwright" \
+  || ok "browser lane: the availability gate honours DOPS_PLAYWRIGHT, not the cwd"
+
+# ...and it still degrades honestly when nobody resolved anything
+OUT=$(cd "$GATEWORK" && PATH="$GATEWORK/bin:$PATH" \
+      bash "$QG/run-ui-checks.sh" http://localhost:1 / "$GATEWORK/out2" 2>&1)
+has "playwright not installed" "$OUT" \
+  && ok "browser lane: with nothing resolved it still says unavailable [A.6]" \
+  || bad "the browser lane stopped reporting a genuinely missing playwright"
+
 # --- [amendment 07 §2] the rehearsal is defined exactly once ---------------
 # A rehearsal must be the thing it rehearses. The end-to-end job used to carry
 # its steps inline, so checking a change locally meant retyping them — and on
