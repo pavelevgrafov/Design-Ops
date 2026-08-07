@@ -58,6 +58,10 @@ import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PKG_ROOT = os.path.dirname(HERE)
+sys.path.insert(0, HERE)
+
+import dops_dom as dom               # noqa: E402  (Ф-1: the selector's subtree)
+
 PINS = os.path.join("artifacts", "pins.json")
 CONTRACT = os.path.join("artifacts", "design-contract.yaml")
 DECISION_LOG = os.path.join("artifacts", "decision-log.md")
@@ -366,6 +370,52 @@ def q1_feasible(pin, markup):
     return None
 
 
+def form_born(pin):
+    """[Ф-1 §4] A pin the edit form produced, recognised by what it CARRIES —
+    a complete `set_text` plan with the selector of the element that was
+    edited — not by a flag anyone could set."""
+    plan = pin.get("plan") or {}
+    params = plan.get("params") or {}
+    return bool(plan.get("machine") and plan.get("action") == "set_text"
+                and (params.get("selector") or "").strip()
+                and params.get("find"))
+
+
+def q1_form_target(pin, markup):
+    """The form's own feasibility question, and it is a stricter one than the
+    generic q1: not "does the selector resolve" but "is the text the owner
+    edited still exactly where they edited it".
+
+    This is why questions 1-2 may be skipped for a form pin — not because the
+    pin is trusted, but because the cheap real check replaces the approximate
+    one. A selector that drifted between the edit and the intake surfaces here
+    as a question, never as a silent write to the wrong element."""
+    params = (pin.get("plan") or {}).get("params") or {}
+    selector, find = params["selector"], params["find"]
+    if markup is None:
+        return {"verdict": "pass", "checker": "script",
+                "unmeasured": ["no build to check the edit against — the "
+                               "target was not re-verified"]}
+    hits = dom.scoped_hits(markup, find, selector)
+    if hits is None:
+        return {"verdict": "pass", "checker": "script",
+                "unmeasured": ["selector `%s` is outside the supported grammar "
+                               "— scope not verified, the executor will fall "
+                               "back to the whole build" % selector[:60]]}
+    if len(hits) == 1:
+        return None
+    if not hits:
+        return {"verdict": "clarify", "checker": "script",
+                "question": ("you edited «%s» inside `%s`, and that text is no "
+                             "longer there — the artefact was rebuilt since. "
+                             "Which element did you mean?"
+                             % (str(find)[:60], selector[:60]))}
+    return {"verdict": "clarify", "checker": "script",
+            "question": ("«%s» occurs %d times inside `%s`, so this edit does "
+                         "not say which one — point at the exact element again"
+                         % (str(find)[:60], len(hits), selector[:60]))}
+
+
 def q2_norms(pin, lane, norms):
     """Only lanes A and B are measured: C changes the structure and D has not
     named a value yet, so there is nothing to hold against a range."""
@@ -567,10 +617,23 @@ def q4_duplicate(pin, seen_hashes):
 # --------------------------------------------------------------------------
 def check_pin(pin, markup, norms, contract, log_text, seen_hashes, allow_model):
     unmeasured = []
-    for probe in (lambda: q1_feasible(pin, markup),
+    # [Ф-1 §4] For a pin born in the edit form, questions 1-2 are answered by
+    # construction: the target existed at the moment of the edit because the
+    # form took it from there, and there are no declared norms on copy. What
+    # replaces them is a cheaper and truer feasibility check — the edited text
+    # is looked for where it was edited. Questions 3-4 are NEVER skipped: an
+    # edit can still contradict a recorded decision or repeat an earlier one,
+    # and the owner has to see that before it is executed.
+    if form_born(pin):
+        probes = (lambda: q1_form_target(pin, markup),
+                  lambda: q3_conflict(pin, contract, log_text),
+                  lambda: q4_duplicate(pin, seen_hashes))
+    else:
+        probes = (lambda: q1_feasible(pin, markup),
                   lambda: q2_norms(pin, pin.get("lane"), norms),
                   lambda: q3_conflict(pin, contract, log_text),
-                  lambda: q4_duplicate(pin, seen_hashes)):
+                  lambda: q4_duplicate(pin, seen_hashes))
+    for probe in probes:
         res = probe()
         if not res:
             continue

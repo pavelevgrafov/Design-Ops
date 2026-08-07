@@ -321,10 +321,26 @@ flow" both ran the full cycle, and the big model met both. Now:
   recorded, one summary line. `dops pins apply [--machine-only]` executes the
   pins whose plan carries fully extracted parameters, one transaction each,
   rolling back alone on failure; two pins on the same target do not both land
-  (the later wins, the earlier is `superseded` with the reason). Measured on
-  the realistic revision set, **0% of pins as owners actually write them are
-  machine-executable** — so this is an accelerator for the explicit cases, not
-  a replacement for the assistant on lane A.
+  (the later wins, the earlier is `superseded` with the reason).
+
+- **The exact-edit form (Ф-1) is why that share is no longer zero.** Measured
+  on the realistic revision set, **0 of 15 pins as owners actually write them
+  are machine-executable**: a person looking at a mockup writes "typo in the
+  caption", not "replace A with B". Guessing `find`/`replace` out of prose is
+  forbidden, so the pair is born from the act of editing instead — press `e`,
+  click the text, fix it in place, and the form writes both strings verbatim
+  out of the DOM. Re-measured with the copy edits made through the form:
+  **5 of 15 (33%)**, the whole copy lane. The set and the script are in the
+  repo (`eval/pins-realistic-set.json`, `eval/measure-machine-plans.py`) —
+  re-measure rather than quote.
+- A plan the pin arrives with is **honoured, never re-derived** (it is better
+  information than any re-reading of the prose), but it is validated first:
+  an incomplete plan claiming `machine: true` drops back to prose. The pin's
+  selector becomes the **scope** of `set_text` — one occurrence inside that
+  element rather than one in the whole build, so the same string in two
+  sections stops blocking both edits. Questions 3 and 4 of the checker are
+  never skipped for a form pin: an edit can still contradict a recorded
+  decision or repeat an earlier one.
 
 - **Two feeds instead of a status question.** `tools/dops pins feed --json`
   gives the whole revision picture in one call (summary + a row per pin with

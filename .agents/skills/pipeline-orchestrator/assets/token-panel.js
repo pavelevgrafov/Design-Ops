@@ -161,6 +161,42 @@
     'font:13px system-ui,sans-serif;';
   document.body.appendChild(bar);
 
+  /* Ф-1: sit clear of the pins bar by MEASURING it, not by remembering how
+   * wide it was. `right:190px` was chosen when that bar held three controls;
+   * it has four now, and the panel landed on top of Export/Import — the
+   * closed button overlapping, the open panel swallowing the whole bar and
+   * intercepting its clicks. A number describing another element's size is
+   * wrong the moment that element changes, so it is not a number any more.
+   * Stacking the panel above the bar was the other candidate and is worse:
+   * the pins feed already lives there (`bottom:52px`), so the fix would have
+   * moved the collision one layer up instead of removing it. */
+  var GAP = 12;
+  function keepClear() {
+    var pins = document.getElementById('ga-bar');
+    var width = pins ? Math.ceil(pins.getBoundingClientRect().width) : 0;
+    bar.style.right = (width ? width + GAP * 2 : GAP) + 'px';
+  }
+  keepClear();
+  window.addEventListener('resize', keepClear);
+  window.addEventListener('load', keepClear);
+  /* The bar is written by another script that may load after this one, and it
+   * re-renders whenever a pin is added. Watching it is the only way the
+   * clearance stays true without the two files agreeing on a constant. */
+  if (window.ResizeObserver) {
+    var watch = new ResizeObserver(keepClear);
+    var attach = function () {
+      var pins = document.getElementById('ga-bar');
+      if (pins) { watch.observe(pins); return true; }
+      return false;
+    };
+    if (!attach()) {
+      var tries = 0;
+      var poll = setInterval(function () {
+        if (attach() || ++tries > 20) clearInterval(poll);
+      }, 100);
+    }
+  }
+
   function esc(s) {
     return String(s).replace(/[&<>"]/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];

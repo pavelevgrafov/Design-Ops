@@ -581,6 +581,32 @@ OUT=$(python3 "$ROOT/tools/dops_lod.py" retrain --check 2>&1); RC=$?
 [ "$RC" -eq 0 ] && ok "У-5: every measured cost carries the samples that earned it" \
   || bad "У-5: cost-table has a hand-written measurement: $(printf '%s' "$OUT" | head -1)"
 
+# --- [Ф-1] the selector's subtree, and the measurement behind the move ----
+OUT=$(python3 "$ROOT/tools/dops_dom.py" --self-test 2>&1); RC=$?
+[ "$RC" -eq 0 ] && ok "Ф-1: selector subtrees resolve, out-of-grammar selectors are refused" \
+  || bad "dops_dom self-test: $(printf '%s' "$OUT" | grep FAIL | head -1)"
+
+# The number this move exists for, re-measured from a set that lives in the
+# repository. The baseline assertion is the valuable one: if it ever stops
+# being 0, an extractor has started GUESSING find/replace out of prose, which
+# is the one thing Ф-1 was built to avoid doing.
+OUT=$(python3 "$ROOT/eval/measure-machine-plans.py" --json 2>&1); RC=$?
+if [ "$RC" -ne 0 ]; then
+  bad "Ф-1 measurement crashed: $(printf '%s' "$OUT" | tail -1)"
+else
+  python3 - "$OUT" <<'F1MPY' && ok "Ф-1: 0/15 typed edits are machine-executable, 5/5 via the form" \
+    || bad "Ф-1 machine_plan_share: $OUT"
+import json, sys
+d = json.loads(sys.argv[1])
+assert d["before"]["machine"] == 0, (
+    "%d typed edit(s) were called machine-executable — an extractor is guessing "
+    "find/replace out of prose again" % d["before"]["machine"])
+assert d["after"]["born_in_form"] == 5, (
+    "the form produced %d machine plans, expected 5" % d["after"]["born_in_form"])
+assert d["after"]["machine"] == 5, "a plan appeared from somewhere other than the form"
+F1MPY
+fi
+
 # --- [С-1] D.39: no artefact steps around a declared alias ---------------
 # Found by П-4: the panel could offer no radius knob on the reference landing,
 # because the markup wrote var(--radius-md) while the knob moves
@@ -1032,6 +1058,143 @@ assert d["reset"] == d["before"], "reset did not return to the compiled CSS"
 assert d["bare"] == 0, "a page without a config still grew a panel button"
 assert d["errs"] == 0, "the panel logged console errors"
 PANPY
+  fi
+
+  # [Ф-1] the edit form, and the overlap the П-4 probe could not see.
+  # П-5 measured 0% machine-executable owner edits; the fix is not a cleverer
+  # classifier but a form that cannot produce a non-machine plan. Both claims
+  # are browser claims, so they are checked in a browser: find/replace really
+  # do come out of the DOM, and — the defect Kimi found on the live demo —
+  # the token panel and the pins bar are usable AT THE SAME TIME. The old
+  # panel probe clicked each surface in turn and so never saw the collision.
+  F1WORK=$(mktemp -d 2>/dev/null || mktemp -d -t f1)
+  mkdir -p "$F1WORK/site"
+  cp "$ROOT/.agents/skills/pipeline-orchestrator/assets/gate-annotate.js" "$F1WORK/site/"
+  cp "$ROOT/.agents/skills/pipeline-orchestrator/assets/token-panel.js" "$F1WORK/site/"
+  cp "$ROOT/skins/base-site/tokens.css" "$F1WORK/site/tokens.css"
+  cat > "$F1WORK/site/index.html" <<'F1HTML'
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>ф-1</title>
+<link rel="stylesheet" href="tokens.css"></head><body>
+<main id="tickets"><p class="note">Билеты в продаже</p><img id="pic" alt="x" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="></main>
+<script src="./panel-config.js"></script>
+<script src="./token-panel.js"></script>
+<script src="./gate-annotate.js"></script>
+</body></html>
+F1HTML
+  python3 "$ROOT/tools/dops_panel.py" emit --skin base-site \
+    --artifact "$F1WORK/site/index.html" > /dev/null 2>&1
+  cat > "$F1WORK/f1.cjs" <<'F1JS'
+const { chromium } = require(process.env.DOPS_PLAYWRIGHT);
+(async () => {
+  const dir = process.argv[2];
+  const b = await chromium.launch();
+  const p = await b.newPage();
+  const errs = [];
+  p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
+  // short, because every wait in this probe is a surface covering another
+  // one: a timeout here IS the finding, and it should read as one rather
+  // than as a crash with a stack trace
+  p.setDefaultTimeout(3000);
+  const url = 'file://' + dir + '/site/index.html';
+  await p.goto(url);
+
+  // an edit is born machine-executable, straight out of the DOM
+  await p.keyboard.press('e');
+  await p.locator('#tickets .note').click();
+  await p.keyboard.type('Билеты уже в продаже');
+  await p.keyboard.press('Enter');
+  const pins = await p.evaluate(() =>
+    JSON.parse(localStorage.getItem('dops-pins:' + location.pathname) || '[]'));
+
+  // it survives a reload, because the artefact on disk has not changed yet
+  await p.reload();
+  const afterReload = await p.locator('#tickets .note').innerText();
+
+  // markup typed in stays text
+  await p.keyboard.press('e');
+  await p.locator('#tickets .note').click();
+  await p.keyboard.type('<b>жирно</b>');
+  await p.keyboard.press('Enter');
+  const boldNodes = await p.evaluate(() =>
+    document.querySelectorAll('#tickets .note b').length);
+
+  // Esc puts the original back and writes no pin
+  const countBefore = await p.evaluate(() =>
+    JSON.parse(localStorage.getItem('dops-pins:' + location.pathname) || '[]').length);
+  await p.keyboard.press('e');
+  await p.locator('#tickets .note').click();
+  await p.keyboard.type('мусор');
+  await p.keyboard.press('Escape');
+  const countAfter = await p.evaluate(() =>
+    JSON.parse(localStorage.getItem('dops-pins:' + location.pathname) || '[]').length);
+
+  // a non-text target never arms
+  await p.keyboard.press('e');
+  await p.locator('#pic').click();
+  const editingImg = await p.evaluate(() =>
+    document.querySelector('#pic').getAttribute('contenteditable'));
+
+  // the overlap: every control of BOTH surfaces reachable at once
+  const boxes = await p.evaluate(() => {
+    const r = (s) => { const e = document.querySelector(s);
+      return e ? e.getBoundingClientRect().toJSON() : null; };
+    return { panel: r('#dops-panel'), bar: r('#ga-bar') };
+  });
+  let panelOpened = true;
+  try { await p.locator('#dops-panel-open').click(); }   // panel open = 320px
+  catch (e) { panelOpened = false; }
+  const openBox = await p.evaluate(() =>
+    document.querySelector('#dops-panel').getBoundingClientRect().toJSON());
+  const barBox = await p.evaluate(() =>
+    document.querySelector('#ga-bar').getBoundingClientRect().toJSON());
+  let clickable = true;
+  for (const sel of ['#ga-arm', '#ga-edit', '#ga-export', '#ga-count']) {
+    try { await p.locator(sel).click({ trial: true, timeout: 1500 }); }
+    catch (e) { clickable = false; }
+  }
+  console.log(JSON.stringify({ pins, afterReload, boldNodes, countBefore,
+    countAfter, editingImg, boxes, openBox, barBox, clickable, panelOpened,
+    errs: errs.length }));
+  await b.close();
+})().catch(e => { console.error(String(e)); process.exit(1); });
+F1JS
+  OUT=$(DOPS_PLAYWRIGHT="$PW_PATH" node "$F1WORK/f1.cjs" "$F1WORK" 2>&1); RC=$?
+  if [ "$RC" -ne 0 ]; then
+    bad "Ф-1 form smoke crashed: $(printf '%s' "$OUT" | tail -1)"
+  else
+    python3 - "$OUT" <<'F1PY' && ok "Ф-1: the form writes find/replace from the DOM, survives reload, refuses non-text" || bad "Ф-1 form smoke: $(printf '%s' "$OUT" | tail -1)"
+import json, sys
+d = json.loads(sys.argv[1])
+pins = d["pins"]
+assert len(pins) == 1, "one edit produced %d pin(s)" % len(pins)
+a = pins[0]
+plan = a.get("plan") or {}
+assert plan.get("machine") is True, "the form produced a pin with no machine plan"
+assert plan.get("action") == "set_text", "wrong action: %r" % plan.get("action")
+pr = plan.get("params") or {}
+assert pr.get("find") == "Билеты в продаже", "find is not the DOM text: %r" % pr.get("find")
+assert pr.get("replace") == "Билеты уже в продаже", "replace is not what was typed: %r" % pr.get("replace")
+assert pr.get("selector"), "the plan carries no selector, so it has no scope"
+assert a.get("lane") == "A", "a born machine plan is not lane A: %r" % a.get("lane")
+assert a.get("status") == "new", "a fresh edit is not `new`: %r" % a.get("status")
+assert d["afterReload"] == "Билеты уже в продаже", \
+    "a pending edit did not survive the reload: %r" % d["afterReload"]
+assert d["boldNodes"] == 0, "typed markup became real nodes"
+assert d["countAfter"] == d["countBefore"], "Esc still wrote a pin"
+assert d["editingImg"] is None, "an image was armed for text editing"
+assert d["errs"] == 0, "%d console error(s)" % d["errs"]
+F1PY
+    python3 - "$OUT" <<'F1PY' && ok "Ф-1: the panel and the pins bar are usable at the same time (Kimi's overlap defect)" || bad "Ф-1 overlap: $(printf '%s' "$OUT" | tail -1)"
+import json, sys
+d = json.loads(sys.argv[1])
+assert d["panelOpened"], "the panel button itself was not reachable"
+assert d["clickable"], "a control of the pins bar could not be clicked with the panel open"
+op, bar = d["openBox"], d["barBox"]
+overlap_x = min(op["x"] + op["width"], bar["x"] + bar["width"]) - max(op["x"], bar["x"])
+overlap_y = min(op["y"] + op["height"], bar["y"] + bar["height"]) - max(op["y"], bar["y"])
+assert not (overlap_x > 0 and overlap_y > 0), (
+    "the open panel overlaps the pins bar by %.0fx%.0f px" % (overlap_x, overlap_y))
+F1PY
   fi
 
   # [П-6] the feed inside the artefact: the counter is a door, waiting pins

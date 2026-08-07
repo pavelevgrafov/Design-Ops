@@ -14,9 +14,20 @@
  *   <script src=".../gate-annotate.js"></script>
  * Zero dependencies, works from file://.
  *
- * Keys: `a` arms the next click, Esc disarms. Pins persist in localStorage
- * per page; "Export" downloads annotations.json for the sorting station
- * (tools/dops_pins.py).
+ * Keys: `a` arms the next click, `e` arms an exact copy edit, Esc disarms.
+ * Pins persist in localStorage per page; "Export" downloads annotations.json
+ * for the sorting station (tools/dops_pins.py).
+ *
+ * Ф-1 — the exact-edit form. П-5 measured that 0% of real owner edits were
+ * machine-executable, and the cause was not a weak classifier: a person
+ * looking at a mockup writes "typo in the caption", not "replace A with B".
+ * An extractor that guesses find/replace out of prose is forbidden — that is
+ * the cheap-wrong-lane mistake. So the exact pair has to be BORN from the
+ * act of editing: press `e`, click the text, fix it in place, and the form
+ * writes `find`/`replace` verbatim out of the DOM. The share of machine plans
+ * rises not because the machine got cleverer but because a non-machine plan
+ * has nowhere to come from. The panel (П-4) closed this for tokens; this
+ * closes it for words.
  *
  * annotations.json (v7.2 — additive; every v6 field is still written):
  *   [{id, selector, target_selector, viewport, x, y, kind, text,
@@ -110,6 +121,12 @@
   }
 
   var bar = document.createElement('div');
+  /* Named so the token panel can MEASURE it instead of hard-coding a width.
+   * The panel used to sit at a fixed `right:190px` chosen against a narrower
+   * bar; this file has since grown a button, and the panel landed on top of
+   * Export/Import. A constant that describes another element's size goes
+   * stale the first time that element changes. */
+  bar.id = 'ga-bar';
   bar.style.cssText = 'position:fixed;right:12px;bottom:12px;z-index:99999;' +
     'font:13px system-ui,sans-serif;display:flex;gap:6px;align-items:center;';
   bar.innerHTML =
@@ -117,6 +134,8 @@
     'background:#111;color:#fff"></span>' +
     '<button id="ga-arm" style="padding:6px 10px;border:1px solid #999;' +
     'background:#fff;border-radius:6px;cursor:pointer">Comment (a)</button>' +
+    '<button id="ga-edit" style="padding:6px 10px;border:1px solid #999;' +
+    'background:#fff;border-radius:6px;cursor:pointer">Edit (e)</button>' +
     '<button id="ga-export" style="padding:6px 10px;border:1px solid #999;' +
     'background:#fff;border-radius:6px;cursor:pointer">Export</button>' +
     '<label id="ga-import" style="padding:6px 10px;border:1px solid #999;' +
@@ -141,6 +160,16 @@
    * asked. The old wording is kept, never overwritten: the checker has to be
    * able to see what changed. */
   function openPin(a, list) {
+    var p = a.plan || {};
+    /* A pending form edit is the one pin whose useful action is "undo": the
+     * artefact has not changed yet, so the owner can still take it back. */
+    if (p.machine && p.action === 'set_text' && a.status !== 'applied' &&
+        !NEEDS_OWNER[a.status]) {
+      if (window.confirm(describe(a) + '\n\nОткатить эту правку?')) {
+        revertPending(a, list);
+      }
+      return;
+    }
     if (!NEEDS_OWNER[a.status]) { window.alert(describe(a)); return; }
     var reply = window.prompt(describe(a) + '\n\nYour answer:', a.text || '');
     if (reply === null) return;
@@ -260,20 +289,181 @@
     document.body.style.cursor = armed ? 'crosshair' : '';
   }
 
+  /* ---- the exact-edit form (Ф-1) --------------------------------------- */
+  /* One armed click, one element, one edit — the same shape as putting a pin,
+   * because it IS a pin: every edit leaves a trace in the decision log, or it
+   * would be a way around the conveyor rather than a way into it. */
+  var editArmed = false;
+  var editing = null;          /* {el, original, selector} while in place */
+
+  function setEditArmed(on) {
+    editArmed = on;
+    document.getElementById('ga-edit').style.background = on ? '#dcfce7' : '#fff';
+    document.body.style.cursor = on ? 'text' : '';
+    if (on) setArmed(false);
+  }
+
+  /* What may be edited, and why the list is this short. `find` is the
+   * element's whole text, and committing writes textContent — so an element
+   * with element children would lose them. Refusing those is not a gap to
+   * fill later with cleverness; it is the boundary that keeps the edit
+   * lossless. Form fields are excluded because their values are data, not
+   * copy. */
+  function editable(el) {
+    if (!el || el.nodeType !== 1) return 'это не текст';
+    if (bar.contains(el) || feed.contains(el)) return null;
+    if (/^(INPUT|TEXTAREA|SELECT|OPTION)$/.test(el.tagName)) {
+      return 'значения полей — это данные, а не текст макета';
+    }
+    if (/^(IMG|SVG|VIDEO|CANVAS|IFRAME|BR|HR)$/.test(el.tagName)) {
+      return 'это не текст';
+    }
+    if (el.children.length) {
+      return 'внутри есть вложенные элементы — правьте самый внутренний';
+    }
+    if (!String(el.textContent || '').trim()) return 'здесь нет текста';
+    return null;
+  }
+
+  function flash(message) {
+    var tip = document.createElement('div');
+    tip.textContent = message;
+    tip.style.cssText = 'position:fixed;left:50%;top:16px;transform:translateX(-50%);' +
+      'z-index:100001;background:#111;color:#fff;padding:6px 12px;border-radius:6px;' +
+      'font:13px system-ui,sans-serif;opacity:.95';
+    document.body.appendChild(tip);
+    setTimeout(function () { tip.remove(); }, 1800);
+  }
+
+  function beginEdit(el) {
+    var why = editable(el);
+    if (why) { flash(why); return false; }
+    editing = { el: el, original: String(el.textContent), selector: selectorFor(el) };
+    el.setAttribute('contenteditable', 'plaintext-only');
+    if (el.contentEditable !== 'plaintext-only') el.contentEditable = 'true';
+    el.style.outline = '2px solid #15803d';
+    el.focus();
+    var range = document.createRange();
+    range.selectNodeContents(el);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    return true;
+  }
+
+  function endEdit(commit) {
+    if (!editing) return;
+    var state = editing;
+    editing = null;
+    var el = state.el;
+    /* Markup typed into the field is inserted as TEXT, never as nodes —
+     * `plaintext-only` is not universal, so the value is read back through
+     * textContent and written back the same way. */
+    var next = String(el.textContent);
+    el.removeAttribute('contenteditable');
+    el.contentEditable = 'inherit';
+    el.style.outline = '';
+    if (!commit || next === state.original) {
+      el.textContent = state.original;
+      return;
+    }
+    el.textContent = next;
+    var list = load();
+    var now = new Date().toISOString();
+    list.push({
+      id: nextId(list),
+      selector: state.selector,
+      target_selector: state.selector,
+      viewport: window.innerWidth,
+      x: Math.round(window.scrollX + el.getBoundingClientRect().left + 8),
+      y: Math.round(window.scrollY + el.getBoundingClientRect().top + 8),
+      kind: 'copy',
+      text: 'правка на месте: «' + state.original + '» → «' + next + '»',
+      status: 'new',
+      lane: 'A',
+      /* The whole point of Ф-1: find/replace come from the DOM verbatim, at
+       * the moment of the edit. Nothing downstream re-derives them from the
+       * sentence above — a plan born here is better information than any
+       * re-reading of the prose around it. */
+      plan: {
+        machine: true,
+        action: 'set_text',
+        params: { selector: state.selector, find: state.original, replace: next }
+      },
+      created_at: now,
+      at: now
+    });
+    save(list);
+    renderPins();
+    flash('правка записана — ждёт забора');
+  }
+
+  /* Pending edits survive a reload the way pins do: the artefact on disk has
+   * not changed yet, so without this the owner would reopen the page and see
+   * their work gone while the pin still claimed it. */
+  function restorePending() {
+    load().forEach(function (a) {
+      var p = (a.plan || {});
+      if (!p.machine || p.action !== 'set_text') return;
+      if (a.status === 'applied' || a.status === 'rejected') return;
+      var params = p.params || {};
+      var el;
+      try { el = document.querySelector(params.selector); } catch (e) { el = null; }
+      if (!el || el.children.length) return;
+      if (String(el.textContent) === params.find) el.textContent = params.replace;
+    });
+  }
+
+  function revertPending(a, list) {
+    var params = (a.plan || {}).params || {};
+    var el;
+    try { el = document.querySelector(params.selector); } catch (e) { el = null; }
+    if (el && !el.children.length && String(el.textContent) === params.replace) {
+      el.textContent = params.find;
+    }
+    var i = list.indexOf(a);
+    if (i >= 0) list.splice(i, 1);
+    save(list);
+    renderPins();
+  }
+
+  document.getElementById('ga-edit').addEventListener('click', function () {
+    setEditArmed(!editArmed);
+  });
   document.getElementById('ga-arm').addEventListener('click', function () {
     setArmed(!armed);
+    if (armed) setEditArmed(false);
   });
   document.getElementById('ga-count').addEventListener('click', function () {
     if (load().length) setFeed(!feedOpen);
   });
   document.addEventListener('keydown', function (e) {
+    /* While an edit is in place the keys belong to the edit, not to the bar:
+     * Enter commits, Esc puts the original text back. */
+    if (editing) {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); endEdit(true); }
+      else if (e.key === 'Escape') { e.preventDefault(); endEdit(false); }
+      return;
+    }
     if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    if (e.target.isContentEditable) return;
     if (e.key === 'a') setArmed(!armed);
+    if (e.key === 'e') setEditArmed(!editArmed);
     if (e.key === 'l') setFeed(!feedOpen);
-    if (e.key === 'Escape') { setArmed(false); setFeed(false); }
-  });
+    if (e.key === 'Escape') { setArmed(false); setEditArmed(false); setFeed(false); }
+  }, true);
+
+  document.addEventListener('focusout', function () {
+    if (editing) endEdit(true);
+  }, true);
 
   document.addEventListener('click', function (e) {
+    if (editArmed && !bar.contains(e.target) && !feed.contains(e.target)) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (beginEdit(e.target)) setEditArmed(false);
+      return;
+    }
     if (!armed || bar.contains(e.target)) return;
     e.preventDefault();
     e.stopPropagation();
@@ -352,5 +542,6 @@
     e.target.value = '';
   });
 
+  restorePending();
   renderPins();
 })();

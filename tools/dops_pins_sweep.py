@@ -47,6 +47,7 @@ sys.path.insert(0, HERE)
 import dops_pins as pins            # noqa: E402  (classification, one shape)
 import dops_pins_check as check     # noqa: E402  (the checker, skin resolution)
 import dops_panel as panel          # noqa: E402  (pointed patch + verify chain)
+import dops_dom as dom              # noqa: E402  (Ф-1: the selector's subtree)
 
 STORE = os.path.join("artifacts", "pins.json")
 ANNOTATIONS = os.path.join("artifacts", "annotations.json")
@@ -335,44 +336,83 @@ def set_token(root, params):
     return True, "%s → %s" % (path, to)
 
 
+def html_files(build):
+    for base, dirs, files in os.walk(build):
+        dirs[:] = [d for d in dirs if d not in
+                   ("node_modules", ".git", "__pycache__", ".venv")]
+        for fn in sorted(files):
+            if fn.endswith((".html", ".htm")):
+                yield os.path.join(base, fn)
+
+
 def set_text(root, params):
-    """A copy edit in the artefact source. The string must occur exactly once:
+    """A copy edit in the artefact source.
+
+    Without a selector the string must occur exactly once in the whole build:
     two matches mean the pin does not identify what to change, and guessing
-    which one the owner meant is the cheap-wrong-lane mistake again."""
+    which one the owner meant is the cheap-wrong-lane mistake again. With a
+    selector (Ф-1) the same rule is applied INSIDE that element's subtree —
+    strictness unchanged, scope narrowed to what the pin actually knows."""
     find, repl = params.get("find"), params.get("replace")
+    selector = (params.get("selector") or "").strip()
     if not find or repl is None:
         return False, "incomplete set_text parameters"
     build = check.find_build(root, None)
     if not build:
         return False, "no build to edit"
-    hits = []
-    for base, dirs, files in os.walk(build):
-        dirs[:] = [d for d in dirs if d not in
-                   ("node_modules", ".git", "__pycache__", ".venv")]
-        for fn in files:
-            if not fn.endswith((".html", ".htm")):
-                continue
-            p = os.path.join(base, fn)
+
+    scoped, hits, out_of_grammar = bool(selector), [], False
+    for p in html_files(build):
+        try:
+            body = open(p, encoding="utf-8").read()
+        except OSError:
+            continue
+        if scoped:
+            found = dom.scoped_hits(body, find, selector)
+            if found is None:
+                out_of_grammar = True
+                break
+            for span in found:
+                hits.append((p, body, span))
+        else:
+            at = 0
+            while True:
+                i = body.find(find, at)
+                if i < 0:
+                    break
+                hits.append((p, body, (i, i + len(find))))
+                at = i + len(find)
+
+    if out_of_grammar:
+        # honest degradation [A.6]: an unsupported selector falls back to the
+        # whole-build rule and SAYS so, rather than matching approximately
+        scoped, hits = False, []
+        for p in html_files(build):
             try:
                 body = open(p, encoding="utf-8").read()
             except OSError:
                 continue
-            n = body.count(find)
-            if n:
-                hits.append((p, body, n))
-    total = sum(n for _p, _b, n in hits)
-    if total == 0:
-        return False, "the string %r is not in the build any more" % find[:40]
-    if total > 1:
-        return False, ("the string %r occurs %d times — the pin does not say "
-                       "which one" % (find[:40], total))
+            at = 0
+            while True:
+                i = body.find(find, at)
+                if i < 0:
+                    break
+                hits.append((p, body, (i, i + len(find))))
+                at = i + len(find)
 
-    path, body, _n = hits[0]
+    where = ("inside `%s`" % selector[:48]) if scoped else "in the build"
+    if not hits:
+        return False, ("the string %r is not %s any more" % (find[:40], where))
+    if len(hits) > 1:
+        return False, ("the string %r occurs %d times %s — the pin does not "
+                       "say which one" % (find[:40], len(hits), where))
+
+    path, body, (start, end) = hits[0]
     backup = path + ".pin-backup"
     shutil.copy2(path, backup)
     try:
         with open(path, "w", encoding="utf-8") as f:
-            f.write(body.replace(find, repl, 1))
+            f.write(body[:start] + repl + body[end:])
         ok, why = verify_copy(path)
         if not ok:
             raise ValueError(why)
@@ -381,7 +421,9 @@ def set_text(root, params):
         os.remove(backup)
         return False, "%s (rolled back, nothing written)" % exc
     os.remove(backup)
-    return True, "%r → %r in %s" % (find[:32], repl[:32], os.path.basename(path))
+    return True, "%r → %r in %s%s" % (
+        find[:32], repl[:32], os.path.basename(path),
+        (" (scoped to `%s`)" % selector[:40]) if scoped else "")
 
 
 def verify_copy(path):
@@ -572,6 +614,109 @@ def self_test():
         if os.path.exists(tokens + ".pin-backup"):
             problems.append("a rollback left its backup behind")
 
+    # [Ф-1] the form's round trip: a pin born with its plan reaches the source
+    TWO_SECTIONS = ('<main id="tickets"><p class="note">Билеты в продаже</p></main>'
+                    '<footer id="foot"><p class="note">Билеты в продаже</p></footer>')
+
+    def _form_pin(i, selector, find, repl, created="2026-08-07T09:0%d:00"):
+        return {"id": "a-%04d" % i, "selector": selector,
+                "target_selector": selector, "viewport": 1440, "x": 1, "y": 2,
+                "kind": "copy", "status": "new", "lane": "A",
+                "text": "правка на месте: «%s» → «%s»" % (find, repl),
+                "created_at": created % i, "at": created % i,
+                "plan": {"machine": True, "action": "set_text",
+                         "params": {"selector": selector, "find": find,
+                                    "replace": repl}}}
+
+    with tempfile.TemporaryDirectory() as tmp:
+        _project(tmp, [_form_pin(1, "#tickets > p.note", "Билеты в продаже",
+                                 "Билеты уже в продаже")],
+                 markup=TWO_SECTIONS)
+        hush(sweep, tmp, ANNOTATIONS, None, False)
+        row = _store(tmp)["pins"][0]
+        plan = row.get("plan") or {}
+        if not plan.get("machine") or plan.get("action") != "set_text":
+            problems.append("a pin born with a machine plan lost it in intake")
+        if (plan.get("params") or {}).get("find") != "Билеты в продаже":
+            problems.append("the form's verbatim `find` was re-derived instead "
+                            "of honoured: %r" % (plan.get("params"),))
+        if row.get("lane") != "A":
+            problems.append("a born machine plan did not force lane A")
+        rc = hush(apply_pins, tmp, True, False)
+        page = open(os.path.join(tmp, "site", "index.html"), encoding="utf-8").read()
+        if "<main id=\"tickets\"><p class=\"note\">Билеты уже в продаже</p>" not in page:
+            problems.append("the scoped edit did not land in its own section "
+                            "(rc=%s)" % rc)
+        if page.count("Билеты в продаже") != 1:
+            problems.append("the edit escaped its scope and touched the footer")
+        if _store(tmp)["pins"][0]["status"] != "applied":
+            problems.append("an applied form pin did not become `applied`")
+        log = open(os.path.join(tmp, DECISION_LOG), encoding="utf-8").read()
+        if "owner-pin a-0001" not in log:
+            problems.append("a form edit left no line in the decision log")
+
+    # ...and without the scope the very same edit is refused, which is what
+    # the scope is FOR: the duplicate string used to block both edits
+    with tempfile.TemporaryDirectory() as tmp:
+        _project(tmp, [_form_pin(1, "", "Билеты в продаже", "Билеты уже в продаже")],
+                 markup=TWO_SECTIONS)
+        hush(sweep, tmp, ANNOTATIONS, None, False)
+        hush(apply_pins, tmp, True, False)
+        row = _store(tmp)["pins"][0]
+        if row.get("status") == "applied":
+            problems.append("an unscoped edit with two candidates was applied "
+                            "— one of them was a guess")
+
+    # a scope with no match and a scope with two are both refused with a reason
+    with tempfile.TemporaryDirectory() as tmp:
+        _project(tmp, [_form_pin(1, "#tickets > p.note", "Нет такого текста", "X")],
+                 markup=TWO_SECTIONS)
+        hush(sweep, tmp, ANNOTATIONS, None, False)
+        row = _store(tmp)["pins"][0]
+        if (row.get("check") or {}).get("verdict") != "clarify":
+            problems.append("an edit whose text is gone from its scope was not "
+                            "sent back to the owner: %r" % (row.get("check"),))
+
+    with tempfile.TemporaryDirectory() as tmp:
+        twice = ('<main id="tickets"><p class="a">Билеты</p>'
+                 '<p class="b">Билеты</p></main>')
+        _project(tmp, [_form_pin(1, "#tickets", "Билеты", "Проходки")],
+                 markup=twice)
+        hush(sweep, tmp, ANNOTATIONS, None, False)
+        row = _store(tmp)["pins"][0]
+        if (row.get("check") or {}).get("verdict") != "clarify":
+            problems.append("two matches inside one scope did not become a "
+                            "question: %r" % (row.get("check"),))
+
+    # a forged plan is dropped back to prose rather than trusted: `machine`
+    # is a promise the executor acts on, so it is validated, not believed
+    with tempfile.TemporaryDirectory() as tmp:
+        forged = _form_pin(1, "#tickets > p.note", "Билеты в продаже", "X")
+        forged["plan"]["params"].pop("replace")
+        # prose the extractor cannot rescue, so this probe measures the
+        # validation of the BORN plan and nothing else
+        forged["text"] = "поправил подпись"
+        _project(tmp, [forged], markup=TWO_SECTIONS)
+        hush(sweep, tmp, ANNOTATIONS, None, False)
+        if (_store(tmp)["pins"][0].get("plan") or {}).get("machine"):
+            problems.append("an incomplete plan claiming `machine: true` was "
+                            "taken at its word")
+
+    # [Ф-1 §4] questions 3 and 4 are NEVER skipped for a form pin
+    with tempfile.TemporaryDirectory() as tmp:
+        _project(tmp, [_form_pin(1, "#tickets > p.note", "Билеты в продаже",
+                                 "Билеты уже в продаже")],
+                 markup=TWO_SECTIONS)
+        with open(os.path.join(tmp, "artifacts", "decision-log.md"), "a",
+                  encoding="utf-8") as f:
+            f.write("- 2026-08-07 · решено не менять формулировку «Билеты в "
+                    "продаже» до старта продаж\n")
+        hush(sweep, tmp, ANNOTATIONS, None, False)
+        verdict = (_store(tmp)["pins"][0].get("check") or {}).get("verdict")
+        if verdict == "pass":
+            problems.append("a form edit contradicting the decision log passed "
+                            "silently — question 3 must never be skipped")
+
     # 8. adoption refuses a stranger's file of the same name
     with tempfile.TemporaryDirectory() as tmp:
         _project(tmp, [_pin(1, "опечатка в подписи")])
@@ -609,8 +754,9 @@ def self_test():
         for p in problems:
             print("self-test FAIL: dops-pins-sweep: %s" % p)
         return 1
-    print("OK: dops-pins-sweep self-test (9 probes: idempotent intake, answered "
-          "pins come round, machine plans only when extractable, last instruction "
+    print("OK: dops-pins-sweep self-test (15 probes: idempotent intake, answered "
+          "pins come round, a plan born in the form is honoured not re-derived, "
+          "an edit lands only inside its own selector, last instruction "
           "wins visibly, failed transactions roll back alone, no stranger adopted)")
     return 0
 
