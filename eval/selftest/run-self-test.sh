@@ -396,15 +396,19 @@ mkdir -p "$GATEWORK/bin"
 printf '#!/bin/sh\nexit 1\n' > "$GATEWORK/bin/node"
 printf '#!/bin/sh\nexit 1\n' > "$GATEWORK/bin/npx"
 chmod +x "$GATEWORK/bin/node" "$GATEWORK/bin/npx"
+# `bash`, not `sh`: that is how the floor registry invokes this check, and the
+# script's shebang says the same. Probing it through dash made the first CI run
+# of this probe pass for the wrong reason — the script died on a bash-ism
+# before it could print anything. Test it the way it is really run.
 OUT=$(cd "$GATEWORK" && PATH="$GATEWORK/bin:$PATH" DOPS_PLAYWRIGHT="/some/resolved/playwright" \
-      sh "$QG/run-ui-checks.sh" http://localhost:1 / "$GATEWORK/out" 2>&1)
+      bash "$QG/run-ui-checks.sh" http://localhost:1 / "$GATEWORK/out" 2>&1)
 has "playwright not installed" "$OUT" \
   && bad "the browser lane bailed out although the caller had resolved playwright" \
   || ok "browser lane: the availability gate honours DOPS_PLAYWRIGHT, not the cwd"
 
 # ...and it still degrades honestly when nobody resolved anything
 OUT=$(cd "$GATEWORK" && PATH="$GATEWORK/bin:$PATH" \
-      sh "$QG/run-ui-checks.sh" http://localhost:1 / "$GATEWORK/out2" 2>&1)
+      bash "$QG/run-ui-checks.sh" http://localhost:1 / "$GATEWORK/out2" 2>&1)
 has "playwright not installed" "$OUT" \
   && ok "browser lane: with nothing resolved it still says unavailable [A.6]" \
   || bad "the browser lane stopped reporting a genuinely missing playwright"
