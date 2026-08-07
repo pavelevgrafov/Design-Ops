@@ -383,6 +383,54 @@ for SKIN in base-site base-app; do
 done
 [ "$CPDRIFT" -eq 0 ] && ok "D3: every declared contrast pair is gated, both skins, both themes"
 
+# --- [amendment 07 §2] the rehearsal is defined exactly once ---------------
+# A rehearsal must be the thing it rehearses. The end-to-end job used to carry
+# its steps inline, so checking a change locally meant retyping them — and on
+# 2026-08-06 the retyped copy was one `cp` more generous than the job, which
+# hid a D.41 defect until it turned main red. The steps now live in
+# eval/e2e/rehearse.sh and nowhere else; this probe is what keeps "nowhere
+# else" true, because a convention that nothing enforces is not a control.
+python3 - "$ROOT" <<'REHPY' && ok "amendment 07 §2: the e2e rehearsal is defined once and CI calls it" \
+  || bad "amendment 07 §2: the rehearsal drifted back into the workflow (see above)"
+import sys, os, yaml
+root = sys.argv[1]
+wf = os.path.join(root, ".github", "workflows", "design-ops.yml")
+script = os.path.join(root, "eval", "e2e", "rehearse.sh")
+
+# the commands that ARE the rehearsal: each must live in the script, and none
+# of them may appear in the workflow again
+MARKS = ["starters/inject.py", "dops_panel.py", "dops_verify.py",
+         "visual-regression.sh", "dops_shots.py", "http.server"]
+
+if not os.path.isfile(script):
+    raise SystemExit("eval/e2e/rehearse.sh is missing — the rehearsal has no home")
+body = open(script, encoding="utf-8").read()
+missing = [m for m in MARKS if m not in body]
+if missing:
+    raise SystemExit("the rehearsal script does not run: %s — this probe would "
+                     "pass on an empty script" % ", ".join(missing))
+
+doc = yaml.safe_load(open(wf, encoding="utf-8"))
+steps = doc["jobs"]["end-to-end"]["steps"]
+runs = "\n".join(s.get("run", "") for s in steps)
+leaked = [m for m in MARKS if m in runs]
+if leaked:
+    raise SystemExit("the end-to-end job runs the rehearsal inline again: %s — "
+                     "call eval/e2e/rehearse.sh instead [amendment 07 §2]"
+                     % ", ".join(leaked))
+if "rehearse.sh" not in runs:
+    raise SystemExit("the end-to-end job no longer calls the rehearsal script")
+REHPY
+
+# ...and the script survives being asked what it is without doing anything
+bash "$ROOT/eval/e2e/rehearse.sh" --help >/dev/null 2>&1 \
+  && ok "rehearse.sh: --help answers without materialising a project" \
+  || bad "rehearse.sh cannot describe itself"
+
+OUT=$(bash "$ROOT/eval/e2e/rehearse.sh" --nonsense 2>&1); RC=$?
+[ "$RC" -eq 2 ] && ok "rehearse.sh: an unknown argument is refused, not ignored" \
+  || bad "rehearse.sh accepted an unknown argument (rc=$RC)"
+
 # --- [У-6] the decision schedule ------------------------------------------
 # `meta.run_plan` was a contract field with no mechanism behind it, so the
 # honest answer to "how long, and when do you need me?" was a guess in prose.

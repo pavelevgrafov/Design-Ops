@@ -97,6 +97,29 @@ for manual steps and the v5.x → v6.0 migration (`contract-migrate.py`).
 First run: prompt P01 from `eval/example-prompts.md`, score with
 `eval/eval-rubric.md` (pass ≥ 10/12).
 
+## Verifying a change
+
+```bash
+bash tools/dops selftest                # the tooling's own acceptance probes
+bash eval/selftest/run-self-test.sh     # the package suite
+bash eval/e2e/rehearse.sh               # the end-to-end rehearsal CI runs
+```
+
+The third one matters most before a pull request. `eval/e2e/rehearse.sh` is
+the *only* definition of the end-to-end job: it materialises a project from a
+starter, emits the self-service panel, serves the build, records the visual
+baseline and runs the whole floor against it. CI does not repeat those steps —
+it installs an environment and calls this script.
+
+That is deliberate. The steps used to live inline in the workflow, so checking
+a change locally meant retyping them, and a retyped copy that carried one file
+more than the real job hid a blocking defect until it reached `main`. A
+rehearsal has to be the thing it rehearses; a self-test probe fails the build
+if the steps ever drift back into the workflow.
+
+Without playwright the script says so and the browser lane reports
+`unavailable` — a thinner run never passes for a full one.
+
 ## Changelog
 
 - **v7.2** — the machine contour: the deterministic floor collapses from ~25
