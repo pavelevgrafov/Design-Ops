@@ -244,8 +244,24 @@ dops control apply --at "checkpoint:sitemap"
   owner is needed and for how long in total. The owner should know the price
   of their attention before the run starts, not after.
 - `meta.target_lod` is the agreed depth. A result "not detailed enough" is
-  usually a target nobody set; `status.lod` records what was reached, and a
-  gap without an owner command is a defect line in the delivery report.
+  usually a target nobody set. Depth is **declared by stages**, never measured
+  off the artifact (`produces_lod` in `stages.json`: K1 100, K2A 200, K2B 300 —
+  K0 and K3 add none, and a K3 that claimed one would make the whole ladder
+  unreachable). `dops stage end` writes `status.lod` — you never write it by
+  hand — and when the route runs out of stages that climb while the target is
+  still above, it publishes `lod-transition` **with the price from
+  `tools/cost-table.json`**: "готов LOD-200, цель — LOD-300. Углубить? +20 мин
+  / +30k токенов (оценка)". A transition without a price is not published at
+  all, because an offer you cannot cost is a status line.
+- Depth changes on the owner's command and on nothing else: `dops control issue
+  --command deepen_lod --args '{"lod":300,"scope":"section:hero"}'` or
+  `--command enough`. Applied at a control point, never mid-script. A scoped
+  deepening needs the hash graph and is REFUSED without it [A.6]; it drops the
+  visual chain and never the skeleton, because a restyle does not rebuild
+  structure [A.7].
+- `dops lod check` runs at delivery: reaching **less** than the target with no
+  command is under-delivery, reaching **more** is overspend, and both are the
+  same `lod_mismatch` defect — the plan changed and nobody was asked.
 
 ## 4. Gates: delegation
 

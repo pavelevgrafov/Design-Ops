@@ -508,6 +508,79 @@ has "SILENT INCIDENT" "$OUT" && has "k3-report" "$OUT" \
   && ok "У-6: the schedule line joins a stale pulse without softening it" \
   || bad "У-6: the schedule masked or lost the silent incident: $(printf '%s' "$OUT" | head -2)"
 
+# --- [У-5] the depth ladder ------------------------------------------------
+# `target_lod` / `status.lod` were fields with nothing behind them, so a run
+# either stopped short in silence or polished past what was asked and billed
+# for it. Four claims are worth CI time, and the first one is the one that
+# would rot quietly: the gap has to be REACHABLE on a default route. If K3
+# ever declared a depth, every verified run would claim the top of the ladder
+# and `lod-transition` could never fire — the mechanism would be dead while
+# every unit test still passed.
+U5WORK=$(mktemp -d 2>/dev/null || mktemp -d -t u5)
+mkdir -p "$U5WORK/artifacts/visual"
+cp "$ROOT/starters/landing-event/contract.yaml" "$U5WORK/artifacts/design-contract.yaml"
+python3 "$ROOT/tools/dops_plan.py" emit --route starter_first --root "$U5WORK" >/dev/null 2>&1
+python3 - "$U5WORK/artifacts/design-contract.yaml" <<'U5PY'
+import re, sys
+p = sys.argv[1]
+t = open(p, encoding="utf-8").read()
+open(p, "w", encoding="utf-8").write(
+    re.sub(r"^meta:$", "meta:\n  target_lod: 300", t, count=1, flags=re.M))
+U5PY
+for st in K1 K2A; do
+  python3 "$ROOT/tools/dops_trace.py" start "$st" --root "$U5WORK" >/dev/null 2>&1
+  python3 "$ROOT/tools/dops_trace.py" end "$st" --root "$U5WORK" >/dev/null 2>&1
+done
+OUT=$(python3 "$ROOT/tools/dops_checkpoint.py" list --root "$U5WORK" 2>&1)
+LOGLINE=$(grep '"id": "lod-transition"' "$U5WORK/artifacts/checkpoints.jsonl" 2>/dev/null | head -1)
+has "lod-transition" "$OUT" && has "мин" "$LOGLINE" && has "токен" "$LOGLINE" \
+  && ok "У-5: a run ending below its target publishes the transition WITH its price" \
+  || bad "У-5: no priced lod-transition on a starter_first run: $(printf '%s' "$OUT" | head -2)"
+
+OUT=$(python3 "$ROOT/tools/dops_lod.py" check --root "$U5WORK" 2>&1); RC=$?
+[ "$RC" -eq 1 ] && has "lod_mismatch" "$OUT" \
+  && ok "У-5: stopping short of the target with no owner command is a defect line" \
+  || bad "У-5: the gap passed the delivery check (rc=$RC): $(printf '%s' "$OUT" | head -1)"
+
+python3 "$ROOT/tools/dops_control.py" issue --command enough --root "$U5WORK" >/dev/null 2>&1
+python3 "$ROOT/tools/dops_control.py" apply --at selftest --root "$U5WORK" >/dev/null 2>&1
+OUT=$(python3 "$ROOT/tools/dops_lod.py" check --root "$U5WORK" 2>&1); RC=$?
+[ "$RC" -eq 0 ] \
+  && ok "У-5: the owner's enough turns the same gap from a defect into a decision" \
+  || bad "У-5: the owner's enough did not close the ladder (rc=$RC): $OUT"
+
+# A deepening is a restyle, and a restyle never rebuilds structure [A.7] —
+# so the skeleton's hash must survive one. Without the graph the scoped form
+# is refused outright rather than quietly costing a full rebuild [A.6].
+OUT=$(python3 "$ROOT/tools/dops_control.py" issue --command deepen_lod \
+      --args '{"lod": 300, "scope": "section:hero"}' --root "$U5WORK" 2>&1
+      python3 "$ROOT/tools/dops_control.py" apply --at selftest --root "$U5WORK" 2>&1)
+has "hash-graph unavailable" "$OUT" \
+  && ok "У-5: a scoped deepening without hashes is refused, not silently full-price" \
+  || bad "У-5: a scoped deepening was accepted with no hash graph: $(printf '%s' "$OUT" | tail -1)"
+
+printf '<h1>x</h1>' > "$U5WORK/skeleton.html"
+printf '{}' > "$U5WORK/artifacts/visual/tokens.json"
+printf ':root{}' > "$U5WORK/artifacts/visual/tokens.css"
+python3 "$ROOT/tools/dops_hash.py" record --root "$U5WORK" >/dev/null 2>&1
+python3 "$ROOT/tools/dops_control.py" issue --command deepen_lod \
+  --args '{"lod": 300, "scope": "section:hero"}' --root "$U5WORK" >/dev/null 2>&1
+OUT=$(python3 "$ROOT/tools/dops_control.py" apply --at selftest --root "$U5WORK" 2>&1)
+python3 - "$U5WORK" <<'U5PY' && ok "У-5: a scoped deepening drops the visual chain and leaves the structure alone [A.7]" \
+  || bad "У-5: the deepening invalidated the wrong set"
+import json, os, sys
+m = json.load(open(os.path.join(sys.argv[1], "artifacts", "hashes.json"), encoding="utf-8"))
+a = m["artifacts"]
+assert "skeleton.html" in a, "the deepening rebuilt the structure"
+assert "artifacts/visual/tokens.css" not in a, "the visual chain was not invalidated"
+U5PY
+
+# The table's own rule made mechanical: `measured` is a label only a retrain
+# may apply, and a hand-written one is an estimate wearing a fact's badge.
+OUT=$(python3 "$ROOT/tools/dops_lod.py" retrain --check 2>&1); RC=$?
+[ "$RC" -eq 0 ] && ok "У-5: every measured cost carries the samples that earned it" \
+  || bad "У-5: cost-table has a hand-written measurement: $(printf '%s' "$OUT" | head -1)"
+
 # --- [С-1] D.39: no artefact steps around a declared alias ---------------
 # Found by П-4: the panel could offer no radius knob on the reference landing,
 # because the markup wrote var(--radius-md) while the knob moves

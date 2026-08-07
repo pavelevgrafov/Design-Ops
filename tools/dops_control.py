@@ -46,6 +46,9 @@ TOPIC = {
     "stop_after_checkpoint": "mode",
     "skip_scope": "scope",
     "deepen_lod": "lod",
+    "enough": "lod",              # [У-5] the answer to a lod-transition that
+                                  # is not "deepen" — same topic, so a later
+                                  # one supersedes an earlier deepening
     "rollback_to": None,          # not a setting: a one-shot action
     "report_now": None,
 }
@@ -196,9 +199,16 @@ def apply_one(root, cmd):
         lod = args.get("lod")
         if lod not in (100, 200, 300, 400):
             return False, "deepen_lod needs {lod: 100|200|300|400}"
-        scope = args.get("scope")
-        return True, ("target LOD %s%s — the next checkpoint carries its price"
-                      % (lod, (" for %s" % scope) if scope else " globally"))
+        # [У-5 §2.4] This is the control point, so this is where the work of
+        # accepting a deepening happens: record it, invalidate what it
+        # invalidates, announce it with its price. The deepening ITSELF is the
+        # existing stages run over a narrow packet — no new machinery.
+        import dops_lod
+        return dops_lod.apply_deepen(root, lod, args.get("scope"))
+
+    if command == "enough":
+        import dops_lod
+        return dops_lod.apply_enough(root)
 
     if command == "pause":
         return True, "paused at the nearest control point"
@@ -296,6 +306,21 @@ def self_test():
         bad = [c for c in state(tmp).values() if c["command"] == "deepen_lod"][0]
         if bad["status"] != "rejected":
             problems.append("an out-of-scale LOD was accepted")
+
+        # [У-5] `enough` is the other half of a lod-transition, and it shares
+        # the `lod` topic — so answering twice leaves one live answer, not two
+        issue(tmp, "deepen_lod", '{"lod": 300}', "chat")
+        deepen_id = sorted(c["id"] for c in state(tmp).values()
+                           if c["command"] == "deepen_lod")[-1]
+        issue(tmp, "enough", None, "chat")
+        if state(tmp)[deepen_id]["status"] != "superseded":
+            problems.append("`enough` did not supersede a queued deepening — "
+                            "the owner would have been billed for an answer "
+                            "they replaced")
+        apply_queued(tmp, "test")
+        enough = [c for c in state(tmp).values() if c["command"] == "enough"][0]
+        if enough["status"] != "applied":
+            problems.append("`enough` was not applied: %s" % enough.get("reason"))
 
     if problems:
         for p in problems:

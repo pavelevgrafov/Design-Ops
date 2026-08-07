@@ -1,6 +1,7 @@
 {
   "schema": "dops-stages/1",
   "note": "What a stage subagent needs — and nothing else. Context that grows monotonically across a run is paid on every turn that follows: by K3 the agent would otherwise still be carrying K0's brief, the skeleton, every token file and every screenshot. Each stage runs in a fresh context with the packet built from this spec, and returns its artifact plus a short summary. `dops handoff <stage>` is the packet.",
+  "lod_note": "`produces_lod` (У-5) is the depth a stage PRODUCES. It is declared here rather than measured off the artifact because no formula over the output — components per screen, tokens per file — can say how finished something is; it can only manufacture a number that looks like it can. Only stages that add depth declare one: K0 has no artifact yet, K3 verifies what already exists, and `deliver` reports on it. A K3 that declared a depth would mean every verified run automatically claims the top of the ladder, and `lod-transition` could never fire at all — the mechanism would be dead on arrival. LOD 400 is deliberately absent: nothing reaches it by default, only an explicit `deepen_lod` from the owner.",
   "budget_tokens": 4000,
   "stages": {
     "K0": {
@@ -14,6 +15,7 @@
     },
     "K1": {
       "role": "structure",
+      "produces_lod": 100,
       "job": "Produce the information model and the NEUTRAL skeleton: real copy, grey graphite, data-priority, not_approved_visual_design marker. App profile fills domain_model, roles_permissions, user_flows, screen_modules, state_matrix, api_contract BEFORE screens. No taste questions, no visual decisions [A.3].",
       "contract_sections": ["meta", "product", "experience", "content_model", "domain_model", "roles_permissions"],
       "inputs": ["artifacts/ux/experience-model.yaml (if present)"],
@@ -23,6 +25,7 @@
     },
     "K2A": {
       "role": "base skin",
+      "produces_lod": 200,
       "job": "Apply the profile's base skin (skins/base-site or skins/base-app): compile tokens, apply, zero taste questions, zero gate. The product becomes presentable and testable.",
       "contract_sections": ["meta", "visual", "status"],
       "inputs": ["skeleton.html", "skins/base-*/tokens.json"],
@@ -32,6 +35,7 @@
     },
     "K2B": {
       "role": "full visual work",
+      "produces_lod": 300,
       "job": "Calibration -> 2-3 constructed-divergence directions -> two-screen slice + blind contact sheet -> Gate 2 -> merge -> DTCG tokens -> scale. Never touches structure [A.7].",
       "contract_sections": ["meta", "product", "experience", "visual", "gates"],
       "inputs": ["skeleton.html", "artifacts/visual/tokens.json", "user references"],
@@ -54,7 +58,7 @@
       "contract_sections": ["meta", "gates", "status", "cost", "acceptance"],
       "inputs": ["artifacts/audit/floor.json", "artifacts/decision-log.md", "dops report"],
       "outputs": ["the final message to the user"],
-      "acceptance": "python3 tools/dops_harvest.py --check && python3 tools/dops_trace.py cost",
+      "acceptance": "python3 tools/dops_harvest.py --check && python3 tools/dops_trace.py cost && python3 tools/dops_lod.py check",
       "do_not_read": ["skeleton", "tokens", "direction docs"]
     }
   }

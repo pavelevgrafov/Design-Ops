@@ -28,6 +28,7 @@
 #   dops skin darkramp [--check]          [Т-1] regenerate the dark ramps from $meta.darkModel
 #   dops plan emit --route R [--with-k2b] [У-6] the decision schedule: what it costs, when you are needed
 #   dops plan show                        [У-6] the plan against the measured facts
+#   dops lod status|check|price|retrain   [У-5] the depth ladder: transitions carry a price
 #   dops status [--json]                  pulse; --json adds plan, checkpoints, queue, pins
 #   dops report                         stage timings + instruction tokens
 #   dops cost [--write]                 measured cost.actual for the contract
@@ -57,7 +58,7 @@ PROGRESS="$(cd "$HERE/.." && pwd)/.agents/skills/pipeline-orchestrator/scripts/p
 usage() {
   # the whole usage block, not the first half of it: a help text that stops at
   # `dops status` hides the checkpoints, the control queue and the pins
-  sed -n '10,38p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '10,39p' "$0" | sed 's/^# \{0,1\}//'
 }
 
 cmd="${1:-}"
@@ -108,6 +109,9 @@ case "$cmd" in
     ;;
   plan)
     exec "$PY" "$HERE/dops_plan.py" "$@"
+    ;;
+  lod)
+    exec "$PY" "$HERE/dops_lod.py" "$@"
     ;;
   stage)
     sub="${1:?usage: dops stage start|end|mark|checkpoint <name>}"; shift
@@ -161,6 +165,7 @@ case "$cmd" in
     "$PY" "$HERE/dops_color.py" --self-test || rc=1
     "$PY" "$HERE/dops_skin.py" --self-test || rc=1
     "$PY" "$HERE/dops_plan.py" --self-test || rc=1
+    "$PY" "$HERE/dops_lod.py" --self-test || rc=1
     "$PY" "$HERE/dops_verify.py" --audit-registry || rc=1
     exit $rc
     ;;

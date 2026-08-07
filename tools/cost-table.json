@@ -1,0 +1,25 @@
+{
+  "schema": "dops-cost-table/1",
+  "note": "What deepening COSTS. A checkpoint that offers `deepen` without a price is a status line — the illusion of control — so this table is the reason `lod-transition` may be published at all. Every number starts as an estimate and says so; `dops lod retrain` replaces it with the median of the project's own measured deepenings once there are three of them, and is the ONLY writer of a `measured` entry.",
+  "source": "Most/tasks/2026-08-06-kimi-u5-u6-lod-runplan-spec.md (Kimi, design) §2.3",
+  "ladder": [100, 200, 300, 400],
+  "composition_note": "Only single steps of the ladder are declared. A two-step jump costs the sum of the steps it crosses, because it is the same work done in one go. Declaring a separate number for every pair would add three more numbers that nobody will ever measure, and an unmeasured number is exactly what this table exists to retire. A sum that crosses even one estimated step is reported as an estimate: a total is only as measured as its weakest term.",
+  "scopes": {
+    "global": "the whole product moves up a step",
+    "section": "one named scope moves up a step (`section:hero`), the rest stays where it is"
+  },
+  "lod_steps": {
+    "100->200": {
+      "global":  {"eta_min": 10, "tokens": 15000, "source": "estimate"},
+      "section": {"eta_min": 3,  "tokens": 4000,  "source": "estimate"}
+    },
+    "200->300": {
+      "global":  {"eta_min": 20, "tokens": 30000, "source": "estimate"},
+      "section": {"eta_min": 6,  "tokens": 8000,  "source": "estimate"}
+    },
+    "300->400": {
+      "global":  {"eta_min": 25, "tokens": 40000, "source": "estimate"},
+      "section": {"eta_min": 8,  "tokens": 10000, "source": "estimate"}
+    }
+  }
+}
