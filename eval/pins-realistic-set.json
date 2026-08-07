@@ -1,0 +1,31 @@
+{
+  "schema": "dops-pins-fixture/1",
+  "note": "The measurement set behind `machine_plan_share`. П-5 measured 0 of 15 organic edits machine-executable and the number went into a report; the set itself lived only in that session, so nobody — including its author — could repeat the measurement. A number that cannot be re-measured is an assertion. This file makes it falsifiable: `python3 eval/measure-machine-plans.py` prints both figures from the same pins the claim is about.",
+  "source": "Most/tasks/2026-08-06-claude-p5-intake-implemented.md §1; re-measured for Ф-1",
+  "organic_note": "How an owner actually writes, looking at a mockup. Not one of these names both the old string and the new one, which is the whole finding: the missing thing was never a cleverer extractor.",
+  "organic": [
+    {"kind": "copy",      "text": "опечатка в подписи к билету"},
+    {"kind": "copy",      "text": "тут слишком казённо звучит"},
+    {"kind": "copy",      "text": "дата написана непонятно"},
+    {"kind": "copy",      "text": "в кнопке лишнее слово"},
+    {"kind": "copy",      "text": "название площадки не то"},
+    {"kind": "visual",    "text": "заголовок дня тонет, сделать крупнее"},
+    {"kind": "visual",    "text": "make the CTA darker"},
+    {"kind": "visual",    "text": "кнопка бледная, сделай фон темнее"},
+    {"kind": "visual",    "text": "воздуха мало между секциями"},
+    {"kind": "visual",    "text": "как-то не то, сделай наряднее"},
+    {"kind": "structure", "text": "поменяй местами секции программы и билетов"},
+    {"kind": "structure", "text": "добавь новую страницу для партнёров"},
+    {"kind": "structure", "text": "убери блок с отзывами"},
+    {"kind": "question",  "text": "а почему тут две кнопки?"},
+    {"kind": "question",  "text": "это точно влезет на телефон?"}
+  ],
+  "form_note": "The same five copy edits, made through the Ф-1 form instead of typed as prose. The other ten are unchanged: the form takes copy out of the prose lane and touches nothing else — it does not make a taste comment or a structural request machine-executable, and claiming otherwise would be the fabricated-executability [A.6] this whole mechanism refuses.",
+  "form_edits": [
+    {"selector": "#tickets > p.note",   "find": "Билеты в продаже",       "replace": "Билеты уже в продаже"},
+    {"selector": "#about > p.lead",     "find": "Мероприятие проводится", "replace": "Мы проводим фестиваль"},
+    {"selector": "#dates > p.when",     "find": "10-12.09",               "replace": "10–12 сентября"},
+    {"selector": "#cta > button.buy",   "find": "Купить билет сейчас",    "replace": "Купить билет"},
+    {"selector": "#venue > h2.name",    "find": "Площадка А",             "replace": "Клуб «Полярный»"}
+  ]
+}

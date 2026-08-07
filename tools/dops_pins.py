@@ -133,6 +133,39 @@ TOKEN_RULE = re.compile(
     r"\{?\s*(?:primitive\.color\.)?(?P<ramp>[a-z]+)\.(?P<step>[0-9]{2,3})\s*\}?")
 
 
+# [Ф-1] What a plan must carry to be executable, per action. A pin can arrive
+# already carrying one — the edit form writes `find`/`replace` straight out of
+# the DOM at the moment the owner edits the text. That plan is BETTER
+# information than anything re-derived from the prose around it, so it is
+# honoured as given and never re-extracted. Validation here is the whole
+# defence: an incomplete or unknown plan is dropped back to prose rather than
+# trusted, because `machine: true` is a promise the executor will act on.
+PLAN_PARAMS = {"set_text": ("selector", "find", "replace"),
+               "set_token": ("path", "to")}
+
+
+def born_plan(pin):
+    """(action, params) when the pin arrived with a complete machine plan of
+    its own — otherwise (None, None) and the extractors below get their turn."""
+    plan = pin.get("plan")
+    if not isinstance(plan, dict) or not plan.get("machine"):
+        return None, None
+    action = plan.get("action")
+    params = plan.get("params")
+    if action not in PLAN_PARAMS or not isinstance(params, dict):
+        return None, None
+    required = PLAN_PARAMS[action]
+    clean = {}
+    for key in required:
+        value = params.get(key)
+        if value is None or (isinstance(value, str) and not value.strip()):
+            return None, None
+        clean[key] = value
+    if action == "set_text" and clean["find"] == clean["replace"]:
+        return None, None               # a no-op edit is not an edit
+    return action, clean
+
+
 def machine_plan(pin, lane, text):
     """Return (action, params) when the pin carries a complete, unambiguous
     instruction — otherwise (None, None) and the plan stays prose.
@@ -244,19 +277,21 @@ def row_for(p):
     entering through the watcher is shaped exactly like one classified by
     hand — two shapes would drift within a day."""
     lane, plan_text, why = classify_one(p)
-    action, params = machine_plan(p, lane, str(p.get("text") or ""))
+    action, params = born_plan(p)
+    born = bool(action)
+    if not born:
+        action, params = machine_plan(p, lane, str(p.get("text") or ""))
+    origin = "born with the pin" if born else "extracted"
     if action and lane != "A":
         # A fully specified instruction IS lane A by definition. The word list
-        # never saw `ink -> gray.700` and called it taste; an extracted plan
-        # outranks a dictionary that has no rule for the sentence.
-        lane, why = "A", "machine plan extracted (%s), overrides %s" % (action, lane)
-        plan_text = LANES["A"]
+        # never saw `ink -> gray.700` and called it taste; a plan — extracted
+        # or born with the pin — outranks a dictionary that has no rule for
+        # the sentence.
+        why = "machine plan %s (%s), overrides %s" % (origin, action, lane)
+        lane, plan_text = "A", LANES["A"]
+    elif born:
+        why = "machine plan born with the pin (%s)" % action
     return {
-            "id": p.get("id") or "",
-            "selector": p.get("selector") or p.get("target_selector") or "",
-            "viewport": p.get("viewport"),
-            "kind": p.get("kind") or "",
-            "text": p.get("text") or "",
         "id": p.get("id") or "",
         "selector": p.get("selector") or p.get("target_selector") or "",
         "viewport": p.get("viewport"),

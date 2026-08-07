@@ -163,6 +163,7 @@ case "$cmd" in
     "$PY" "$HERE/dops_pins_sweep.py" --self-test || rc=1
     "$PY" "$HERE/dops_feed.py" --self-test || rc=1
     "$PY" "$HERE/dops_color.py" --self-test || rc=1
+    "$PY" "$HERE/dops_dom.py" --self-test || rc=1
     "$PY" "$HERE/dops_skin.py" --self-test || rc=1
     "$PY" "$HERE/dops_plan.py" --self-test || rc=1
     "$PY" "$HERE/dops_lod.py" --self-test || rc=1

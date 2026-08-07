@@ -23,6 +23,12 @@ on:
 
 jobs:
   selftest:
+    # The name is now narrower than the job — it runs the browser probes too.
+    # It stays because branch protection requires this exact string, and a
+    # required check that stops reporting under its old name blocks every PR.
+    # Renaming means editing the workflow and the protection rule together,
+    # which is a repository setting and therefore Pavel's call, not a rename
+    # smuggled into an unrelated move.
     name: Self-test (fs-level)
     runs-on: ubuntu-latest
     steps:
@@ -30,8 +36,26 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Install Python dependencies
-        run: python3 -m pip install --quiet pyyaml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      # The browser half of the suite — D22 visual regression, the П-4 panel,
+      # the П-6 feed, the Ф-1 form and its overlap probe — is guarded by
+      # `require.resolve('playwright')` and had NEVER run here: this job had
+      # no node, so it printed one honest `skip` line and moved on. The line
+      # was true and nobody read it as "every UI acceptance probe is
+      # unverified". That is the fourth time in this project that a check
+      # existed and was not the one that ran, and the reason is always the
+      # same shape — a capability the environment silently lacked.
+      #
+      # Installing it here is what makes those probes probes. The extra
+      # minute buys the difference between a suite that passes and a suite
+      # that ran.
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --quiet pyyaml
+          npm install -D playwright axe-core
+          npx playwright install --with-deps chromium
       - name: Tooling acceptance
         run: bash tools/dops selftest
       - name: Package self-test

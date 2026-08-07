@@ -302,6 +302,78 @@ there is one — that is what makes the ladder end at K2A on `starter_first` and
 at K2B on a full run. Without a plan the declaration order in `stages.json` is
 the fallback, and it is a fallback, not a guess.
 
+## The exact-edit form
+
+П-5 measured that **0 of 15** realistic owner edits were machine-executable,
+and the cause was not a weak classifier. A person looking at a mockup writes
+"typo in the ticket caption", not "replace A with B" — the second is how an
+engineer writes, not how someone looking at a screen writes. An extractor that
+guesses `find`/`replace` out of prose is forbidden for the same reason a wrong
+cheap lane is: it is confidently wrong at the owner's expense.
+
+So Ф-1 does not make the machine cleverer. It changes where the edit is BORN.
+Press `e`, click the text, fix it in place — the result is visible in the same
+instant, which is the preview — and the form writes `find`/`replace` verbatim
+out of the DOM. The share of machine plans rises because a non-machine plan has
+nowhere to come from. The panel (П-4) closed this for tokens; this closes it
+for words.
+
+The measurement is in the repository (`eval/pins-realistic-set.json`,
+`eval/measure-machine-plans.py`) rather than in a report, because a number
+nobody can re-derive is an assertion:
+
+```
+machine_plan_share on 15 realistic owner edits
+  before Ф-1 (as typed):        0/15  (0.0%)
+  after  Ф-1 (copy via form):   5/15  (33.3%), 5 born in the form
+```
+
+The ten taste and structure pins are identical in both runs on purpose: the
+form takes copy out of the prose lane and claims nothing about the rest. A
+self-test probe holds the **baseline** as well as the gain — if 0/15 ever
+becomes 1/15, an extractor has started guessing again.
+
+Three rules carry the mechanism:
+
+- **A plan born with the pin is never re-derived.** It came from the DOM at the
+  moment of the edit, which is better information than any re-reading of the
+  sentence around it. It is *validated* rather than believed, though — an
+  incomplete plan claiming `machine: true` drops back to prose, because
+  `machine` is a promise the executor acts on.
+- **The selector is the scope of the search** (`tools/dops_dom.py`). `set_text`
+  used to refuse any string occurring twice in the build; now, when the pin
+  carries a selector, the same one-occurrence rule is applied inside that
+  element's subtree. "Sold out" on a button and "Sold out" in the footer stop
+  blocking each other, and strictness is unchanged — the scope applies exactly
+  where a scope exists. A selector outside the supported grammar falls back to
+  the whole-build rule **and says so**.
+- **Questions 3 and 4 are never skipped.** Feasibility and norms are answered by
+  construction for a form pin — and replaced by a truer check, that the edited
+  text is still where it was edited. Conflict and duplicate are not: an edit can
+  contradict a recorded decision, and the owner has to see that first.
+
+Only the whole text of a leaf element, and only as text. An element with
+element children is refused rather than flattened — `find` is the element's
+entire text and committing writes `textContent`, so editing a container would
+silently delete its markup. That boundary is what keeps the edit lossless.
+
+### The panel and the pins bar, measured rather than remembered
+
+The token panel used to sit at `right:190px`, a constant chosen when the pins
+bar held three controls. The bar has four now, so the closed panel button
+overlapped Export/Import and the open panel swallowed the bar entirely and
+intercepted its clicks. The panel now **measures** `#ga-bar` and keeps clear of
+its actual width, watching it for changes.
+
+Stacking the panel above the bar was the other candidate and is worse: the pins
+feed already lives at `bottom:52px`, so that fix would have moved the collision
+one layer up rather than removing it. A constant describing another element's
+size is wrong the moment that element changes.
+
+The old panel probe never saw this: it clicked each surface in turn and so
+never asked whether both were usable at once. The Ф-1 probe does, and fails
+with the overlap in pixels.
+
 ## The semantic layer under guard
 
 `check-semantic-layer.py` (D.39, С-1) closes a defect П-4 found by failing:
