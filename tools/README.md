@@ -51,6 +51,8 @@ tools/dops pins feed --json      # [П-6] the whole revision picture in one call
 tools/dops status --json         # [П-6] pulse + plan + checkpoints + queue + pins
 tools/dops plan emit --route starter_first  # [У-6] the decision schedule
 tools/dops plan show             # [У-6] the plan against the measured facts
+tools/dops lod status            # [У-5] depth reached vs agreed, and what the rest costs
+tools/dops lod check             # [У-5] lod_mismatch: short or over, both without a command
 tools/dops skin darkramp         # [Т-1] regenerate the dark tones from $meta.darkModel
 tools/dops skin darkramp --check # [Т-1] D.40: a hand-edited dark tone fails the build
 tools/dops stage start K1        # run instrumentation
@@ -260,6 +262,45 @@ stored back in the contract: `dops stage end` is already the one writer of
 that measurement. The line is an addition to the pulse, never a replacement:
 a stale pulse still reads as a silent incident with a plan in place, and a
 self-test probe holds that.
+
+## The depth ladder
+
+`meta.target_lod`, `meta.lod_overrides` and `status.lod` were the other three
+fields with nothing behind them (У-5). What was missing was not a feature but
+a **choice**: a run either stopped at whatever depth it reached and said
+nothing, or polished past what was asked and billed the difference. Both are
+decisions taken without the person paying for them.
+
+- **Depth is declared, never measured.** No formula over the output —
+  components per screen, tokens per file — can say how finished something is;
+  it can only manufacture a number that looks like it can. Each stage declares
+  what it produces (`produces_lod`), and `status.lod` is the highest any closed
+  stage produced. K0 and K3 declare nothing, which is the honest answer rather
+  than a zero — and a K3 that declared a depth would mean every verified run
+  automatically claims the top of the ladder, so `lod-transition` could never
+  fire at all. A self-test probe holds that assignment for exactly that reason:
+  the drift would leave the mechanism dead while every unit test still passed.
+- **A transition carries its price or it is not published.** "Deepen?" without
+  "+20 мин / +30k токенов" is a status line. Prices live in
+  `cost-table.json`, seeded as estimates that say so; only single ladder steps
+  are declared and a two-step jump costs the sum of what it crosses, because a
+  total is only as measured as its weakest term.
+- **The table retrains on the project's own facts.** `dops lod done` closes an
+  accepted deepening with the measured wall-clock and token delta; after three
+  single-step measurements `dops lod retrain --write` replaces the estimate
+  with the median and flips `source` to `measured`. It is the only writer of
+  that label, and `dops lod retrain --check` fails the build on a `measured`
+  entry that cannot show the samples that earned it.
+- **`lod_mismatch` cuts both ways.** Reaching less than the target with no
+  owner command is under-delivery; reaching more is overspend. `dops lod check`
+  runs at delivery and reports either as the same defect, because both mean the
+  plan changed and nobody was asked. `enough`, `speed_up`, a deferred K2B or an
+  accepted `deepen_lod` are what turn it from a defect into a decision.
+
+Which stage is the *last* one that climbs comes from the run plan (У-6) when
+there is one — that is what makes the ladder end at K2A on `starter_first` and
+at K2B on a full run. Without a plan the declaration order in `stages.json` is
+the fallback, and it is a fallback, not a guess.
 
 ## The semantic layer under guard
 

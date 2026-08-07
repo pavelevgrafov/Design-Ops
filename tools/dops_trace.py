@@ -180,7 +180,17 @@ def process_metrics(root, summary):
 
     issued = [c for c in control if c.get("event") == "issue"]
 
+    # [У-5] depth against the agreed depth. Absent rather than zero when the
+    # run never declared one: a fabricated 0 would read as "nothing was built".
+    lod = None
+    try:
+        import dops_lod
+        lod = dops_lod.metrics(root)
+    except Exception:                                     # noqa: BLE001
+        lod = None
+
     return {
+        "lod": lod,
         "blind_zone_min": blind,
         "checkpoints_published": sum(1 for e in checkpoints
                                      if e.get("event") == "publish"),
@@ -324,6 +334,20 @@ def main():
         problem = beat(root, args.stage, args.command, args.note)
         print("trace %s %s%s" % (args.command, args.stage,
                                  "" if not problem else "  (%s)" % problem))
+        # [У-5] a closed stage is the only moment the depth actually changes,
+        # so it is the only writer of `status.lod` — and the moment to offer
+        # the owner the rest of the ladder, with its price, if the run is
+        # about to end below what was agreed. It runs AFTER the trace line so
+        # a published checkpoint reads as a consequence of the stage ending,
+        # which is what it is.
+        if args.command == "end" and args.status == "ok":
+            try:
+                import dops_lod
+                note = dops_lod.on_stage_end(root, args.stage)
+            except Exception as exc:                      # noqa: BLE001
+                note = "depth not recorded: %s" % exc
+            if note:
+                print("  (%s)" % note)
         return 0
 
     summary = summarize(root)
@@ -357,6 +381,13 @@ def main():
                  m["machine_decisions"],
                  m["visible_decisions_pct"] if m["visible_decisions_pct"] is not None else "n/a",
                  m["control_usage"]))
+        lod = m.get("lod")
+        if lod and lod.get("lod"):
+            print("  depth: LOD-%s%s; %s"
+                  % (lod["lod"],
+                     "" if not lod["lod_mismatch"] else "  [lod_mismatch: %s]"
+                     % lod["lod_mismatch"],
+                     lod["lod_mismatch_note"]))
         return 0
 
     line = cost_line(root, summary)
