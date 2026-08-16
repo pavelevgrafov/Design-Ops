@@ -28,7 +28,11 @@ TARGET="${ARGS:-.}"
 mkdir -p "$TARGET"
 TARGET="$(cd "$TARGET" && pwd)"
 
-ITEMS="AGENTS.md README.md INSTALL.md LICENSE install.sh mkdocs.yml .agents tools eval starters skins packs knowledge docs showcase radar"
+# `.github` belongs to the package: eval/selftest asserts that the end-to-end
+# job calls eval/e2e/rehearse.sh (amendment 07 §2), so an install without the
+# workflow is red on arrival — which contradicts C12 (a fresh copy works with
+# zero edits).
+ITEMS="AGENTS.md README.md INSTALL.md LICENSE install.sh mkdocs.yml .agents tools eval starters skins packs knowledge docs showcase radar .github"
 # Paths that belong to the LOCAL project, never to the package overlay:
 LOCAL_KEEP=".agents/config.yaml .agents/knowledge-sync .pack-cache"
 

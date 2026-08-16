@@ -421,7 +421,7 @@ has "playwright not installed" "$OUT" \
 # eval/e2e/rehearse.sh and nowhere else; this probe is what keeps "nowhere
 # else" true, because a convention that nothing enforces is not a control.
 python3 - "$ROOT" <<'REHPY' && ok "amendment 07 §2: the e2e rehearsal is defined once and CI calls it" \
-  || bad "amendment 07 §2: the rehearsal drifted back into the workflow (see above)"
+  || bad "amendment 07 §2: rehearsal check failed — reason printed above"
 import sys, os, yaml
 root = sys.argv[1]
 wf = os.path.join(root, ".github", "workflows", "design-ops.yml")
@@ -434,6 +434,11 @@ MARKS = ["starters/inject.py", "dops_panel.py", "dops_verify.py",
 
 if not os.path.isfile(script):
     raise SystemExit("eval/e2e/rehearse.sh is missing — the rehearsal has no home")
+if not os.path.isfile(wf):
+    raise SystemExit(".github/workflows/design-ops.yml is missing — the install is "
+                     "incomplete, not the rehearsal divergent. Reinstall, or copy "
+                     "the workflow in; a probe cannot compare against a file that "
+                     "is not there")
 body = open(script, encoding="utf-8").read()
 missing = [m for m in MARKS if m not in body]
 if missing:
