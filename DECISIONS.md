@@ -49,4 +49,6 @@ in the CSS (unique colours by frequency, the spacing scale, type sizes) and a hu
 the uncertainty to one short, visible step instead of hiding it behind a confidence
 percentage. Worth building only if reading a reference site becomes an actual requirement.
 
-Full analysis: `Research/reports/2026-08-17-design-oracle.md`.
+The full analysis behind this entry lives in a local archive outside this
+repository, at `Research/reports/2026-08-17-design-oracle.md` — the path is kept
+here so it stays findable by `grep` on the machine that holds it.
