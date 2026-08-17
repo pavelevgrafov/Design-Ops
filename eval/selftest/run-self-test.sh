@@ -940,9 +940,14 @@ items = set(m.group(1).split())
 
 # Tracked at the top level but deliberately NOT copied. Each entry is a
 # decision, not an oversight: the pro directories are handled separately by the
-# subscription tier block below ITEMS, and .gitignore belongs to whatever
-# repository the package lands in, never to the package.
-LOCAL_ONLY = {"packs-pro", "skins-pro", "starters-pro", ".gitignore"}
+# subscription tier block below ITEMS; .gitignore belongs to whatever repository
+# the package lands in, never to the package; and DECISIONS.md records why THIS
+# toolkit is built the way it is — a project built with the pipeline needs the
+# instructions (README, AGENTS, INSTALL, which do ship) and not the history.
+# Shipping it would also hand the copy-linter a root-level document to read as
+# product copy, which it is not.
+LOCAL_ONLY = {"packs-pro", "skins-pro", "starters-pro", ".gitignore",
+              "DECISIONS.md"}
 
 try:
     # -z: the package carries Cyrillic filenames under docs/, which plain
