@@ -529,3 +529,10 @@ DOPS_SCAN_EXCLUDE="dir1,dir2" tools/dops verify
 
 Scanning an excluded directory on purpose (a fixture, a vendored subtree)
 disables the exclusion — pointing a check at a directory means you meant it.
+
+"Every walker" was not true until 17.08.2026. D.39 (`check-semantic-layer.py`)
+had no exclusion and the gap survived a repository-wide fix because the check
+only becomes reachable once a run registers skin tokens — so it had never
+actually run against a project root. The first real run, case №1, failed on
+the toolkit's own fixture. A self-test probe now asserts both halves: silent
+on the vendored package, still loud when the fixture is scanned deliberately.
