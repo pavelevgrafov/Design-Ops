@@ -9,9 +9,10 @@ run to ready_with_caveats, and burns agent turns on honest-but-avoidable
 Usage:
   python3 tools/dops_doctor.py [--root DIR] [--json] [--fix]
 
-`--fix` INSTALLS things (pip install pyyaml; npm i -D playwright axe-core;
-npx playwright install chromium). It is never implied — the default run only
-reports and prints the commands.
+`--fix` INSTALLS things (pip install pyyaml; npm install, which brings both
+playwright and axe-core from the shipped package.json; npx playwright install
+chromium). It is never implied — the default run only reports and prints the
+commands.
 
 Exit: 0 all core capabilities present, 1 something core missing, 2 usage.
 """
@@ -27,9 +28,10 @@ OPTIONAL = "optional"
 
 
 def probe(cmd, cwd=None, timeout=60):
-    """Detection is quick; installs are not. `npm i -D playwright` alone runs
-    past a minute on a cold cache, and reporting that as "failed" sends the
-    user chasing a problem that does not exist."""
+    """Detection is quick; installs are not. `npm install` runs past a minute
+    on a cold cache — playwright fetches a browser in its postinstall — and
+    reporting that as "failed" sends the user chasing a problem that does not
+    exist."""
     try:
         return subprocess.run(cmd, cwd=cwd, capture_output=True,
                               text=True, timeout=timeout)
@@ -67,7 +69,7 @@ def check_all(root):
     pw_ok = bool(pw and pw.returncode == 0)
     items.append(dict(id="playwright", klass=CORE, ok=pw_ok,
                       detail=(pw.stdout.strip() if pw_ok else "not resolvable"),
-                      fix="npm i -D playwright && npx playwright install chromium"))
+                      fix="npm install && npx playwright install chromium"))
 
     chromium_ok = False
     if pw_ok:
@@ -84,7 +86,7 @@ def check_all(root):
     items.append(dict(id="axe-core", klass=CORE,
                       ok=bool(axe and axe.returncode == 0),
                       detail="installed" if axe and axe.returncode == 0 else "missing",
-                      fix="npm i -D axe-core"))
+                      fix="npm install"))
 
     for tool, klass in (("curl", OPTIONAL), ("git", OPTIONAL)):
         items.append(dict(id=tool, klass=klass, ok=shutil.which(tool) is not None,
@@ -93,9 +95,11 @@ def check_all(root):
     return items
 
 
+# `npm install` for both node packages: package.json ships with the pipeline
+# and pins them, so the fix is the manifest, not a remembered pair of names.
 FIXES = [
-    ("playwright", ["npm", "i", "-D", "playwright"]),
-    ("axe-core", ["npm", "i", "-D", "axe-core"]),
+    ("playwright", ["npm", "install"]),
+    ("axe-core", ["npm", "install"]),
     ("chromium", ["npx", "playwright", "install", "chromium"]),
 ]
 
@@ -144,9 +148,11 @@ def apply_fixes(items, root):
     if "pyyaml" in missing:
         print("→ pyyaml")
         rc |= fix_pyyaml(root)
+    ran = []
     for key, cmd in FIXES:
-        if key not in missing:
-            continue
+        if key not in missing or cmd in ran:
+            continue          # one `npm install` covers playwright and axe-core
+        ran.append(cmd)
         print("→ %s" % " ".join(cmd))
         proc = probe(cmd, cwd=root, timeout=INSTALL_TIMEOUT)
         if proc is None or proc.returncode != 0:

@@ -13,7 +13,7 @@ bash eval/selftest/run-self-test.sh
 
 Expected: `self-test: 22 passed, 0 failed, 0 skipped` (see `expected.txt`).
 Without playwright the browser stage is an explicit `skip`, never a silent
-pass — install it (`npm i -D playwright && npx playwright install chromium`)
+pass — install it (`npm install && npx playwright install chromium`)
 for the full circuit. Run on BOTH environment families before shipping
 changes to scripts: **macOS (bash 3.2 + BSD grep)** and **Linux (bash 5 +
 GNU grep)** [TZ-4.2].

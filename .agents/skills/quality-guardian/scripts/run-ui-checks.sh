@@ -45,7 +45,7 @@ mkdir -p "$OUT"
 if [ -z "${DOPS_PLAYWRIGHT:-}" ] \
    && ! node -e "require.resolve('playwright')" 2>/dev/null \
    && ! npx --no-install playwright --version >/dev/null 2>&1; then
-  echo "unavailable: playwright not installed (npm i -D playwright && npx playwright install chromium)"
+  echo "unavailable: playwright not installed (npm install && npx playwright install chromium)"
   # HTTP-only fallback (degradation matrix): curl status per route
   if command -v curl >/dev/null 2>&1; then
     IFS=',' read -ra R <<< "$ROUTES"
@@ -150,7 +150,7 @@ const results = { console: [], overflow: [], taps: [], perf: [], inp: [], shots:
             results.axe.push({ route, unavailable: 'axe run failed: ' + e.message });
           }
         } else {
-          results.axe.push({ route, unavailable: 'axe-core not installed (npm i -D axe-core)' });
+          results.axe.push({ route, unavailable: 'axe-core not installed (npm install)' });
         }
       }
 

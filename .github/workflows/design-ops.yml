@@ -54,7 +54,12 @@ jobs:
       - name: Install dependencies
         run: |
           python3 -m pip install --quiet pyyaml
-          npm install -D playwright axe-core
+          # `npm install`, not a retyped `-D playwright axe-core`: package.json
+          # is what an installed project gets and what it resolves the browser
+          # lane from, so CI installing a hand-listed set instead would be the
+          # same shape as the hand-retyped rehearsal that hid a D.41 defect —
+          # two places claiming to say the same thing, free to drift.
+          npm install
           npx playwright install --with-deps chromium
       - name: Tooling acceptance
         run: bash tools/dops selftest
@@ -81,7 +86,12 @@ jobs:
       - name: Install dependencies
         run: |
           python3 -m pip install --quiet pyyaml
-          npm install -D playwright axe-core
+          # `npm install`, not a retyped `-D playwright axe-core`: package.json
+          # is what an installed project gets and what it resolves the browser
+          # lane from, so CI installing a hand-listed set instead would be the
+          # same shape as the hand-retyped rehearsal that hid a D.41 defect —
+          # two places claiming to say the same thing, free to drift.
+          npm install
           npx playwright install --with-deps chromium
       # The rehearsal itself is NOT written here. It lives in
       # eval/e2e/rehearse.sh, which this job and the implementer both run, so

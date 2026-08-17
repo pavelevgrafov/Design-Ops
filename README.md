@@ -94,6 +94,14 @@ Copies the package, checks dependencies (Python ≥3.10 + pyyaml, Bash
 without it), runs the self-test, prints the ready line. See `INSTALL.md`
 for manual steps and the v5.x → v6.0 migration (`contract-migrate.py`).
 
+To switch the browser half of the floor on, run the two commands the
+installer prints in the target repo — the node manifest ships with the
+package, so there is no dependency list to remember:
+
+```bash
+npm install && npx playwright install chromium
+```
+
 First run: prompt P01 from `eval/example-prompts.md`, score with
 `eval/eval-rubric.md` (pass ≥ 10/12).
 
