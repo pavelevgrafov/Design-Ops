@@ -24,7 +24,7 @@ fi
 export DOPS_PLAYWRIGHT
 if [ -z "$DOPS_PLAYWRIGHT" ] && ! node -e "require.resolve('playwright')" 2>/dev/null; then
   echo "unavailable D22 visual-regression: playwright not installed" \
-       "(npm i -D playwright && npx playwright install chromium) — caps verdict"
+       "(npm install && npx playwright install chromium) — caps verdict"
   exit 2
 fi
 

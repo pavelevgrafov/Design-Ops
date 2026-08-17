@@ -1,0 +1,14 @@
+{
+  "name": "design-ops",
+  "version": "7.2.0",
+  "private": true,
+  "description": "Design-Ops pipeline — the node manifest the browser half of the floor is resolved from (D2/D12/D13/D15/D20/D21/D22). Without it a fresh install has nothing to `npm install`, so every browser probe reports an honest skip that reads like a pass.",
+  "scripts": {
+    "selftest": "bash eval/selftest/run-self-test.sh",
+    "browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "axe-core": "^4.13.0",
+    "playwright": "^1.62.1"
+  }
+}

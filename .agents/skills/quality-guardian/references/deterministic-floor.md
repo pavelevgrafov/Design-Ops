@@ -232,7 +232,7 @@ report and never block. Browser-dependent tests report explicit
 | D.33 grayscale test | hierarchy works without color | 2 | model_judged on the D22 render |
 | D.34 keyboard test | whole scenario without a mouse | 2 | D21-keyboard line + manual probe |
 | D.35 jank-safe motion | transform/opacity only, no linear easing | 2 | `scripts/check-motion-properties.py` |
-| D.36 copy audit | no corporate slop (EN+RU list) | 2 | `packs/copy-linter` |
+| D.36 copy audit | no corporate slop (EN+RU list); a banned word *displayed as data* is exempt when the element declares `data-dops-exhibit` (stop-list tab, quoted example) — the removal is printed, never silent | 2 | `packs/copy-linter` |
 | D.37 token architecture | primitive → semantic → component refs only | 1 | `packs/token-validator` (+ compile-time A.21) |
 | D.38 seven states | idle/loading/skeleton/populated/empty/error/success per async module | 1 | `scripts/check-seven-states.py` + `packs/state-generator` |
 | D.39 semantic layer | an artefact must not use a token an alias is declared over; no alias, no finding | 1 | `scripts/check-semantic-layer.py` (С-1) — map built from the skin, never a ban-list |

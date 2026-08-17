@@ -3,5 +3,8 @@ __pycache__/
 *.pyc
 .venv/
 node_modules/
-package-lock.json
-package.json
+# package.json / package-lock.json were ignored here until 17.08.2026. They are
+# part of the package now: the browser half of the floor resolves `playwright`
+# from the project, and a fresh install with no manifest has nothing to
+# `npm install` — so every browser probe reported an honest skip that read like
+# a pass (D-BZ-2, case №1).

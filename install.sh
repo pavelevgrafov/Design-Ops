@@ -28,7 +28,18 @@ TARGET="${ARGS:-.}"
 mkdir -p "$TARGET"
 TARGET="$(cd "$TARGET" && pwd)"
 
-ITEMS="AGENTS.md README.md INSTALL.md LICENSE install.sh mkdocs.yml .agents tools eval starters skins packs knowledge docs showcase radar"
+# Every top-level path the package ships is listed here. Two were missing and
+# case №1 found both:
+#   * `.github` — eval/selftest asserts that the end-to-end job calls
+#     eval/e2e/rehearse.sh (amendment 07 §2), so an install without the
+#     workflow is red on arrival, which contradicts C12 (a fresh copy works
+#     with zero edits);
+#   * `package*.json` — the browser half of the floor resolves `playwright`
+#     from the project, and an install with no manifest has nothing to
+#     `npm install`, so those probes skipped honestly and silently.
+# The list is no longer maintained by memory: run-self-test.sh compares it
+# against what the repository actually tracks and fails on the next omission.
+ITEMS="AGENTS.md README.md INSTALL.md LICENSE install.sh mkdocs.yml package.json package-lock.json .agents tools eval starters skins packs knowledge docs showcase radar .github"
 # Paths that belong to the LOCAL project, never to the package overlay:
 LOCAL_KEEP=".agents/config.yaml .agents/knowledge-sync .pack-cache"
 
@@ -115,11 +126,24 @@ if [ -n "$MISSING" ]; then
   echo "fail: missing dependencies:$MISSING" >&2
   exit 1
 fi
-if node -e "require.resolve('playwright')" 2>/dev/null; then
+# Resolution happens FROM THE TARGET: node walks up from its cwd, so asking
+# here would answer for whatever directory the installer was launched in.
+# The target now carries package.json, so the enable line is `npm install` —
+# one command against a pinned manifest, not a remembered dependency list.
+#
+# This installer checks dependencies and never installs them (pyyaml above
+# behaves the same way; `dops doctor --fix` is the one entry point that
+# installs, and it says so). What changed is that the remedy is now a single
+# command the package itself defines.
+if (cd "$TARGET" && node -e "require.resolve('playwright')") 2>/dev/null; then
   echo "== playwright: present (browser checks D2/D12/D13/D15/D20/D21/D22 active)"
+elif command -v node >/dev/null 2>&1; then
+  echo "== playwright: absent — D2/D12/D13/D15/D20/D21 report 'unavailable' and"
+  echo "   D22 visual regression does not run; the verdict caps at ready_with_caveats"
+  echo "   (enable: cd $TARGET && npm install && npx playwright install chromium)"
 else
-  echo "== playwright: absent — browser checks will honestly report 'unavailable'"
-  echo "   (enable: npm i -D playwright axe-core && npx playwright install chromium)"
+  echo "== node: absent — the whole browser half of the floor stays unavailable"
+  echo "   (enable: install node ≥20, then npm install && npx playwright install chromium)"
 fi
 
 # --- subscription tier (v7.0) -------------------------------------------------

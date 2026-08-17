@@ -421,7 +421,7 @@ has "playwright not installed" "$OUT" \
 # eval/e2e/rehearse.sh and nowhere else; this probe is what keeps "nowhere
 # else" true, because a convention that nothing enforces is not a control.
 python3 - "$ROOT" <<'REHPY' && ok "amendment 07 §2: the e2e rehearsal is defined once and CI calls it" \
-  || bad "amendment 07 §2: the rehearsal drifted back into the workflow (see above)"
+  || bad "amendment 07 §2: rehearsal check failed — reason printed above"
 import sys, os, yaml
 root = sys.argv[1]
 wf = os.path.join(root, ".github", "workflows", "design-ops.yml")
@@ -434,6 +434,11 @@ MARKS = ["starters/inject.py", "dops_panel.py", "dops_verify.py",
 
 if not os.path.isfile(script):
     raise SystemExit("eval/e2e/rehearse.sh is missing — the rehearsal has no home")
+if not os.path.isfile(wf):
+    raise SystemExit(".github/workflows/design-ops.yml is missing — the install is "
+                     "incomplete, not the rehearsal divergent. Reinstall, or copy "
+                     "the workflow in; a probe cannot compare against a file that "
+                     "is not there")
 body = open(script, encoding="utf-8").read()
 missing = [m for m in MARKS if m not in body]
 if missing:
@@ -621,6 +626,25 @@ OUT=$(python3 "$QG/check-semantic-layer.py" "$ROOT/starters" \
       --tokens "$ROOT/skins/base-site/tokens.json" 2>&1); RC=$?
 [ "$RC" -eq 0 ] && ok "D.39: all six shipped starters speak through the declared aliases" \
   || bad "D.39: a starter bypasses the semantic layer: $(printf '%s' "$OUT" | grep FAIL | head -1)"
+
+# [D-BZ-5] Scope, not verdict. D.39 runs with {src} = the project root, and a
+# project has the toolkit vendored inside it — so an unexcluded walk audits
+# eval/selftest/fixture/, whose traps are deliberate, and fails the floor on
+# them. Every other walker had this exclusion; this one did not, and the gap
+# survived because D.39 is only reachable once a run registers skin tokens.
+# Case №1 was the first real run and its only fail was exactly that.
+# Both halves are asserted: silent on the vendored package, still loud when
+# the fixture is scanned on purpose.
+OUT=$(python3 "$QG/check-semantic-layer.py" "$ROOT" \
+      --tokens "$ROOT/skins/base-site/tokens.json" 2>&1); RC=$?
+[ "$RC" -eq 0 ] && ok "D.39: the vendored package is not audited as product" \
+  || bad "D.39 scans the toolkit's own fixture: $(printf '%s' "$OUT" | grep FAIL | head -1)"
+
+OUT=$(python3 "$QG/check-semantic-layer.py" "$FIX" \
+      --tokens "$ROOT/skins/base-site/tokens.json" 2>&1); RC=$?
+[ "$RC" -eq 1 ] && has "font-scale-step2" "$OUT" \
+  && ok "D.39: the exclusion is scope only — the fixture trap still fires when scanned on purpose" \
+  || bad "D.39 went quiet on its own fixture trap (rc=$RC) — the exclusion ate the check"
 
 # The acceptance of the move, and the reason it is not bureaucracy: after the
 # rebinding the panel must find the radius knob it could not find before.
@@ -893,6 +917,70 @@ if [ -d "$UPDWORK/.agents" ]; then
     && ! grep -q broken "$UPDWORK/knowledge/index.yaml" && [ -f "$UPDWORK/LOCAL-NOTES.md" ] \
     && ok "install --update: overlays the package, preserves local files" \
     || bad "install --update broke overlay semantics"
+
+  # --- [D-BZ-1/2] the install carries everything the package ships ------------
+  # Case №1 installed the toolkit into a fresh repo and got a red self-test:
+  # install.sh's ITEMS list had never been given `.github`, and `package.json`
+  # was gitignored, so the browser lane had nothing to resolve playwright from.
+  # Both are the same class as the CI defect fixed in 3330a3e — the check
+  # existed, the thing that ran was not it — and both were invisible because
+  # ITEMS was maintained by memory. This probe is what makes ITEMS a list the
+  # repository checks: whatever is tracked at the top level either ships or is
+  # named as deliberately local, and the fresh install is verified to hold it.
+  ITEMSPY=$(mktemp 2>/dev/null || mktemp -t items)
+  python3 - "$ROOT" "$UPDWORK" > "$ITEMSPY" 2>&1 <<'ITEMPY'
+import os, re, subprocess, sys
+root, target = sys.argv[1], sys.argv[2]
+
+m = re.search(r'^ITEMS="([^"]*)"', open(os.path.join(root, "install.sh"),
+                                        encoding="utf-8").read(), re.M)
+if not m:
+    raise SystemExit("install.sh has no ITEMS= line — the copy list is gone")
+items = set(m.group(1).split())
+
+# Tracked at the top level but deliberately NOT copied. Each entry is a
+# decision, not an oversight: the pro directories are handled separately by the
+# subscription tier block below ITEMS, and .gitignore belongs to whatever
+# repository the package lands in, never to the package.
+LOCAL_ONLY = {"packs-pro", "skins-pro", "starters-pro", ".gitignore"}
+
+try:
+    # -z: the package carries Cyrillic filenames under docs/, which plain
+    # ls-files returns C-quoted ("docs/\320\221...") and would have been read
+    # here as a top-level path named `"docs`.
+    out = subprocess.run(["git", "-C", root, "ls-files", "-z"],
+                         capture_output=True, text=True, timeout=30)
+except (OSError, subprocess.SubprocessError) as e:
+    raise SystemExit("SKIP: git unavailable (%s)" % e)
+if out.returncode != 0 or not out.stdout.strip():
+    raise SystemExit("SKIP: not a git checkout — nothing to compare ITEMS against")
+
+tracked = {p.split("/", 1)[0] for p in out.stdout.split("\0") if p.strip()}
+unlisted = sorted(tracked - items - LOCAL_ONLY)
+if unlisted:
+    raise SystemExit("the package tracks %s, which install.sh never copies — a "
+                     "fresh install arrives without it (add to ITEMS, or to "
+                     "LOCAL_ONLY here with the reason)" % ", ".join(unlisted))
+
+stale = sorted(i for i in items if not os.path.exists(os.path.join(root, i)))
+if stale:
+    raise SystemExit("ITEMS lists %s, which the package no longer has" %
+                     ", ".join(stale))
+
+absent = sorted(i for i in items if os.path.exists(os.path.join(root, i))
+                and not os.path.exists(os.path.join(target, i)))
+if absent:
+    raise SystemExit("the fresh install is missing %s — it is in ITEMS but did "
+                     "not arrive" % ", ".join(absent))
+print("%d shipped path(s) listed and installed" % len(items))
+ITEMPY
+  ITEMSOUT=$(cat "$ITEMSPY"); rm -f "$ITEMSPY"
+  case "$ITEMSOUT" in
+    SKIP:*) skip "install completeness: ${ITEMSOUT#SKIP: }" ;;
+    *"listed and installed"*)
+      ok "install completeness: every tracked top-level path ships and arrives ($ITEMSOUT)" ;;
+    *) bad "install completeness: $ITEMSOUT" ;;
+  esac
 else
   bad "install.sh fresh install red in update test"
 fi

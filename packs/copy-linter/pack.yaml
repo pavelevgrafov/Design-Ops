@@ -9,4 +9,7 @@ acceptance_test: 'python3 "{pack_dir}/scripts/lint-copy.py" --self-test'
 degradation: "copy ships unlinted — D.36 reports unavailable (tier 2, never caps the verdict)"
 cost_profile: free
 license_notes: n/a
-version: "0.1.0"
+version: "0.2.0"
+# 0.2.0 — D-BZ-4: an element marked `data-dops-exhibit` is data on display
+# (a stop-words tab, a quoted example), not the product's voice; its subtree
+# is skipped and the skip is reported.
