@@ -42,6 +42,25 @@ two records are compared and both are known. That is why a pass rate over these 
 a meaningful number: it measures conformance to something declared, not agreement with
 something inferred.
 
+**Declaring intent is necessary but not sufficient — amended 2026-08-17.** A declared
+intent tells an agent what the result should look like. It does not tell the agent what
+already exists, so the agent follows the intent faithfully and **rebuilds components that
+were already built**. Atlassian hit this when they published a `DESIGN.md` for their design
+system and named it as one of three limitations: the format reveals the system's internals
+without giving code guidance, which makes agents re-create components rather than use the
+existing ones. Their own file resolves it by refusing the job — it states it is for
+generating UI *in the style of* the system, not production screens, and points at the ADS
+MCP server and skill for implementation detail.
+
+So the layers are two, and they answer different questions: **what this should look like**
+(portable, always loaded, small) and **what already exists and how to use it** (served on
+demand, precise, larger than any file that can be loaded every turn). A single artifact
+carrying both is the mistake, not the goal — Atlassian measured it at roughly 92% more
+tokens than their on-demand channel, on a task their own file disclaims. For this toolkit
+the consequence is narrow but real: a declared system is the input the floor verifies, and
+a project that declares intent without also publishing its implementation layer will pass
+the checks while its component library quietly stops being used.
+
 **What would reverse this.** A method that recovers intent from a render without borrowing
 or guessing it — for example, a hybrid where the machine extracts only what is genuinely
 in the CSS (unique colours by frequency, the spacing scale, type sizes) and a human names
